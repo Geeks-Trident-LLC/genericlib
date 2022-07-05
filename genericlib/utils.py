@@ -34,20 +34,46 @@ class Printer:
         width_limit (int): minimum width of displayed text.  Default is 20.
         failure_msg (str): a failure message.  Default is empty.
         """
-        headers = str(header).splitlines()
-        footers = str(footer).splitlines()
-        data = data if Misc.is_mutable_sequence(data) else [data]
         lst = []
         result = []
 
-        right_bound = width - 4
+        if width > 0:
+            right_bound = width - 4
+        else:
+            right_bound = 76
+
+        headers = []
+        if header:
+            if Misc.is_mutable_sequence(header):
+                for item in header:
+                    for line in str(item).splitlines():
+                        headers.extend(wrap(line, width=right_bound))
+            else:
+                headers.extend(wrap(str(header), width=right_bound))
+
+        footers = []
+        if footer:
+            if Misc.is_mutable_sequence(footer):
+                for item in footer:
+                    for line in str(item).splitlines():
+                        footers.extend(wrap(line, width=right_bound))
+            else:
+                footers.extend(wrap(str(footer), width=right_bound))
+
+        if data:
+            data = data if Misc.is_mutable_sequence(data) else [data]
+        else:
+            data = []
 
         for item in data:
-            if width >= width_limit:
-                for line in str(item).splitlines():
-                    lst.extend(wrap(line, width=right_bound))
+            if width > 0:
+                if width >= width_limit:
+                    for line in str(item).splitlines():
+                        lst.extend(wrap(line, width=right_bound + 4))
+                else:
+                    lst.extend(line.rstrip() for line in str(item).splitlines())
             else:
-                lst.extend(line.rstrip() for line in str(item).splitlines())
+                lst.append(str(item))
         length = max(len(str(i)) for i in lst + headers + footers)
 
         if width >= width_limit:
@@ -60,7 +86,7 @@ class Printer:
             result.append(Text.format('+-{}-+', '-' * length))
 
         for item in lst:
-            result.append(Text.format('| {} |', item.ljust(length)))
+            result.append(item)
         result.append(Text.format('+-{}-+', '-' * length))
 
         if footer:

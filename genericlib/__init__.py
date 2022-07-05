@@ -12,6 +12,10 @@ from .constant import STRING
 from .constant import STR
 from .constnum import NUMBER
 
+from .utils import Printer
+from .utils import Misc
+from .utils import MiscOutput
+
 from .config import version
 
 __all__ = [
@@ -27,6 +31,11 @@ __all__ = [
     'NUMBER',
 
     'File',
+
+    'Misc',
+    'MiscOutput',
+
+    'Printer',
 
     'Text',
 

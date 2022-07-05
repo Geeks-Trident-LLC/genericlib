@@ -1,0 +1,105 @@
+printer:
+  case1:
+    data: Hello Python Generic Library
+    width: 80
+    header: ''
+    footer: ''
+    failure_msg: ''
+    expected_result: |-
+      +------------------------------------------------------------------------------+
+      Hello Python Generic Library
+      +------------------------------------------------------------------------------+
+  case2:
+    data: Hello Python Generic Library
+    width: 40
+    header: ''
+    footer: ''
+    failure_msg: ''
+    expected_result: |-
+      +--------------------------------------+
+      Hello Python Generic Library
+      +--------------------------------------+
+  case3:
+    data: Hello Python Generic Library.  This is a very long message which exceeds 80 characters
+    width: 60
+    header: ''
+    footer: ''
+    failure_msg: ''
+    expected_result: |-
+      +------------------------------------------------------------+
+      Hello Python Generic Library.  This is a very long message
+      which exceeds 80 characters
+      +------------------------------------------------------------+
+  case4:
+    data: Hello Python Generic Library.  This is a very long message which exceeds 80 characters
+    width: -1
+    header: ''
+    footer: ''
+    failure_msg: ''
+    expected_result: |-
+      +----------------------------------------------------------------------------------------+
+      Hello Python Generic Library.  This is a very long message which exceeds 80 characters
+      +----------------------------------------------------------------------------------------+
+  case5:
+    data:
+      - Hello Python Generic Library
+      - This data is the list of string
+    width: 40
+    header: ''
+    footer: ''
+    failure_msg: ''
+    expected_result: |-
+      +--------------------------------------+
+      Hello Python Generic Library
+      This data is the list of string
+      +--------------------------------------+
+  case6:
+    data:
+      - Hello Python Generic Library
+      - This data is the list of string
+    width: 40
+    header: 'Adding header data here'
+    footer: ''
+    failure_msg: ''
+    expected_result: |-
+      +--------------------------------------+
+      | Adding header data here              |
+      +--------------------------------------+
+      Hello Python Generic Library
+      This data is the list of string
+      +--------------------------------------+
+  case7:
+    data:
+      - Hello Python Generic Library
+      - This data is the list of string
+    width: 40
+    header: 'Adding header data here'
+    footer: 'Adding footer data here'
+    failure_msg: ''
+    expected_result: |-
+      +--------------------------------------+
+      | Adding header data here              |
+      +--------------------------------------+
+      Hello Python Generic Library
+      This data is the list of string
+      +--------------------------------------+
+      | Adding footer data here              |
+      +--------------------------------------+
+  case8:
+    data:
+      - Hello Python Generic Library
+      - This data is the list of string
+    width: 40
+    header: 'Adding header data here'
+    footer: 'Adding footer data here'
+    failure_msg: 'Adding failure message here'
+    expected_result: |-
+      +--------------------------------------+
+      | Adding header data here              |
+      +--------------------------------------+
+      Hello Python Generic Library
+      This data is the list of string
+      +--------------------------------------+
+      | Adding footer data here              |
+      +--------------------------------------+
+      Adding failure message here
