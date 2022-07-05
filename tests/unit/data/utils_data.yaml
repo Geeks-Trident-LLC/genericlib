@@ -103,3 +103,132 @@ printer:
       | Adding footer data here              |
       +--------------------------------------+
       Adding failure message here
+
+tabular:
+  case1:
+    data: 1
+    columns: null
+    justify: left
+    missing: not_found
+    expected_result: 1
+  case2:
+    data: Hello Python Generic Library
+    columns: null
+    justify: left
+    missing: not_found
+    expected_result: Hello Python Generic Library
+
+  case3:
+    data:
+      first_name: Jack
+      last_name: Brown
+      full_name: Jack Brown
+    columns: null
+    justify: left
+    missing: not_found
+    expected_result: |-
+      +------------+-----------+------------+
+      | first_name | last_name | full_name  |
+      +------------+-----------+------------+
+      | Jack       | Brown     | Jack Brown |
+      +------------+-----------+------------+
+
+  case4:
+    data:
+      -
+        first_name: Jack
+        last_name: Brown
+        full_name: Jack Brown
+      - first_name: Linda
+        last_name: Wilson
+        full_name: Linda Wilson
+    columns: null
+    justify: left
+    missing: not_found
+    expected_result: |-
+      +------------+-----------+--------------+
+      | first_name | last_name | full_name    |
+      +------------+-----------+--------------+
+      | Jack       | Brown     | Jack Brown   |
+      | Linda      | Wilson    | Linda Wilson |
+      +------------+-----------+--------------+
+
+  case5:
+    data:
+      -
+        first_name: Jack
+        last_name: Brown
+        full_name: Jack Brown
+      - first_name: Linda
+        last_name: Wilson
+        full_name: Linda Wilson
+    columns: null
+    justify: right
+    missing: not_found
+    expected_result: |-
+      +------------+-----------+--------------+
+      | first_name | last_name |    full_name |
+      +------------+-----------+--------------+
+      |       Jack |     Brown |   Jack Brown |
+      |      Linda |    Wilson | Linda Wilson |
+      +------------+-----------+--------------+
+
+  case6:
+    data:
+      -
+        first_name: Jack
+        last_name: Brown
+        full_name: Jack Brown
+      - first_name: Linda
+        last_name: Wilson
+        full_name: Linda Wilson
+    columns: null
+    justify: center
+    missing: not_found
+    expected_result: |-
+      +------------+-----------+--------------+
+      | first_name | last_name |  full_name   |
+      +------------+-----------+--------------+
+      |    Jack    |   Brown   |  Jack Brown  |
+      |   Linda    |   Wilson  | Linda Wilson |
+      +------------+-----------+--------------+
+
+  case7:
+    data:
+      -
+        first_name: Jack
+        last_name: Brown
+        full_name: Jack Brown
+      - first_name: Linda
+        last_name: Wilson
+        full_name: Linda Wilson
+    columns: [first_name, full_name]
+    justify: center
+    missing: not_found
+    expected_result: |-
+      +------------+--------------+
+      | first_name |  full_name   |
+      +------------+--------------+
+      |    Jack    |  Jack Brown  |
+      |   Linda    | Linda Wilson |
+      +------------+--------------+
+
+  case8:
+    data:
+      -
+        first_name: Jack
+        last_name: Brown
+        full_name: Jack Brown
+      - first_name: Linda
+        last_name: Wilson
+        full_name: Linda Wilson
+    columns: [first_name, middle_name, last_name, full_name]
+    justify: center
+    missing: not_found
+    expected_result: |-
+      +------------+-------------+-----------+--------------+
+      | first_name | middle_name | last_name |  full_name   |
+      +------------+-------------+-----------+--------------+
+      |    Jack    |  not_found  |   Brown   |  Jack Brown  |
+      |   Linda    |  not_found  |   Wilson  | Linda Wilson |
+      +------------+-------------+-----------+--------------+

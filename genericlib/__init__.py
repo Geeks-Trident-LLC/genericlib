@@ -15,6 +15,8 @@ from .constnum import NUMBER
 from .utils import Printer
 from .utils import Misc
 from .utils import MiscOutput
+from .utils import get_data_as_tabular
+from .utils import print_data_as_tabular
 
 from .config import version
 
@@ -38,6 +40,9 @@ __all__ = [
     'Printer',
 
     'Text',
+
+    'get_data_as_tabular',
+    'print_data_as_tabular',
 
     'substitute_variable',
 

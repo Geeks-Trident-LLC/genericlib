@@ -5,6 +5,7 @@ import platform
 import subprocess
 
 from textwrap import wrap
+from pprint import pprint
 
 import typing
 
@@ -346,3 +347,226 @@ class MiscOutput:
             is_success=exit_code == ECODE.SUCCESS
         )
         return result
+
+
+class Tabular:
+    """Construct Tabular Format
+
+    Attributes
+    _________
+    data (list): a list of dictionary or a dictionary.
+    columns (list): a list of selecting headers.  Default is None.
+    justify (str): left|right|center.  Default is a left justification.
+    missing (str): report missing value if column is not found.
+            Default is not_found.
+
+    Methods
+    -------
+    validate_argument_list_of_dict() -> None
+    build_width_table(columns) -> dict
+    align_string(value, width) -> str
+    build_headers_string(columns, width_tbl) -> str
+    build_tabular_string(columns, width_tbl) -> str
+    process() -> None
+    get() -> str or raw data
+    print() -> None
+
+    """
+    def __init__(self, data, columns=None, justify='left', missing='not_found'):
+        self.result = ''
+        if isinstance(data, dict):
+            self.data = [data]
+        else:
+            self.data = data
+        self.columns = columns
+        self.justify = str(justify).lower()
+        self.missing = missing
+        self.is_ready = True
+        self.is_tabular = False
+        self.failure = ''
+        self.validate_argument_list_of_dict()
+        self.process()
+
+    def validate_argument_list_of_dict(self):
+        """Validate a list of dictionary for tabular format."""
+        if not isinstance(self.data, (list, tuple)):
+            self.is_ready = False
+            self.failure = 'data MUST be a list.'
+            return
+
+        if not self.data:
+            self.is_ready = False
+            self.failure = 'data MUST be NOT an empty list.'
+            return
+
+        chk_keys = list()
+        for a_dict in self.data:
+            if isinstance(a_dict, dict):
+                if not a_dict:
+                    self.is_ready = False
+                    self.failure = 'all dict elements MUST be NOT empty.'
+                    return
+
+                keys = list(a_dict.keys())
+                if not chk_keys:
+                    chk_keys = keys
+                else:
+                    if keys != chk_keys:
+                        self.is_ready = False
+                        self.failure = 'dict element MUST have same keys.'
+                        return
+            else:
+                self.is_ready = False
+                self.failure = 'all elements of list MUST be dictionary.'
+                return
+
+    def build_width_table(self, columns):
+        """return mapping table of string length.
+
+        Parameters
+        ----------
+        columns (list): headers of tabular data
+
+        Returns
+        -------
+        dict: a mapping table of string length.
+        """
+        width_tbl = dict(zip(columns, (len(str(k)) for k in columns)))
+
+        for a_dict in self.data:
+            for col, width in width_tbl.items():
+                curr_width = len(str(a_dict.get(col, self.missing)))
+                new_width = max(width, curr_width)
+                width_tbl[col] = new_width
+        return width_tbl
+
+    def align_string(self, value, width):
+        """return an aligned string
+
+        Parameters
+        ----------
+        value (Any): a data.
+        width (int): a width for data alignment.
+
+        Returns
+        -------
+        str: a string.
+        """
+        value = str(value)
+        if self.justify == 'center':
+            return str.center(value, width)
+        elif self.justify == 'right':
+            return str.rjust(value, width)
+        else:
+            return str.ljust(value, width)
+
+    def build_headers_string(self, columns, width_tbl):
+        """Return headers as string
+
+        Parameters
+        ----------
+        columns (list): a list of headers.
+        width_tbl (dict): a mapping table of string length.
+
+        Returns
+        -------
+        str: headers as string.
+        """
+        lst = []
+        for col in columns:
+            width = width_tbl.get(col)
+            new_col = self.align_string(col, width)
+            lst.append(new_col)
+        return '| {} |'.format(' | '.join(lst))
+
+    def build_tabular_string(self, columns, width_tbl):
+        """Build data to tabular format
+
+        Parameters
+        ----------
+        columns (list): a list of headers.
+        width_tbl (dict): a mapping table of string length.
+
+        Returns
+        -------
+        str: a tabular data.
+        """
+        lst_of_str = []
+        for a_dict in self.data:
+            lst = []
+            for col in columns:
+                val = a_dict.get(col, self.missing)
+                width = width_tbl.get(col)
+                new_val = self.align_string(val, width)
+                lst.append(new_val)
+            lst_of_str.append('| {} |'.format(' | '.join(lst)))
+
+        return '\n'.join(lst_of_str)
+
+    def process(self):
+        """Process data to tabular format."""
+        if not self.is_ready:
+            return
+
+        try:
+            keys = list(self.data[0].keys())
+            columns = self.columns or keys
+            width_tbl = self.build_width_table(columns)
+            deco = ['-' * width_tbl.get(c) for c in columns]
+            deco_str = '+-{}-+'.format('-+-'.join(deco))
+            headers_str = self.build_headers_string(columns, width_tbl)
+            tabular_data = self.build_tabular_string(columns, width_tbl)
+
+            lst = [deco_str, headers_str, deco_str, tabular_data, deco_str]
+            self.result = '\n'.join(lst)
+            self.is_tabular = True
+        except Exception as ex:
+            self.failure = '{}: {}'.format(type(ex).__name__, ex)
+            self.is_tabular = False
+
+    def get(self):
+        """Return result if a provided data is tabular format, otherwise, data"""
+        tabular_data = self.result if self.is_tabular else self.data
+        return tabular_data
+
+    def print(self):
+        """Print the tabular content"""
+        tabular_data = self.get()
+        if isinstance(tabular_data, (dict, list, tuple, set)):
+            pprint(tabular_data)
+        else:
+            print(tabular_data)
+
+
+def get_data_as_tabular(data, columns=None, justify='left', missing='not_found'):
+    """translate data (i.e a list of string or dictionary) to tabular format
+
+    Parameters
+    __________
+    data (list): a list of dictionary or a dictionary.
+    columns (list): a list of selecting headers.  Default is None.
+    justify (str): left|right|center.  Default is a left justification.
+    missing (str): report missing value if column is not found.
+            Default is not_found.
+
+    Returns:
+        str: tabular format
+    """
+    node = Tabular(data, columns=columns, justify=justify, missing=missing)
+    result = node.get()
+    return result
+
+
+def print_data_as_tabular(data, columns=None, justify='left', missing='not_found'):
+    """print data (i.e a list of string or dictionary) as tabular format
+
+    Parameters
+    __________
+    data (list): a list of dictionary or a dictionary.
+    columns (list): a list of selecting headers.  Default is None.
+    justify (str): left|right|center.  Default is a left justification.
+    missing (str): report missing value if column is not found.
+            Default is not_found.
+    """
+    node = Tabular(data, columns=columns, justify=justify, missing=missing)
+    node.print()

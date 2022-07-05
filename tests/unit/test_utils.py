@@ -4,6 +4,7 @@ from genericlib import Printer
 from genericlib import File
 from genericlib import Misc
 from genericlib import MiscOutput
+from genericlib import get_data_as_tabular
 
 TEST_DATA = File.get_result_from_yaml_file(
     'data/utils_data.yaml',
@@ -249,3 +250,68 @@ class TestMiscOutput:
         assert result.exit_code == 0
         assert result.is_success is True
 
+
+@pytest.mark.parametrize(
+    "data,columns,justify,missing,expected_result",
+    [
+        (
+            TEST_DATA.tabular.case1.data,
+            TEST_DATA.tabular.case1.columns,
+            TEST_DATA.tabular.case1.justify,
+            TEST_DATA.tabular.case1.missing,
+            TEST_DATA.tabular.case1.expected_result
+        ),
+        (
+            TEST_DATA.tabular.case2.data,
+            TEST_DATA.tabular.case2.columns,
+            TEST_DATA.tabular.case2.justify,
+            TEST_DATA.tabular.case2.missing,
+            TEST_DATA.tabular.case2.expected_result
+        ),
+        (
+            TEST_DATA.tabular.case3.data,
+            TEST_DATA.tabular.case3.columns,
+            TEST_DATA.tabular.case3.justify,
+            TEST_DATA.tabular.case3.missing,
+            TEST_DATA.tabular.case3.expected_result
+        ),
+        (
+            TEST_DATA.tabular.case4.data,
+            TEST_DATA.tabular.case4.columns,
+            TEST_DATA.tabular.case4.justify,
+            TEST_DATA.tabular.case4.missing,
+            TEST_DATA.tabular.case4.expected_result
+        ),
+        (
+            TEST_DATA.tabular.case5.data,
+            TEST_DATA.tabular.case5.columns,
+            TEST_DATA.tabular.case5.justify,
+            TEST_DATA.tabular.case5.missing,
+            TEST_DATA.tabular.case5.expected_result
+        ),
+        (
+            TEST_DATA.tabular.case6.data,
+            TEST_DATA.tabular.case6.columns,
+            TEST_DATA.tabular.case6.justify,
+            TEST_DATA.tabular.case6.missing,
+            TEST_DATA.tabular.case6.expected_result
+        ),
+        (
+            TEST_DATA.tabular.case7.data,
+            TEST_DATA.tabular.case7.columns,
+            TEST_DATA.tabular.case7.justify,
+            TEST_DATA.tabular.case7.missing,
+            TEST_DATA.tabular.case7.expected_result
+        ),
+        (
+            TEST_DATA.tabular.case8.data,
+            TEST_DATA.tabular.case8.columns,
+            TEST_DATA.tabular.case8.justify,
+            TEST_DATA.tabular.case8.missing,
+            TEST_DATA.tabular.case8.expected_result
+        ),
+    ]
+)
+def test_get_data_as_tabular(data, columns, justify, missing, expected_result):
+    result = get_data_as_tabular(data, columns=columns, justify=justify, missing=missing)
+    assert result == expected_result
