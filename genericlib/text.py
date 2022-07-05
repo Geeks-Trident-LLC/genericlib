@@ -1,0 +1,63 @@
+class Text(str):
+    def __new__(cls, *args, **kwargs):
+        if not args and not kwargs:
+            return str.__new__(cls, '')
+        encoding = kwargs.get('encoding', 'utf-8')
+        errors = kwargs.get('errors', 'strict')
+        obj = kwargs.get('object', '')
+        if args:
+            if len(args) == 1:
+                obj = args[0]
+                if isinstance(obj, bytes):
+                    return str.__new__(cls, obj, encoding=encoding, errors=errors)
+                elif isinstance(obj, BaseException):
+                    return str.__new__(cls, '{}: {}'.format(type(obj).__name__, obj))
+                else:
+                    return str.__new__(cls, obj)
+            else:
+                return str.__new__(cls, *args, **kwargs)
+        else:
+            if isinstance(obj, bytes):
+                return str.__new__(cls, obj, encoding=encoding, errors=errors)
+            elif isinstance(obj, BaseException):
+                return str.__new__(cls, '{}: {}'.format(type(obj).__name__, obj))
+            else:
+                return str.__new__(cls, obj)
+
+    @classmethod
+    def format(cls, *args, **kwargs):
+        if not args:
+            text = ''
+            return text
+        else:
+            if kwargs:
+                fmt = args[0]
+                try:
+                    text = str(fmt).format(args[1:], **kwargs)
+                    return text
+                except Exception as ex:
+                    text = cls(ex)
+                    return text
+            else:
+                if len(args) == 1:
+                    text = cls(args[0])
+                    return text
+                else:
+                    fmt = args[0]
+                    t_args = tuple(args[1:])
+                    try:
+                        if len(t_args) == 1 and isinstance(t_args[0], dict):
+                            text = str(fmt) % t_args[0]
+                        else:
+                            text = str(fmt) % t_args
+
+                        if text == fmt:
+                            text = str(fmt).format(*t_args)
+                        return text
+                    except Exception as ex1:
+                        try:
+                            text = str(fmt).format(*t_args)
+                            return text
+                        except Exception as ex2:
+                            text = '%s\n%s' % (cls(ex1), cls(ex2))
+                            return text
