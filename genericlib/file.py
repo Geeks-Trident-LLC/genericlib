@@ -321,7 +321,7 @@ class File:
 
         ref_datetime = ref_datetime if isinstance(ref_datetime, datetime) else datetime.now()
 
-        basename = '{:%Y%B%d_%H%M%S}'.format(ref_datetime)
+        basename = '{:%Y%b%d_%H%M%S}'.format(ref_datetime)
         if prefix.strip():
             basename = '%s_%s' % (prefix.strip(), basename)
 

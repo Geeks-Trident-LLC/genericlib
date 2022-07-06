@@ -15,6 +15,7 @@ from .constnum import NUMBER
 from .utils import Printer
 from .utils import Misc
 from .utils import MiscOutput
+from .utils import Tabular
 from .utils import get_data_as_tabular
 from .utils import print_data_as_tabular
 
@@ -41,6 +42,7 @@ __all__ = [
 
     'Text',
 
+    'Tabular',
     'get_data_as_tabular',
     'print_data_as_tabular',
 
