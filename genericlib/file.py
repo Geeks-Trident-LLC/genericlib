@@ -562,3 +562,39 @@ class File:
         else:
             match = re.search(lookup, content)
             return bool(match)
+
+    @classmethod
+    def get_new_filename(cls, filename, new_name='', prefix='',
+                         postfix='', new_extension=''):
+        if File.is_dir(filename):
+            return filename
+
+        file_obj = Path(filename)
+
+        if new_name:
+            file_obj = file_obj.with_name(new_name)
+            new_filename = str(file_obj)
+            return new_filename
+
+        new_ext = new_extension.strip()
+        if new_ext:
+            new_ext = '.%s' % new_ext.lstrip('.')
+            file_obj = file_obj.with_suffix(new_ext)
+
+        prefix = prefix.strip()
+        if prefix:
+            fn = file_obj.name
+            if not fn.startswith(prefix):
+                fn = '%s%s' % (prefix, fn)
+                file_obj = file_obj.with_name(fn)
+
+        postfix = postfix.strip()
+        if postfix:
+            fn_wo_ext = file_obj.stem
+            ext = file_obj.suffix
+            if not fn_wo_ext.endswith(postfix):
+                fn = '%s%s%s' % (fn_wo_ext, postfix, ext)
+                file_obj = file_obj.with_name(fn)
+
+        new_filename = str(file_obj)
+        return new_filename

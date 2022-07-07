@@ -233,3 +233,24 @@ class TestFile:
 
         assert result.employees.employee2.name == 'Linda Wilson'
         assert result.employees.employee2.office_location == 'Milpitas, CA'
+
+    @pytest.mark.parametrize(
+        "filename,new_name,prefix,postfix,new_extension,expected_result",
+        [
+            ('', 'blab_blab', 'blab_blab', 'blab_blab', 'blab_blab', ''),
+            ('.', 'blab_blab', 'blab_blab', 'blab_blab', 'blab_blab', '.'),
+            ('abc/file1.txt', 'file2.py', '', '', '', 'abc/file2.py'),
+            ('abc/file1.txt', '', '', '', 'bat', 'abc/file1.bat'),
+            ('abc/file1.txt', '', 'test_', '', 'bat', 'abc/test_file1.bat'),
+            ('abc/test_file1.txt', '', 'test_', '', 'bat', 'abc/test_file1.bat'),
+            ('abc/file1.txt', '', 'test_', '_xyz', 'bat', 'abc/test_file1_xyz.bat'),
+            ('abc/test_file1.txt', '', 'test_', '_xyz', 'bat', 'abc/test_file1_xyz.bat'),
+            ('abc/test_file1_xyz.txt', '', 'test_', '_xyz', 'bat', 'abc/test_file1_xyz.bat'),
+        ]
+    )
+    def test_get_new_filename(self, filename, new_name, prefix, postfix,
+                              new_extension, expected_result):
+        result = File.get_new_filename(filename, new_name=new_name,
+                                       prefix=prefix,postfix=postfix,
+                                       new_extension=new_extension)
+        assert result == expected_result
