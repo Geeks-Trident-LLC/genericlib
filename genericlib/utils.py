@@ -1,6 +1,7 @@
 """Module containing the logic for utilities."""
 
 import platform
+import sys
 
 import subprocess
 
@@ -346,6 +347,24 @@ class MiscOutput:
             exit_code=exit_code,
             is_success=exit_code == ECODE.SUCCESS
         )
+        return result
+
+
+class MiscPlatform:
+    @classmethod
+    def get_kernel_info(cls):
+        result = '{0.system} {0.release}'.format(platform.uname())
+        return result
+
+    @classmethod
+    def get_python_info(cls):
+        result = 'Python {}'.format(platform.python_version())
+        return result
+
+    @classmethod
+    def get_python_docs_url(cls):
+        fmt = 'https://docs.python.org/{0.major}.{0.minor}/'
+        result = fmt.format(sys.version_info)
         return result
 
 
