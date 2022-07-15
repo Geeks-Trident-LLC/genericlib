@@ -300,6 +300,14 @@ class Misc:
         return isinstance(obj, typing.Iterable)
 
     @classmethod
+    def is_none_type(cls, obj):
+        return isinstance(obj, None)
+
+    @classmethod
+    def is_string_or_none(cls, obj):
+        return isinstance(obj, (None, str))
+
+    @classmethod
     def join_string(cls, *args, **kwargs):
         if not args:
             return ''
