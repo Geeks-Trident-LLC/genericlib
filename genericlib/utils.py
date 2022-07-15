@@ -2,6 +2,7 @@
 
 import platform
 import sys
+import re
 
 import subprocess
 
@@ -336,6 +337,27 @@ class Misc:
     def is_nix_os(cls):
         chk = cls.is_linux_os() or cls.is_mac_os()
         return chk
+
+    @classmethod
+    def escape_double_quote(cls, data):
+        if not isinstance(data, str):
+            return data
+        new_data = data.replace('"', '\\"')
+        return new_data
+
+    @classmethod
+    def escape_single_quote(cls, data):
+        if not isinstance(data, str):
+            return data
+        new_data = data.replace("'", "\\'")
+        return new_data
+
+    @classmethod
+    def escape_quote(cls, data):
+        if not isinstance(data, str):
+            return data
+        new_data = re.sub('([\'"])', r'\\\1', data)
+        return new_data
 
 
 class MiscOutput:
