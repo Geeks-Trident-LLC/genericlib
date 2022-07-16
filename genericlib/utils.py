@@ -7,6 +7,7 @@ import re
 import subprocess
 
 from textwrap import wrap
+from textwrap import indent
 from pprint import pprint
 
 import typing
@@ -317,6 +318,17 @@ class Misc:
         sep = kwargs.get('separator', '')
         sep = kwargs.get('sep', sep)
         return sep.join(str(item) for item in args)
+
+    @classmethod
+    def indent_string(cls, *args, width=2):
+        lst = []
+        for item in args:
+            item = item or ''
+            lst.extend(str(item).splitlines())
+
+        data = '\n'.join(lst)
+        result = indent(data, ' ' * width)
+        return result
 
     @classmethod
     def skip_first_line(cls, data):
