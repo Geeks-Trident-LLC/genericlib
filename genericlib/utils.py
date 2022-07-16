@@ -321,6 +321,7 @@ class Misc:
 
     @classmethod
     def indent_string(cls, *args, width=2):
+        width = width if width >= 0 else 0
         lst = []
         for item in args:
             item = item or ''
@@ -328,6 +329,25 @@ class Misc:
 
         data = '\n'.join(lst)
         result = indent(data, ' ' * width)
+        return result
+
+    @classmethod
+    def indent_string_level2(cls, *args, width=2, start_pos=1, other_width=4):
+
+        start_pos = start_pos if start_pos >= 0 else 0
+        other_width = other_width if other_width > width else width
+
+        print(other_width)
+
+        if start_pos == 0 or other_width == width:
+            result = cls.indent_string(*args, width=width)
+            return result
+
+        lines = cls.indent_string(*args, width=0).splitlines()
+        pprint(lines)
+        txt1 = indent('\n'.join(lines[:start_pos]), ' ' * width)
+        txt2 = indent('\n'.join(lines[start_pos:]), ' ' * other_width)
+        result = '%s\n%s' % (txt1, txt2)
         return result
 
     @classmethod
