@@ -306,7 +306,7 @@ class Misc:
 
     @classmethod
     def is_string_or_none(cls, obj):
-        return isinstance(obj, (None, str))
+        return isinstance(obj, (type(None), str))
 
     @classmethod
     def join_string(cls, *args, **kwargs):
