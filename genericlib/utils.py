@@ -351,6 +351,13 @@ class Misc:
         return result
 
     @classmethod
+    def is_string_multiline(cls, txt):
+        if not cls.is_string(txt):
+            return False
+        lines_count = len(txt.splitlines())
+        return lines_count > 1
+
+    @classmethod
     def skip_first_line(cls, data):
         if not cls.is_string(data):
             return data
