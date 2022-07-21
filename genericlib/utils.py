@@ -6,6 +6,8 @@ import re
 
 import subprocess
 
+from io import StringIO
+
 from textwrap import wrap
 from textwrap import indent
 from pprint import pprint
@@ -434,6 +436,44 @@ class MiscPlatform:
     def get_python_docs_url(cls):
         fmt = 'https://docs.python.org/{0.major}.{0.minor}/'
         result = fmt.format(sys.version_info)
+        return result
+
+
+class MiscFunction:
+    @classmethod
+    def do_silent_invoke(cls, callable_obj, *args, filename='', **kwargs):
+        stdout_bak = sys.stdout
+        stderr_bak = sys.stderr
+        sys.stdout = StringIO()
+        sys.stderr = StringIO()
+
+        ret_result = callable_obj(*args, **kwargs)
+
+        sys.stdout.seek(0)
+        sys.stderr.seek(0)
+
+        stdout_result = sys.stdout.read()
+        stderr_result = sys.stderr.read()
+
+        if stderr_result:
+            output_and_error = '%s\n%s' % (stdout_result, stderr_result)
+        else:
+            output_and_error = stdout_result
+
+        result = DotObject(
+            result=ret_result,
+            output=stdout_result,
+            error=stderr_result,
+            output_and_error=output_and_error
+        )
+
+        if filename:
+            with(open(filename, 'w')) as stream:
+                stream.write(result.output_and_error)
+
+        sys.stdout = stdout_bak
+        sys.stderr = stderr_bak
+
         return result
 
 
