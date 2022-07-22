@@ -79,6 +79,15 @@ class STRING:
     TRUE = 'True'
     FALSE = 'False'
 
+    CMDLINES = 'cmdlines'
+    NAME = 'name'
+    DESCRIPTION = 'description'
+    LOGIN = 'login'
+    SUCCESS = 'success'
+    WARNING = 'warning'
+    ERROR = 'error'
+    SUBMIT = 'submit'
+
 
 STR = STRING
 
