@@ -61,3 +61,21 @@ class Text(str):
                         except Exception as ex2:
                             text = '%s\n%s' % (cls(ex1), cls(ex2))
                             return text
+
+    @classmethod
+    def wrap_html(cls, tag, data, *args):
+        data = str(data)
+        tag = str(tag).strip()
+        attributes = [str(arg).strip() for arg in args if str(arg).strip()]
+        if attributes:
+            attrs_txt = ' '.join(attributes)
+            if data.strip():
+                result = '<{0} {1}>{2}</{0}>'.format(tag, attrs_txt, data)
+            else:
+                result = '<{0} {1}/>'.format(tag, attrs_txt)
+        else:
+            if data.strip():
+                result = '<{0}>{1}</{0}>'.format(tag, data)
+            else:
+                result = '<{0}/>'.format(tag)
+        return result
