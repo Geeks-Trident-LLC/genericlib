@@ -1,3 +1,4 @@
+import pytest
 from genericlib import Text
 from genericlib import DotObject
 
@@ -56,3 +57,23 @@ class TestText:
         fmt3 = '{p2[first_name]} {p2[last_name]}, {p1[first_name]} {p1[last_name]}'
         node = Text.format(fmt3, p1=data.person1, p2=data.person2)
         assert node == 'Linda Wilson, Jack Brown'
+
+    @pytest.mark.parametrize(
+        "tag,data,attributes,expected_result",
+        [
+            ('div', '', [], '<div/>'),
+            ('div', 'Hello GenericLib', [], '<div>Hello GenericLib</div>'),
+            ('div', 'Hello GenericLib', ['class="container"'],
+             '<div class="container">Hello GenericLib</div>'),
+            ('div', 'Hello GenericLib',
+             ['class="container"', 'width="100%"'],
+             '<div class="container" width="100%">Hello GenericLib</div>'),
+            ('div', 'Hello GenericLib',
+             ['class="container"', ' ', 'width="100%"'],
+             '<div class="container" width="100%">Hello GenericLib</div>'),
+
+        ]
+    )
+    def test_wrap_html(self, tag, data, attributes, expected_result):
+        result = Text.wrap_html(tag, data, *attributes)
+        assert result == expected_result

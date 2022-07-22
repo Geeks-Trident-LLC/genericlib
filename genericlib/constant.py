@@ -79,6 +79,7 @@ class STRING:
     TRUE = 'True'
     FALSE = 'False'
 
+    CMDLINE = 'cmdline'
     CMDLINES = 'cmdlines'
     NAME = 'name'
     DESCRIPTION = 'description'

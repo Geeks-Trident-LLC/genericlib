@@ -37,7 +37,7 @@ class TestICSStripValue:
             ('True', '', 'true'),
             ('  True ', '', 'true'),
             ('robotframework', r'(rf|robotframework)$', 'robotframework'),
-            ('robotframework', r'(rf|robotframework)$', 'rf')
+            ('robotframework', r'(rf|robotframework)$', 'rf'),
 
         ]
     )
@@ -71,7 +71,16 @@ class TestString:
             (STRING.FALSE, 'False'),
             (STRING.NEWLINE, '\n'),
             (STRING.LINEFEED, '\n'),
-            (STRING.CARRIAGE_RETURN, '\r')
+            (STRING.CARRIAGE_RETURN, '\r'),
+            (STRING.CMDLINE, 'cmdline'),
+            (STRING.CMDLINES, 'cmdlines'),
+            (STRING.NAME, 'name'),
+            (STRING.DESCRIPTION, 'description'),
+            (STRING.LOGIN, 'login'),
+            (STRING.SUCCESS, 'success'),
+            (STRING.WARNING, 'warning'),
+            (STRING.ERROR, 'error'),
+            (STRING.SUBMIT, 'submit')
         ]
     )
     def test_constant_string(self, constant_string, expected_result):
