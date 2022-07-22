@@ -78,6 +78,10 @@ class STRING:
     CARRIAGE_RETURN = '\r'
     TRUE = 'True'
     FALSE = 'False'
+    FORWARD_FLASH = '/'
+    EQUAL_SYMBOL = '='
+    SPACE_CHAR = ' '
+    DOT_CHAR = '.'
 
     CMDLINE = 'cmdline'
     CMDLINES = 'cmdlines'
@@ -88,6 +92,25 @@ class STRING:
     WARNING = 'warning'
     ERROR = 'error'
     SUBMIT = 'submit'
+
+    EXECUTION = 'execution'
+    BATCH = 'batch'
+    TEST_SCRIPT = 'test_script'
+    STATIC = 'static'
+    HIDDEN_INPUT_FIELD = 'hidden_input_field'
+    TEMPLATE_RESULT = 'template_result'
+    SCRIPT_RESULT = 'script_result'
+    SEARCHED_TEMPLATE = 'searched_template'
+    BUILT_TEMPLATE = 'built_template'
+    BUILT_SCRIPT = 'built_script'
+    SAVED_TEMPLATE = 'saved_template'
+    ITERATIVE_TEST = 'iterative_test'
+    ITERATIVE_RESULT = 'iterative_result'
+    BATCH_ACTION = 'batch_action'
+    BATCH_RESULT = 'batch_result'
+    ROBOT = 'robot'
+    PY = 'py'
+    TEST_ = 'test_'
 
 
 STR = STRING

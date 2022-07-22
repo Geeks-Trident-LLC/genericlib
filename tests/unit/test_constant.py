@@ -72,6 +72,11 @@ class TestString:
             (STRING.NEWLINE, '\n'),
             (STRING.LINEFEED, '\n'),
             (STRING.CARRIAGE_RETURN, '\r'),
+            (STRING.FORWARD_FLASH, '/'),
+            (STRING.EQUAL_SYMBOL, '='),
+            (STRING.SPACE_CHAR, ' '),
+            (STRING.DOT_CHAR, '.'),
+
             (STRING.CMDLINE, 'cmdline'),
             (STRING.CMDLINES, 'cmdlines'),
             (STRING.NAME, 'name'),
@@ -80,7 +85,22 @@ class TestString:
             (STRING.SUCCESS, 'success'),
             (STRING.WARNING, 'warning'),
             (STRING.ERROR, 'error'),
-            (STRING.SUBMIT, 'submit')
+            (STRING.SUBMIT, 'submit'),
+            (STRING.EXECUTION, 'execution'),
+            (STRING.BATCH, 'batch'),
+            (STRING.STATIC, 'static'),
+            (STRING.HIDDEN_INPUT_FIELD, 'hidden_input_field'),
+            (STRING.TEMPLATE_RESULT, 'template_result'),
+            (STRING.SCRIPT_RESULT, 'script_result'),
+            (STRING.SEARCHED_TEMPLATE, 'searched_template'),
+            (STRING.BUILT_TEMPLATE, 'built_template'),
+            (STRING.BUILT_SCRIPT, 'built_script'),
+            (STRING.SAVED_TEMPLATE, 'saved_template'),
+            (STRING.ITERATIVE_TEST, 'iterative_test'),
+            (STRING.ITERATIVE_RESULT, 'iterative_result'),
+            (STRING.BATCH_ACTION, 'batch_action'),
+            (STRING.ROBOT, 'robot'),
+            (STRING.PY, 'py'),
         ]
     )
     def test_constant_string(self, constant_string, expected_result):
