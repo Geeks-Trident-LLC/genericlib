@@ -5,6 +5,8 @@ from .collection import substitute_variable
 from .text import Text
 from .file import File
 
+from .search import Wildcard
+
 from .constant import ICSValue
 from .constant import ICSStripValue
 from .constant import ECODE
@@ -35,6 +37,8 @@ __all__ = [
     'NUMBER',
 
     'File',
+
+    'Wildcard',
 
     'Misc',
     'MiscFunction',
