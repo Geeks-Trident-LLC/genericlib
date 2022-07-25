@@ -14,9 +14,13 @@ from pprint import pprint
 
 import typing
 
-from genericlib.constant import ECODE
-from genericlib.text import Text
-from genericlib.collection import DotObject
+from .constant import ECODE
+from .constant import STRING
+# from .constnum import NUMBER
+from .text import Text
+from .collection import DotObject
+
+from time import time
 
 
 class Printer:
@@ -304,7 +308,7 @@ class Misc:
 
     @classmethod
     def is_none_type(cls, obj):
-        return isinstance(obj, None)
+        return isinstance(obj, type(None))
 
     @classmethod
     def is_string_or_none(cls, obj):
@@ -407,6 +411,15 @@ class Misc:
             return data
         new_data = re.sub('([\'"])', r'\\\1', data)
         return new_data
+
+    @classmethod
+    def get_clock_tick_str(cls, precision=10, dot_replaced='_',
+                           prefix='', postfix=''):
+        clock_tick_str = '%.*f' % (precision, time())
+        clock_tick_str = clock_tick_str.replace(STRING.DOT_CHAR, dot_replaced)
+        clock_tick_str = '%s%s' % (prefix, clock_tick_str) if prefix else clock_tick_str
+        clock_tick_str = '%s%s' % (clock_tick_str, postfix) if postfix else clock_tick_str
+        return clock_tick_str
 
 
 class MiscOutput:
