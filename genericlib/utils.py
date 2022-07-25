@@ -421,6 +421,11 @@ class Misc:
         clock_tick_str = '%s%s' % (clock_tick_str, postfix) if postfix else clock_tick_str
         return clock_tick_str
 
+    @classmethod
+    def get_uniq_number_str(cls):
+        uniq_str = cls.get_clock_tick_str()
+        return uniq_str
+
 
 class MiscOutput:
     @classmethod
