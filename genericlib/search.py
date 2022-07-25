@@ -1,6 +1,9 @@
 import re
 import fnmatch
 
+from .constant import STRING
+from .constnum import NUMBER
+
 
 class Wildcard:
     def __init__(self, data, is_prefix=True, is_postfix=True, ignore_case=True):
@@ -10,7 +13,7 @@ class Wildcard:
         self.ignore_case = ignore_case
         self.is_multiline = bool(re.search(r'[\r\n]', self.data))
 
-        self._pattern = ''
+        self._pattern = STRING.EMPTY
         self.process()
 
     @property
@@ -18,8 +21,19 @@ class Wildcard:
         return self._pattern
 
     def process(self):
-        if '--regex ' in self.data:
-            self._pattern = self.data.replace('--regex ', '')
+        p = r'(?i)(?P<start>^ *--regex *)|(?P<end> +--regex *$)|(?P<middle> *--regex +)'
+        match = re.search(p, self.data)
+        if match:
+            start = match.groupdict().get('start', STRING.EMPTY)
+            end = match.groupdict().get('end', STRING.EMPTY)
+            middle = match.groupdict().get('middle', STRING.EMPTY)
+            if start:
+                replaced = ' *' if len(start) > NUMBER.EIGHT else STRING.EMPTY
+            elif end:
+                replaced = ' *' if len(end) > NUMBER.EIGHT else STRING.EMPTY
+            else:
+                replaced = ' *' if len(middle) > NUMBER.EIGHT else STRING.EMPTY
+            self._pattern = re.sub(p, replaced, self.data)
         else:
             method = self.parse_multiline if self.is_multiline else self.parse_single_line
             pat = method(self.data)

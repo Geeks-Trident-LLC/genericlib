@@ -38,8 +38,33 @@ class TestWildcard:
 
         ]
     )
-    def test_wrap_html(self, data, is_prefix, is_postfix, ignore_case, expected_result):
+    def test_wildcard(self, data, is_prefix, is_postfix, ignore_case, expected_result):
         node = Wildcard(data, is_prefix=is_prefix, is_postfix=is_postfix,
                         ignore_case=ignore_case)
+        pattern = node.pattern
+        assert pattern == expected_result
+
+    @pytest.mark.parametrize(
+        "data,expected_result",
+        [
+            ('--regex', ''),
+            ('--regex ', ''),
+            ('--regex  ', ' *'),
+            ('--regex Hello GenericLib', 'Hello GenericLib'),
+            ('--regex  Hello GenericLib', ' *Hello GenericLib'),
+            ('--regex Hello [Gg]eneric[Ll]ib', 'Hello [Gg]eneric[Ll]ib'),
+            ('--regex (?i)Hello [Gg]eneric[Ll]ib', '(?i)Hello [Gg]eneric[Ll]ib'),
+            ('(?i)--regex Hello [Gg]eneric[Ll]ib', '(?i)Hello [Gg]eneric[Ll]ib'),
+            ('(?i)--regex  Hello [Gg]eneric[Ll]ib', '(?i) *Hello [Gg]eneric[Ll]ib'),
+            ('(?i) --regex Hello [Gg]eneric[Ll]ib', '(?i) *Hello [Gg]eneric[Ll]ib'),
+            ('(?i)Hello --regex [Gg]eneric[Ll]ib', '(?i)Hello *[Gg]eneric[Ll]ib'),
+            ('(?i)Hello --regex  [Gg]eneric[Ll]ib', '(?i)Hello *[Gg]eneric[Ll]ib'),
+            ('(?i)Hello [Gg]eneric[Ll]ib --regex', '(?i)Hello [Gg]eneric[Ll]ib'),
+            ('(?i)Hello [Gg]eneric[Ll]ib  --regex', '(?i)Hello [Gg]eneric[Ll]ib *'),
+            ('(?i)Hello [Gg]eneric[Ll]ib  --regex $', '(?i)Hello [Gg]eneric[Ll]ib *$'),
+        ]
+    )
+    def test_wildcard_case_regex_flag(self, data, expected_result):
+        node = Wildcard(data)
         pattern = node.pattern
         assert pattern == expected_result
