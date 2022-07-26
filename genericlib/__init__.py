@@ -13,6 +13,7 @@ from .constant import ECODE
 from .constant import STRING
 from .constant import STR
 from .constnum import NUMBER
+from .constsymbol import SYMBOL
 
 from .utils import Printer
 from .utils import Misc
@@ -35,6 +36,7 @@ __all__ = [
     'STR',
 
     'NUMBER',
+    'SYMBOL',
 
     'File',
 
