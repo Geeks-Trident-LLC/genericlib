@@ -1,3 +1,5 @@
+import re
+
 import pytest
 from genericlib import Wildcard
 
@@ -64,7 +66,153 @@ class TestWildcard:
             ('(?i)Hello [Gg]eneric[Ll]ib  --regex $', '(?i)Hello [Gg]eneric[Ll]ib *$'),
         ]
     )
-    def test_wildcard_case_regex_flag(self, data, expected_result):
+    def test_wildcard_for_regex_flag_case(self, data, expected_result):
         node = Wildcard(data)
         pattern = node.pattern
         assert pattern == expected_result
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern,matched_results",
+        [
+            (
+                'file[[:digit:]]',
+                '^file[0-9]$',
+                [
+                    'file0', 'file1', 'file3', 'file4', 'file5',
+                    'file6', 'file7', 'file7', 'file8', 'file9'
+                ]
+            ),
+            (
+                'file[[:alpha:]]',
+                '^file[a-zA-Z]$',
+                ['filea', 'fileb', 'filec', 'fileE']
+            ),
+            (
+                'file[[:alnum:]]',
+                '^file[a-zA-Z0-9]$',
+                [
+                    'file0', 'file1', 'file3', 'file4', 'file5',
+                    'file6', 'file7', 'file7', 'file8', 'file9',
+                    'filea', 'fileb', 'filec', 'fileE'
+                ]
+            ),
+            (
+                'file[a-c[:digit:]]',
+                '^file[a-c0-9]$',
+                [
+                    'file0', 'file1', 'file3', 'file4', 'file5',
+                    'file6', 'file7', 'file7', 'file8', 'file9',
+                    'filea', 'fileb', 'filec'
+                ]
+            ),
+            (
+                'file[2-5[:alpha:]]',
+                '^file[2-5a-zA-Z]$',
+                [
+                    'file2', 'file3', 'file4', 'file5',
+                    'filea', 'fileb', 'filec'
+                ]
+            ),
+            (
+                'file[^2-5[:alpha:]]',
+                '^file[^2-5a-zA-Z]$',
+                [
+                    'file0', 'file1', 'file6', 'file7',
+                    'file_', 'file+', 'file-'
+                ]
+            ),
+            (
+                'file[^a-c[:digit:]]',
+                '^file[^a-c0-9]$',
+                [
+                    'filed', 'filee', 'filef', 'fileg',
+                    'file_', 'file+', 'file-'
+                ]
+            ),
+            (
+                '*file[^a-c[:digit:]]*',
+                '^.*file[^a-c0-9].*$',
+                [
+                    'filed', 'filee', 'filef', 'fileg',
+                    'file_', 'file+', 'file-'
+                ]
+            ),
+            (
+                '*file[^a-c[:digit:]]*',
+                '^.*file[^a-c0-9].*$',
+                [
+                    'abc_filed_xyz', '123_filee_+++',
+                    'filed', 'filee', 'filef', 'fileg',
+                    'file_', 'file+', 'file-'
+                ]
+            ),
+        ]
+    )
+    def test_wildcard_for_posix_case(self, data, expected_pattern, matched_results):
+        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+        for matched_result in matched_results:
+            matched = re.match(pattern, matched_result)
+            assert bool(matched)
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern,matched_results,not_matched_results",
+        [
+            (
+                'file.{txt,xml,yaml}',
+                '^file\\.(txt|xml|yaml)$',
+                ['file.txt', 'file.xml', 'file.yaml'],
+                ['file.xml1', 'file.yml']
+            ),
+            (
+                'file.{b..d}',
+                '^file\\.[b-d]$',
+                ['file.b', 'file.c', 'file.d'],
+                ['file.a', 'file.e']
+            ),
+            (
+                'file.{d..b}',
+                '^file\\.[b-d]$',
+                ['file.b', 'file.c', 'file.d'],
+                ['file.a', 'file.e']
+            ),
+            (
+                'file.{c..E}',
+                '^file\\.[E-Za-c\\[\\\\\\]\\^_`]$',
+                ['file.E', 'file.F', 'file.b', 'file._', 'file.^', 'file.`', 'file.['],
+                ['file.D', 'file.d', 'file.+']
+            ),
+            (
+                'file{2..5}',
+                '^file[2-5]$',
+                ['file2', 'file3', 'file4'],
+                ['file1', 'file6']
+            ),
+            (
+                'file{5..2}',
+                '^file[2-5]$',
+                ['file2', 'file3', 'file4'],
+                ['file1', 'file6']
+            ),
+            (
+                'file{-2..5}',
+                '^file-?[0-5]$',
+                ['file-2', 'file-1', 'file4'],
+                ['file-9', 'file6']
+            ),
+        ]
+    )
+    def test_wildcard_for_expansion_case(self, data, expected_pattern,
+                                         matched_results, not_matched_results):
+        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+        for matched_result in matched_results:
+            matched = re.match(pattern, matched_result)
+            assert bool(matched)
+
+        if not_matched_results:
+            for not_matched_result in not_matched_results:
+                matched = re.match(pattern, not_matched_result)
+                assert not bool(matched)
