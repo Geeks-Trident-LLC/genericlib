@@ -209,13 +209,27 @@ class Wildcard:
             lst = []
             start = NUMBER.ZERO
             item = None
-            for item in re.finditer(r'\{.+?\}', data):
+            for item in re.finditer(r'(\\?)[{][^}]+\1[}]', data):
                 pre_matched = data[start:item.start()]
                 escaped_txt = re.escape(pre_matched)
                 lst.append(escaped_txt)
                 matched_txt = item.group()
-                expanded_txt = self.parse_shell_expansion(matched_txt)
-                lst.append(expanded_txt)
+                match_a = re.match(r'(\\?)[{] *(, *)+\1[}]', matched_txt)
+                match1 = re.match(r'(\\?)[{] *\d+ *\1[}]', matched_txt)
+                match2 = re.match(r'(\\?)[{] *\d* *, *\d* *\1[}]', matched_txt)
+                match3 = re.match(r'[{][^}]+[}]', matched_txt)
+
+                if match_a:
+                    lst.append(STRING.EMPTY)
+                elif match1 or match2:
+                    new_matched_txt = matched_txt.replace('\\', '')
+                    lst.append(new_matched_txt)
+                elif match3:
+                    expanded_txt = self.parse_shell_expansion(matched_txt)
+                    lst.append(expanded_txt)
+                else:
+                    escaped_txt = re.escape(matched_txt)
+                    lst.append(escaped_txt)
                 start = item.end()
             if lst:
                 post_matched = data[item.end():]

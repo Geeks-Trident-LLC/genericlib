@@ -192,7 +192,7 @@ class TestWildcard:
             (
                 'file_{,}.txt',
                 '^file_\\.txt$',
-                ['file_.txt',],
+                ['file_.txt'],
                 ['file_abd.txt', 'file__.txt']
             ),
             (
@@ -593,6 +593,57 @@ class TestWildcard:
                 ['file-39', 'file-1', 'file4', 'file39'],
                 ['file-40', 'file-44', 'file40']
             ),
+            # Limiting repetition
+            (
+                'file_a{2}.txt',
+                '^file_a{2}\\.txt$',
+                ['file_aa.txt'],
+                ['file_a.txt', 'file_aaa.txt', 'file_.txt']
+            ),
+            (
+                'file_a{1,2}.txt',
+                '^file_a{1,2}\\.txt$',
+                ['file_a.txt', 'file_aa.txt'],
+                ['file_aaa.txt', 'file_.txt']
+            ),
+            (
+                'file_a{,2}.txt',
+                '^file_a{,2}\\.txt$',
+                ['file_.txt', 'file_a.txt', 'file_aa.txt'],
+                ['file_aaa.txt']
+            ),
+            (
+                'file_a{2,}.txt',
+                '^file_a{2,}\\.txt$',
+                ['file_aa.txt', 'file_aaaa.txt', 'file_aaaaaaaaaa.txt'],
+                ['file_.txt', 'file_a.txt']
+            ),
+            # Limiting repetition with back flash
+            (
+                'file_a\\{2\\}.txt',
+                '^file_a{2}\\.txt$',
+                ['file_aa.txt'],
+                ['file_a.txt', 'file_aaa.txt', 'file_.txt']
+            ),
+            (
+                'file_a\\{1,2\\}.txt',
+                '^file_a{1,2}\\.txt$',
+                ['file_a.txt', 'file_aa.txt'],
+                ['file_aaa.txt', 'file_.txt']
+            ),
+            (
+                'file_a\\{,2\\}.txt',
+                '^file_a{,2}\\.txt$',
+                ['file_.txt', 'file_a.txt', 'file_aa.txt'],
+                ['file_aaa.txt']
+            ),
+            (
+                'file_a\\{2,\\}.txt',
+                '^file_a{2,}\\.txt$',
+                ['file_aa.txt', 'file_aaaa.txt', 'file_aaaaaaaaaa.txt'],
+                ['file_.txt', 'file_a.txt']
+            ),
+
         ]
     )
     def test_wildcard_for_expansion_case(self, data, expected_pattern,
@@ -635,7 +686,6 @@ class TestWildcard:
             ('file_{5 11}', r'^file_\{5 11\}$'),
             ('file_{5-11}', r'^file_\{5\-11\}$'),
             ('file_{5 - 11}', r'^file_\{5 \- 11\}$'),
-            ('file_{5}', r'^file_\{5\}$'),
             ('file_{5...11}', r'^file_\{5\.\.\.11\}$'),
             ('file_{5:11}', r'^file_\{5:11\}$'),
             ('file_{aa..z}', r'^file_\{aa\.\.z\}$'),
