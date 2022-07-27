@@ -13,6 +13,6 @@ class SYMBOL:
 
     QUESTION_MARK = '?'
 
-    LEFT_PARENTHESIS = '{'
-    RIGHT_PARENTHESIS = '}'
+    LEFT_PARENTHESIS = '('
+    RIGHT_PARENTHESIS = ')'
 
