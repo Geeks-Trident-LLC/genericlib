@@ -93,6 +93,12 @@ class STRING:
     ERROR = 'error'
     SUBMIT = 'submit'
 
+    START = 'start'
+    END = 'end'
+    MIDDLE = 'middle'
+    FIRST = 'first'
+    LAST = 'last'
+
     EXECUTION = 'execution'
     BATCH = 'batch'
     TEST_SCRIPT = 'test_script'
