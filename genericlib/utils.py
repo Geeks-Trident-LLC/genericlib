@@ -435,12 +435,12 @@ class Misc:
     @classmethod
     def get_last_char(cls, data, to_string=True, on_failure=False):
         if cls.is_string(data):
-            result = data[:1]
+            result = data[-1:]
             return result
         else:
             if to_string:
                 txt = str(data)
-                result = txt[:1]
+                result = txt[-1:]
                 return result
             else:
                 if on_failure:
