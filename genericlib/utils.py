@@ -413,6 +413,26 @@ class Misc:
         return new_data
 
     @classmethod
+    def get_first_char(cls, data, to_string=True, on_failure=False):
+        if cls.is_string(data):
+            result = data[:1]
+            return result
+        else:
+            if to_string:
+                txt = str(data)
+                result = txt[:1]
+                return result
+            else:
+                if on_failure:
+                    fmt = ('Type of this data is %r.  Data must '
+                           'be string type or to_string=True')
+                    cls_name = data.__name__ if cls.is_class(data) else type(data).__name__
+                    failure = fmt % cls_name
+                    raise Exception(failure)
+                else:
+                    return ''
+
+    @classmethod
     def get_clock_tick_str(cls, precision=10, dot_replaced='_',
                            prefix='', postfix=''):
         clock_tick_str = '%.*f' % (precision, time())
