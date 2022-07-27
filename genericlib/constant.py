@@ -118,6 +118,8 @@ class STRING:
     PY = 'py'
     TEST_ = 'test_'
 
+    UNSUPPORTED_PARSING = 'unsupported parsing'
+
 
 STR = STRING
 

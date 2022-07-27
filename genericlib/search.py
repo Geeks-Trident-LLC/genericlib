@@ -16,6 +16,7 @@ class Wildcard:
         self.is_multiline = bool(re.search(PATTERN.CRNL, self.data))
 
         self._pattern = STRING.EMPTY
+        self.failure_fmt = 'unsupported parsing integers (%s, %s)'
         self.process()
 
     @property
@@ -120,8 +121,7 @@ class Wildcard:
             pattern = re.sub(repl_pat, repl_val, pattern)
             return pattern
 
-        fmt = 'Unsupported parsing two integers (%s, %s)'
-        return fmt
+        return self.failure_fmt
 
     def get_pattern_for_two_numbers(self, v1, v2):
         lst = [int(v1), int(v2)]
@@ -132,23 +132,27 @@ class Wildcard:
             return pattern
         if small >= NUMBER.ZERO and large >= NUMBER.ZERO:
             pattern = self.get_pattern_for_two_unsigned_int(small, large)
-            if pattern.startswith('Unsupported parsing'):
-                return pattern % (small, large)
+            if pattern.startswith(STRING.UNSUPPORTED_PARSING):
+                failure = self.failure_fmt % (small, large)
+                return failure
             pattern = '(%s)' % pattern if SYMBOL.LEFT_PARENTHESIS in pattern else pattern
             return pattern
         elif small <= NUMBER.ZERO and large <= NUMBER.ZERO:
             pattern = self.get_pattern_for_two_numbers(abs(small), abs(large))
-            if pattern.startswith('Unsupported parsing'):
-                return pattern % (small, large)
+            if pattern.startswith(STRING.UNSUPPORTED_PARSING):
+                failure = self.failure_fmt % (small, large)
+                return failure
             pattern = '(-%s)' % pattern if pattern else pattern
             return pattern
         else:
             pattern1 = self.get_pattern_for_two_numbers(NUMBER.ZERO, small)
             pattern2 = self.get_pattern_for_two_numbers(NUMBER.ZERO, large)
-            if pattern1.startswith('Unsupported parsing'):
-                return pattern1 % (small, large)
-            if pattern2.startswith('Unsupported parsing'):
-                return pattern2 % (small, large)
+            if pattern1.startswith(STRING.UNSUPPORTED_PARSING):
+                failure = self.failure_fmt % (small, large)
+                return failure
+            if pattern2.startswith(STRING.UNSUPPORTED_PARSING):
+                failure = self.failure_fmt % (small, large)
+                return failure
 
             pattern1 = '(%s)' % pattern1 if pattern1[:NUMBER.ONE] == '-' else pattern1
             pattern = '(%s|%s)' % (pattern1, pattern2)
@@ -157,7 +161,7 @@ class Wildcard:
     def parse_shell_expansion(self, data):
         match1 = re.match(r'(?i)\{(?P<first>[a-z])[.]{2}(?P<last>[a-z])\}', data)
         match2 = re.match(r'(?i)\{(?P<first>-?\d+)[.]{2}(?P<last>-?\d+)\}', data)
-        match3 = re.match(r'(?i)\{[^,]+(,[^,]+)+\}', data)
+        match3 = re.match(r'(?i)\{[^,]+(,[^,]*)+\}', data)
 
         if match1:
             first = match1.group(STRING.FIRST)
@@ -197,15 +201,19 @@ class Wildcard:
             item = None
             for item in re.finditer(r'\{.+?\}', data):
                 pre_matched = data[start:item.start()]
-                lst.append(re.escape(pre_matched))
+                escaped_txt = re.escape(pre_matched)
+                lst.append(escaped_txt)
                 matched_txt = item.group()
-                lst.append(self.parse_shell_expansion(matched_txt))
+                expanded_txt = self.parse_shell_expansion(matched_txt)
+                lst.append(expanded_txt)
                 start = item.end()
             if lst:
                 post_matched = data[item.end():]
-                lst.append(re.escape(post_matched))
+                escaped_txt = re.escape(post_matched)
+                lst.append(escaped_txt)
             else:
-                lst.append(re.escape(data))
+                escaped_txt = re.escape(data)
+                lst.append(escaped_txt)
             data = STRING.EMPTY.join(lst)
         else:
             data = re.escape(data)

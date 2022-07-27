@@ -461,6 +461,102 @@ class TestWildcard:
                 ['file-2', 'file-1', 'file4'],
                 ['file-3', 'file-4', 'file6']
             ),
+            (
+                'file{-2..10}',
+                '^file((-[0-2])|([0-9]|(10)))$',
+                ['file-2', 'file-1', 'file4', 'file10'],
+                ['file-3', 'file-4', 'file11']
+            ),
+            (
+                'file{-5..15}',
+                '^file((-[0-5])|([0-9]|(1[0-5])))$',
+                ['file-5', 'file-1', 'file4', 'file15'],
+                ['file-6', 'file-24', 'file16']
+            ),
+            (
+                'file{-15..5}',
+                '^file((-([0-9]|(1[0-5])))|[0-5])$',
+                ['file-15', 'file-1', 'file4', 'file5'],
+                ['file-16', 'file-24', 'file6']
+            ),
+            (
+                'file{-5..100}',
+                '^file((-[0-5])|([0-9]|([1-9][0-9])|(100)))$',
+                ['file-5', 'file-1', 'file99', 'file100'],
+                ['file-6', 'file-24', 'file101']
+            ),
+            (
+                'file{-100..5}',
+                '^file((-([0-9]|([1-9][0-9])|(100)))|[0-5])$',
+                ['file-100', 'file-99', 'file4', 'file5'],
+                ['file-101', 'file24', 'file6']
+            ),
+            (
+                'file{-100..100}',
+                '^file((-([0-9]|([1-9][0-9])|(100)))|([0-9]|([1-9][0-9])|(100)))$',
+                ['file-100', 'file-99', 'file99', 'file100'],
+                ['file-101', 'file224', 'file101']
+            ),
+            (
+                'file{-10..10}',
+                '^file((-([0-9]|(10)))|([0-9]|(10)))$',
+                ['file-10', 'file-1', 'file4', 'file10'],
+                ['file-11', 'file-14', 'file11']
+            ),
+            (
+                'file{-15..15}',
+                '^file((-([0-9]|(1[0-5])))|([0-9]|(1[0-5])))$',
+                ['file-15', 'file-1', 'file4', 'file15'],
+                ['file-16', 'file-24', 'file16']
+            ),
+            (
+                'file{-15..19}',
+                '^file((-([0-9]|(1[0-5])))|([0-9]|(1[0-9])))$',
+                ['file-15', 'file-1', 'file4', 'file19'],
+                ['file-16', 'file-24', 'file20']
+            ),
+            (
+                'file{-15..20}',
+                '^file((-([0-9]|(1[0-5])))|([0-9]|(1[0-9])|(20)))$',
+                ['file-15', 'file-1', 'file4', 'file20'],
+                ['file-16', 'file-24', 'file21']
+            ),
+            (
+                'file{-15..32}',
+                '^file((-([0-9]|(1[0-5])))|([0-9]|([1-2][0-9])|(3[0-2])))$',
+                ['file-15', 'file-1', 'file4', 'file32'],
+                ['file-16', 'file-24', 'file33']
+            ),
+            (
+                'file{-15..32}',
+                '^file((-([0-9]|(1[0-5])))|([0-9]|([1-2][0-9])|(3[0-2])))$',
+                ['file-15', 'file-1', 'file4', 'file32'],
+                ['file-16', 'file-24', 'file33']
+            ),
+            (
+                'file{-15..39}',
+                '^file((-([0-9]|(1[0-5])))|([0-9]|([1-3][0-9])))$',
+                ['file-15', 'file-1', 'file4', 'file39'],
+                ['file-16', 'file-24', 'file40']
+            ),
+            (
+                'file{-30..39}',
+                '^file((-([0-9]|([1-2][0-9])|(30)))|([0-9]|([1-3][0-9])))$',
+                ['file-30', 'file-1', 'file4', 'file39'],
+                ['file-31', 'file-44', 'file40']
+            ),
+            (
+                'file{-33..39}',
+                '^file((-([0-9]|([1-2][0-9])|(3[0-3])))|([0-9]|([1-3][0-9])))$',
+                ['file-33', 'file-1', 'file4', 'file39'],
+                ['file-34', 'file-44', 'file40']
+            ),
+            (
+                'file{-39..39}',
+                '^file((-([0-9]|([1-3][0-9])))|([0-9]|([1-3][0-9])))$',
+                ['file-39', 'file-1', 'file4', 'file39'],
+                ['file-40', 'file-44', 'file40']
+            ),
         ]
     )
     def test_wildcard_for_expansion_case(self, data, expected_pattern,
@@ -476,3 +572,23 @@ class TestWildcard:
             for not_matched_result in not_matched_results:
                 matched = re.match(pattern, not_matched_result)
                 assert not bool(matched)
+
+    @pytest.mark.parametrize(
+        "data,expected_failure",
+        [
+            ('file_{5..101}', '^file_unsupported parsing integers (5, 101)$'),
+            ('file_{5..199}', '^file_unsupported parsing integers (5, 199)$'),
+            ('file_{235..545}', '^file_unsupported parsing integers (235, 545)$'),
+            ('file_{235..9}', '^file_unsupported parsing integers (9, 235)$'),
+            ('file_{-101..-9}', '^file_unsupported parsing integers (-101, -9)$'),
+            ('file_{-9..-101}', '^file_unsupported parsing integers (-101, -9)$'),
+            ('file_{-119..-101}', '^file_unsupported parsing integers (-119, -101)$'),
+            ('file_{-101..5}', '^file_unsupported parsing integers (-101, 5)$'),
+            ('file_{-101..222}', '^file_unsupported parsing integers (-101, 222)$'),
+            ('file_{-25..222}', '^file_unsupported parsing integers (-25, 222)$'),
+        ]
+    )
+    def test_wildcard_for_expansion_unsupported_case(self, data, expected_failure):
+        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        pattern = node.pattern
+        assert pattern == expected_failure
