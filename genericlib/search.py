@@ -4,6 +4,7 @@ from .utils import Misc
 from .constant import STRING
 from .constnum import NUMBER
 from .constsymbol import SYMBOL
+from .constpattern import PATTERN
 
 
 class Wildcard:
@@ -12,7 +13,7 @@ class Wildcard:
         self.is_prefix = is_prefix
         self.is_postfix = is_postfix
         self.ignore_case = ignore_case
-        self.is_multiline = bool(re.search(r'[\r\n]', self.data))
+        self.is_multiline = bool(re.search(PATTERN.CRNL, self.data))
 
         self._pattern = STRING.EMPTY
         self.process()
@@ -29,11 +30,11 @@ class Wildcard:
             end = match.groupdict().get(STRING.END, STRING.EMPTY)
             middle = match.groupdict().get(STRING.MIDDLE, STRING.EMPTY)
             if start:
-                replaced = ' *' if len(start) > NUMBER.EIGHT else STRING.EMPTY
+                replaced = PATTERN.SPACES_BUT if len(start) > NUMBER.EIGHT else STRING.EMPTY
             elif end:
-                replaced = ' *' if len(end) > NUMBER.EIGHT else STRING.EMPTY
+                replaced = PATTERN.SPACES_BUT if len(end) > NUMBER.EIGHT else STRING.EMPTY
             else:
-                replaced = ' *' if len(middle) > NUMBER.EIGHT else STRING.EMPTY
+                replaced = PATTERN.SPACES_BUT if len(middle) > NUMBER.EIGHT else STRING.EMPTY
             self._pattern = re.sub(p, replaced, self.data)
         else:
             method = self.parse_multiline if self.is_multiline else self.parse_single_line
@@ -135,7 +136,7 @@ class Wildcard:
                 return pattern % (small, large)
             pattern = '(%s)' % pattern if SYMBOL.LEFT_PARENTHESIS in pattern else pattern
             return pattern
-        elif small <= 0 and large <= 0:
+        elif small <= NUMBER.ZERO and large <= NUMBER.ZERO:
             pattern = self.get_pattern_for_two_numbers(abs(small), abs(large))
             if pattern.startswith('Unsupported parsing'):
                 return pattern % (small, large)
@@ -208,21 +209,21 @@ class Wildcard:
             data = STRING.EMPTY.join(lst)
         else:
             data = re.escape(data)
-        data = data.replace(repl1, '.*')
-        data = data.replace(repl2, '.?')
+        data = data.replace(repl1, PATTERN.SOMETHING)
+        data = data.replace(repl2, PATTERN.ANYTHING_BUT)
         return data
 
     def parse_data(self, data):
-        if re.match(' +$', data):
-            return data if len(data) <= 1 else ' +'
+        if re.match(PATTERN.SPACES_AT_END_OF_STR, data):
+            return data if len(data) <= NUMBER.ONE else PATTERN.SPACES
 
         start = NUMBER.ZERO
         item = None
         lst = []
-        for item in re.finditer(' +', data):
+        for item in re.finditer(PATTERN.SPACES, data):
             pre_matched = data[start:item.start()]
             lst.append(self.escape_data(pre_matched))
-            lst.append(' ' if len(item.group()) == 1 else ' +')
+            lst.append(PATTERN.SPACE if len(item.group()) == NUMBER.ONE else PATTERN.SPACES)
             start = item.end()
 
         if lst:
@@ -238,11 +239,11 @@ class Wildcard:
         line = data
         if not line:
             return STRING.EMPTY
-        elif re.match(' +$', line):
-            return ' +'
+        elif re.match(PATTERN.SPACES_AT_END_OF_STR, line):
+            return PATTERN.SPACES
 
-        is_started_space = bool(re.match(' ', line))
-        is_ended_space = bool(re.search(' $', line))
+        is_started_space = bool(re.match(PATTERN.SPACE, line))
+        is_ended_space = bool(re.search(PATTERN.SPACE_AT_END_OF_STR, line))
         line = line.strip()
 
         line = re.sub(r'(?i)\[:digit:\]', '0-9', line)
@@ -250,7 +251,7 @@ class Wildcard:
         line = re.sub(r'(?i)\[:alnum:\]', 'a-zA-Z0-9', line)
 
         lst = []
-        start = 0
+        start = NUMBER.ZERO
         item = None
         for item in re.finditer(r'\[.+?\]', line):
             pre_matched = line[start:item.start()]
@@ -277,9 +278,9 @@ class Wildcard:
 
     def parse_multiline(self, data):
         lst = []
-        for line in re.split(r'[\r\n]+', data):
+        for line in re.split(PATTERN.MULTI_CRNL, data):
             pat = self.parse_single_line(line)
             lst.append(pat)
 
-        pattern = r'[\r\n]+'.join(lst)
+        pattern = PATTERN.MULTI_CRNL.join(lst)
         return pattern

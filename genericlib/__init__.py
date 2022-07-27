@@ -14,6 +14,7 @@ from .constant import STRING
 from .constant import STR
 from .constnum import NUMBER
 from .constsymbol import SYMBOL
+from .constpattern import PATTERN
 
 from .utils import Printer
 from .utils import Misc
@@ -37,6 +38,7 @@ __all__ = [
 
     'NUMBER',
     'SYMBOL',
+    'PATTERN',
 
     'File',
 
