@@ -592,3 +592,23 @@ class TestWildcard:
         node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
         pattern = node.pattern
         assert pattern == expected_failure
+
+    @pytest.mark.parametrize(
+        "data,expected_result",
+        [
+            ('file_{5 11}', r'^file_\{5 11\}$'),
+            ('file_{5-11}', r'^file_\{5\-11\}$'),
+            ('file_{5 - 11}', r'^file_\{5 \- 11\}$'),
+            ('file_{5}', r'^file_\{5\}$'),
+            ('file_{5...11}', r'^file_\{5\.\.\.11\}$'),
+            ('file_{5:11}', r'^file_\{5:11\}$'),
+            ('file_{aa..z}', r'^file_\{aa\.\.z\}$'),
+            ('file_{a..az}', r'^file_\{a\.\.az\}$'),
+            ('file_{a az}', r'^file_\{a az\}$'),
+            ('file_{abc}', r'^file_\{abc\}$'),
+        ]
+    )
+    def test_wildcard_for_unrecognized_expansion_case(self, data, expected_result):
+        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        pattern = node.pattern
+        assert pattern == expected_result
