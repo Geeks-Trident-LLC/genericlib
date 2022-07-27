@@ -166,6 +166,42 @@ class TestWildcard:
                 ['file.xml1', 'file.yml']
             ),
             (
+                'file_{abc,xyz}.txt',
+                '^file_(abc|xyz)\\.txt$',
+                ['file_abc.txt', 'file_xyz.txt'],
+                ['file_abd.txt', 'file_123.txt']
+            ),
+            (
+                'file_{abc,}.txt',
+                '^file_(abc)?\\.txt$',
+                ['file_abc.txt', 'file_.txt'],
+                ['file_abd.txt', 'file__.txt']
+            ),
+            (
+                'file_{abc,,xyz}.txt',
+                '^file_(abc|xyz)?\\.txt$',
+                ['file_abc.txt', 'file_.txt', 'file_xyz.txt'],
+                ['file_abd.txt', 'file__.txt']
+            ),
+            (
+                'file_{abc,,xyz,}.txt',
+                '^file_(abc|xyz)?\\.txt$',
+                ['file_abc.txt', 'file_.txt', 'file_xyz.txt'],
+                ['file_abd.txt', 'file__.txt']
+            ),
+            (
+                'file_{,}.txt',
+                '^file_\\.txt$',
+                ['file_.txt',],
+                ['file_abd.txt', 'file__.txt']
+            ),
+            (
+                'file_{,,,}.txt',
+                '^file_\\.txt$',
+                ['file_.txt', ],
+                ['file_abd.txt', 'file__.txt']
+            ),
+            (
                 'file.{b..d}',
                 '^file\\.[b-d]$',
                 ['file.b', 'file.c', 'file.d'],

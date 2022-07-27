@@ -161,7 +161,7 @@ class Wildcard:
     def parse_shell_expansion(self, data):
         match1 = re.match(r'(?i)\{(?P<first>[a-z])[.]{2}(?P<last>[a-z])\}', data)
         match2 = re.match(r'(?i)\{(?P<first>-?\d+)[.]{2}(?P<last>-?\d+)\}', data)
-        match3 = re.match(r'(?i)\{[^,]+(,[^,]*)+\}', data)
+        match3 = re.match(r'(?i)\{[^,]*(,[^,]*)+\}', data)
 
         if match1:
             first = match1.group(STRING.FIRST)
@@ -181,9 +181,19 @@ class Wildcard:
             pattern = self.get_pattern_for_two_numbers(first, last)
             return pattern
         elif match3:
-            lst = [re.escape(i) for i in data[1:-1].split(SYMBOL.COMMA)]
-            pattern = '(%s)' % SYMBOL.VERTICAL_LINE.join(lst)
-            return pattern
+            is_empty_item = False
+            lst = []
+            for item in data[1:-1].split(SYMBOL.COMMA):
+                if item:
+                    lst.append(re.escape(item))
+                else:
+                    is_empty_item = True
+            if lst:
+                pattern = '(%s)' % SYMBOL.VERTICAL_LINE.join(lst)
+                pattern = '%s?' % pattern if is_empty_item else pattern
+                return pattern
+            else:
+                return STRING.EMPTY
         else:
             pattern = re.escape(data)
             return pattern
