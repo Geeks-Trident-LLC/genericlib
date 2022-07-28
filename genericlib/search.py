@@ -278,9 +278,22 @@ class Wildcard:
         is_ended_space = bool(re.search(PATTERN.SPACE_AT_END_OF_STR, line))
         line = line.strip()
 
-        line = re.sub(r'(?i)\[:digit:\]', '0-9', line)
-        line = re.sub(r'(?i)\[:alpha:\]', 'a-zA-Z', line)
-        line = re.sub(r'(?i)\[:alnum:\]', 'a-zA-Z0-9', line)
+        line = re.sub(r'(?i)\[:alpha:\]', r'a-zA-Z', line)
+        line = re.sub(r'(?i)\[:alnum:\]', r'a-zA-Z0-9', line)
+        # line = re.sub(r'(?i)\[:blank:\]', r' \t', line)
+        line = re.sub(r'(?i)\[:blank:\]', r'__placeholder_blank_pat__', line)
+        # line = re.sub(r'(?i)\[:cntrl:\]', r'\x00-\x1f\x7f', line)
+        line = re.sub(r'(?i)\[:cntrl:\]', r'__placeholder_cntr_pat__', line)
+        line = re.sub(r'(?i)\[:digit:\]', r'0-9', line)
+        # line = re.sub(r'(?i)\[:graph:\]', r'\x21-\x7e', line)
+        line = re.sub(r'(?i)\[:graph:\]', r'__placeholder_graph_pat__', line)
+        line = re.sub(r'(?i)\[:lower:\]', r'a-z', line)
+        # line = re.sub(r'(?i)\[:print:\]', r'\x20-\x7e', line)
+        line = re.sub(r'(?i)\[:print:\]', r'__placeholder_print_pat__', line)
+        # line = re.sub(r'(?i)\[:space:\]', r' \t', line)
+        line = re.sub(r'(?i)\[:space:\]', r'__placeholder_space_pat__', line)
+        line = re.sub(r'(?i)\[:upper:\]', r'A-Z', line)
+        line = re.sub(r'(?i)\[:xdigit:\]', r'a-fA-F0-9', line)
 
         lst = []
         start = NUMBER.ZERO
@@ -305,6 +318,14 @@ class Wildcard:
             pattern = ' *%s' % pattern
         if is_ended_space or self.is_postfix:
             pattern = '%s *' % pattern
+
+        cntr_pat = r'\x00-\x1f\x7f'
+
+        pattern = pattern.replace('__placeholder_blank_pat__', r' \t')
+        pattern = pattern.replace('__placeholder_cntr_pat__', r'\x00-\x1f\x7f')
+        pattern = pattern.replace('__placeholder_graph_pat__', r'\x21-\x7e')
+        pattern = pattern.replace('__placeholder_print_pat__', r'\x20-\x7e')
+        pattern = pattern.replace('__placeholder_space_pat__', r' \t')
 
         return pattern
 

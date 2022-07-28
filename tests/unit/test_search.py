@@ -698,3 +698,34 @@ class TestWildcard:
         node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
         pattern = node.pattern
         assert pattern == expected_result
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern,matched_results,not_matched_results",
+        [
+            ('[[:alpha:]]', r'^[a-zA-Z]$', ['a', 'b', 'C'], [' ', '\t']),
+            ('[[:alnum:]]', r'^[a-zA-Z0-9]$', ['a', 'b', 'C', '1'], [' ', '\t']),
+            ('[[:blank:]]', r'^[ \t]$', [' ', '\t'], ['a', 'b', '1']),
+            ('[[:cntrl:]]', r'^[\x00-\x1f\x7f]$', ['\t', '\n'], ['a', 'b', '1']),
+            ('[[:digit:]]', r'^[0-9]$', ['1', '2'], ['a', 'b', ' ']),
+            ('[[:graph:]]', r'^[\x21-\x7e]$', ['a', '2'], [' ', '\n', '\t']),
+            ('[[:lower:]]', r'^[a-z]$', ['a', 'b'], ['A', 'B', '1']),
+            ('[[:print:]]', r'^[\x20-\x7e]$', ['a', '2'], ['\n', '\t']),
+            ('[[:space:]]', r'^[ \t]$', [' ', '\t'], ['a', 'b', '1']),
+            ('[[:upper:]]', r'^[A-Z]$', ['A', 'C'], ['a', 'b', '1']),
+            ('[[:xdigit:]]', r'^[a-fA-F0-9]$', ['a', 'F', '1'], ['g', 'Z']),
+        ]
+    )
+    def test_wildcard_posix_character_class(self, data, expected_pattern,
+                                            matched_results, not_matched_results):
+        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+        for matched_result in matched_results:
+            matched = re.match(pattern, matched_result)
+            assert bool(matched)
+
+        if not_matched_results:
+            for not_matched_result in not_matched_results:
+                matched = re.match(pattern, not_matched_result)
+                assert not bool(matched)
