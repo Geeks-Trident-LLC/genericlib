@@ -729,3 +729,29 @@ class TestWildcard:
             for not_matched_result in not_matched_results:
                 matched = re.match(pattern, not_matched_result)
                 assert not bool(matched)
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern,matched_results,not_matched_results",
+        [
+            (
+                '\\<red\\>*',
+                r'^\bred\b.*$',
+                ['red', 'red.green', 'red car'],
+                ['redo', 'reduce']
+            ),
+        ]
+    )
+    def test_wildcard_word_bound_case(self, data, expected_pattern,
+                                      matched_results, not_matched_results):
+        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+        for matched_result in matched_results:
+            matched = re.match(pattern, matched_result)
+            assert bool(matched)
+
+        if not_matched_results:
+            for not_matched_result in not_matched_results:
+                matched = re.match(pattern, not_matched_result)
+                assert not bool(matched)

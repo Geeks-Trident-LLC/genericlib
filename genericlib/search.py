@@ -297,6 +297,15 @@ class Wildcard:
             line = line.replace(replacing, replaced)
         return line
 
+    def mark_word_bound(self, line):        # noqa
+        pat = r'(\\<)(.*?)(\\>)'
+        line = re.sub(pat, r'__placeholder_wb_pat__\2__placeholder_wb_pat__', line)
+        return line
+
+    def replace_word_bound(self, line):     # noqa
+        line = line.replace('__placeholder_wb_pat__', r'\b')
+        return line
+
     def parse_single_line(self, data):
         line = data
         if not line:
@@ -309,6 +318,7 @@ class Wildcard:
         line = line.strip()
 
         line = self.mark_posix_char_class(line)
+        line = self.mark_word_bound(line)
 
         lst = []
         start = NUMBER.ZERO
@@ -335,6 +345,7 @@ class Wildcard:
             pattern = '%s *' % pattern
 
         pattern = self.replace_posix_char_class(pattern)
+        pattern = self.replace_word_bound(pattern)
 
         return pattern
 
