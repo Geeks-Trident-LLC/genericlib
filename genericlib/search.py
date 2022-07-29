@@ -52,7 +52,7 @@ class Wildcard:
                 replaced = PATTERN.SPACES_BUT if len(middle) > NUMBER.EIGHT else STRING.EMPTY
             self._pattern = re.sub(p, replaced, self.data)
         else:
-            method = self.parse_multiline if self.is_multiline else self.parse_single_line
+            method = self.parse_multiline if self.is_multiline else self.parse_line
             pat = method(self.data)
             pattern = '^%s$' % pat
             if self.ignore_case:
@@ -343,7 +343,7 @@ class Wildcard:
         line = line.replace(self.multi_ws_placeholder, self.multi_ws_repl)
         return line
 
-    def parse_single_line(self, data):
+    def parse_line(self, data):
         line = data
         if not line:
             return STRING.EMPTY
@@ -389,7 +389,7 @@ class Wildcard:
     def parse_multiline(self, data):
         lst = []
         for line in re.split(PATTERN.MULTI_CRNL, data):
-            pat = self.parse_single_line(line)
+            pat = self.parse_line(line)
             lst.append(pat)
 
         pattern = PATTERN.MULTI_CRNL.join(lst)
