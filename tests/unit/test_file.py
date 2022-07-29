@@ -4,6 +4,7 @@ import time
 from textwrap import dedent
 
 from genericlib import File
+from genericlib import Misc
 
 from . import get_temp_file
 from . import get_temp_dir
@@ -251,6 +252,11 @@ class TestFile:
     def test_get_new_filename(self, filename, new_name, prefix, postfix,
                               new_extension, expected_result):
         result = File.get_new_filename(filename, new_name=new_name,
-                                       prefix=prefix,postfix=postfix,
+                                       prefix=prefix, postfix=postfix,
                                        new_extension=new_extension)
-        assert result == expected_result
+
+        if Misc.is_window_os():
+            expected_result_for_win_os = expected_result.replace('/', '\\')
+            assert result == expected_result_for_win_os
+        else:
+            assert result == expected_result
