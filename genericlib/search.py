@@ -8,12 +8,26 @@ from .constpattern import PATTERN
 
 
 class Wildcard:
-    def __init__(self, data, is_prefix=True, is_postfix=True, ignore_case=True):
+    def __init__(self, data, is_prefix=True, is_postfix=True,
+                 ignore_case=True, relax=False, used_whitespace=False):
         self.data = str(data)
         self.is_prefix = is_prefix
         self.is_postfix = is_postfix
         self.ignore_case = ignore_case
         self.is_multiline = bool(re.search(PATTERN.CRNL, self.data))
+        self.relax = relax
+        self.used_whitespace = used_whitespace
+
+        self.ws_placeholder = '__placeholder_whitespace_pat__'
+        self.multi_ws_placeholder = '__placeholder_whitespaces_pat__'
+
+        self.ws_repl = PATTERN.WHITESPACE if used_whitespace else PATTERN.SPACE
+        self.multi_ws_repl = PATTERN.WHITESPACES if used_whitespace else PATTERN.SPACES
+        self.ws_pattern = self.ws_repl
+        self.multi_ws_pattern = self.multi_ws_repl
+
+        if self.relax:
+            self.ws_repl = self.multi_ws_repl
 
         self._pattern = STRING.EMPTY
         self.failure_fmt = 'unsupported parsing integers (%s, %s)'
@@ -306,6 +320,29 @@ class Wildcard:
         line = line.replace('__placeholder_wb_pat__', r'\b')
         return line
 
+    def mark_whitespace(self, line):
+        start = NUMBER.ZERO
+        item = None
+        lst = []
+        for item in re.finditer(self.multi_ws_pattern, line):
+            pre_matched = line[start:item.start()]
+            lst.append(pre_matched)
+            if len(item.group()) == NUMBER.ONE:
+                lst.append(self.ws_placeholder)
+            else:
+                lst.append(self.multi_ws_placeholder)
+            start = item.end()
+        if lst:
+            post_matched = line[item.end():]
+            lst.append(post_matched)
+        else:
+            return line
+
+    def replace_whitespace_pattern(self, line):
+        line = line.replace(self.ws_placeholder, self.ws_repl)
+        line = line.replace(self.multi_ws_placeholder, self.multi_ws_repl)
+        return line
+
     def parse_single_line(self, data):
         line = data
         if not line:
@@ -340,9 +377,9 @@ class Wildcard:
 
         pattern = STRING.EMPTY.join(lst)
         if is_started_space or self.is_prefix:
-            pattern = ' *%s' % pattern
+            pattern = '%s*%s' % (self.ws_pattern, pattern)
         if is_ended_space or self.is_postfix:
-            pattern = '%s *' % pattern
+            pattern = '%s%s*' % (pattern, self.ws_pattern)
 
         pattern = self.replace_posix_char_class(pattern)
         pattern = self.replace_word_bound(pattern)

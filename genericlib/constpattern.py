@@ -13,6 +13,10 @@ class PATTERN:
     SPACE_AT_END_OF_STR = ' $'
     SPACES_AT_END_OF_STR = ' +$'
 
+    WHITESPACE = r'\s'
+    WHITESPACES = r'\s+'
+    WHITESPACES_BUT = r'\s*'
+
     CRNL = r'[\r\n]'
     CR_NL = CRNL
     MULTI_CRNL = r'[\r\n]+'
