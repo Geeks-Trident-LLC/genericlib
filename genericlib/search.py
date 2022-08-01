@@ -212,7 +212,7 @@ class Wildcard:
             pattern = re.escape(data)
             return pattern
 
-    def escape_data(self, data):
+    def parse_curly_bracket(self, data):
         uniq_str = Misc.get_uniq_number_str()
         repl1 = 'star_%s' % uniq_str
         repl2 = 'question_%s' % uniq_str
@@ -268,15 +268,37 @@ class Wildcard:
         lst = []
         for item in re.finditer(PATTERN.SPACES, data):
             pre_matched = data[start:item.start()]
-            lst.append(self.escape_data(pre_matched))
+            lst.append(self.parse_curly_bracket(pre_matched))
             lst.append(PATTERN.SPACE if len(item.group()) == NUMBER.ONE else PATTERN.SPACES)
             start = item.end()
 
         if lst:
             post_matched = data[item.end():]
-            lst.append(self.escape_data(post_matched))
+            lst.append(self.parse_curly_bracket(post_matched))
         else:
-            lst.append(self.escape_data(data))
+            lst.append(self.parse_curly_bracket(data))
+
+        pattern = STRING.EMPTY.join(lst)
+        return pattern
+
+    def parse_data_bak(self, data):
+        if re.match(PATTERN.SPACES_AT_END_OF_STR, data):
+            return data if len(data) <= NUMBER.ONE else PATTERN.SPACES
+
+        start = NUMBER.ZERO
+        item = None
+        lst = []
+        for item in re.finditer(PATTERN.SPACES, data):
+            pre_matched = data[start:item.start()]
+            lst.append(self.parse_curly_bracket(pre_matched))
+            lst.append(PATTERN.SPACE if len(item.group()) == NUMBER.ONE else PATTERN.SPACES)
+            start = item.end()
+
+        if lst:
+            post_matched = data[item.end():]
+            lst.append(self.parse_curly_bracket(post_matched))
+        else:
+            lst.append(self.parse_curly_bracket(data))
 
         pattern = STRING.EMPTY.join(lst)
         return pattern
