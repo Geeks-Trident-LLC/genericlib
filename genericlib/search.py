@@ -6,6 +6,8 @@ from .constnum import NUMBER
 from .constsymbol import SYMBOL
 from .constpattern import PATTERN
 
+from .conststruct import SLICE
+
 
 class Wildcard:
     def __init__(self, data, is_prefix=True, is_postfix=True,
@@ -55,12 +57,12 @@ class Wildcard:
             self._pattern = re.sub(p, replaced, self.data)
         else:
             method = self.parse_multiline if self.is_multiline else self.parse_line
-            pattern = method(self.data)
+            pattern = method(self.data)     # noqa
 
-            if self.used_sol_eof and pattern[:1] != SYMBOL.CARET:
+            if self.used_sol_eof and pattern[SLICE.GET_FIRST] != SYMBOL.CARET:
                 pattern = '^%s' % pattern
 
-            if self.used_sol_eof and pattern[-1:] != SYMBOL.DOLLAR_SIGN:
+            if self.used_sol_eof and pattern[SLICE.GET_LAST] != SYMBOL.DOLLAR_SIGN:
                 pattern = '%s$' % pattern
 
             if self.ignore_case:
@@ -211,7 +213,7 @@ class Wildcard:
                 failure = self.failure_fmt % (small, large)
                 return failure
 
-            pattern1 = '(%s)' % pattern1 if pattern1[:NUMBER.ONE] == '-' else pattern1
+            pattern1 = '(%s)' % pattern1 if pattern1[SLICE.GET_FIRST] == '-' else pattern1
             pattern = '(%s|%s)' % (pattern1, pattern2)
             return pattern
 
@@ -240,7 +242,7 @@ class Wildcard:
         elif match3:
             is_empty_item = False
             lst = []
-            for item in data[1:-1].split(SYMBOL.COMMA):
+            for item in data[SLICE.FIRST_TO_LAST].split(SYMBOL.COMMA):
                 if item:
                     escaped_txt = self.escape_data(item)
                     lst.append(escaped_txt)
@@ -268,7 +270,8 @@ class Wildcard:
             item = None
             for item in re.finditer(r'(\\?)[{][^}]+\1[}]', data):
                 pre_matched = data[start:item.start()]
-                escaped_txt = re.escape(pre_matched)
+                # escaped_txt = re.escape(pre_matched)
+                escaped_txt = self.escape_data(pre_matched)
                 lst.append(escaped_txt)
                 matched_txt = item.group()
                 match_a = re.match(r'(\\?)[{] *(, *)+\1[}]', matched_txt)
@@ -301,12 +304,79 @@ class Wildcard:
         return data
 
     def parse_round_bracket(self, data):
-        index = NUMBER.TWO if data[:1] == SYMBOL.BACK_SLASH else NUMBER.ONE
-        left_data = data[:index]
-        right_data = data[:-index]
-        middle_data = data[index:-index]
-        parsed_middle_data = self.parse_data(middle_data)
-        pattern = '%s%s%s' % (left_data, parsed_middle_data, right_data)
+        line = data
+        if not line:
+            return STRING.EMPTY
+        elif re.match(PATTERN.SPACES_AT_END_OF_STR, line):
+            return PATTERN.SPACES
+
+        lst = []
+        start = NUMBER.ZERO
+        item = None
+
+        for item in re.finditer(r'(\\?)\((.+)(\1\))', line):
+            pre_matched = line[start:item.start()]
+            parsed_pre_matched = self.parse_square_bracket(pre_matched)
+            parsed_pre_matched = self.replace_whitespace(parsed_pre_matched)
+            lst.append(parsed_pre_matched)
+            left, middle, right = item.groups()
+            sub_pat = self.parse_round_bracket(middle)
+            if sub_pat == SYMBOL.BACK_SLASH:
+                parsed_matched_txt = '\\(%s\\)' % sub_pat
+            else:
+                parsed_matched_txt = '(%s)' % sub_pat
+            lst.append(parsed_matched_txt)
+            start = item.end()
+
+        if lst:
+            post_matched = line[item.end():]
+            parsed_post_matched = self.parse_square_bracket(post_matched)
+            parsed_post_matched = self.replace_whitespace(parsed_post_matched)
+            lst.append(parsed_post_matched)
+        else:
+            parsed_txt = self.parse_square_bracket(line)
+            parsed_txt = self.replace_whitespace(parsed_txt)
+            lst.append(parsed_txt)
+
+        pattern = STRING.EMPTY.join(lst)
+
+        return pattern
+
+    def parse_square_bracket(self, data):
+
+        line = data
+        if not line:
+            return STRING.EMPTY
+        elif re.match(PATTERN.SPACES_AT_END_OF_STR, line):
+            return PATTERN.SPACES
+
+        lst = []
+        start = NUMBER.ZERO
+        item = None
+
+        for item in re.finditer(r'\[.+?]', line):
+            pre_matched = line[start:item.start()]
+            parsed_pre_matched = self.parse_data(pre_matched)
+            parsed_pre_matched = self.replace_whitespace(parsed_pre_matched)
+            lst.append(parsed_pre_matched)
+            matched_txt = item.group()
+            if matched_txt.startswith('[!'):
+                matched_txt = '[^%s' % matched_txt[SLICE.SKIP_FROM_SECOND]
+            lst.append(matched_txt)
+            start = item.end()
+
+        if lst:
+            post_matched = line[item.end():]
+            parsed_post_matched = self.parse_data(post_matched)
+            parsed_post_matched = self.replace_whitespace(parsed_post_matched)
+            lst.append(parsed_post_matched)
+        else:
+            parsed_txt = self.parse_data(line)
+            parsed_txt = self.replace_whitespace(parsed_txt)
+            lst.append(parsed_txt)
+
+        pattern = STRING.EMPTY.join(lst)
+
         return pattern
 
     def parse_data(self, data):
@@ -379,11 +449,16 @@ class Wildcard:
         start = NUMBER.ZERO
         item = None
         lst = []
-        for item in re.finditer(self.multi_ws_pattern, line):
+        for item in re.finditer(r'( +)([+*?]?)', line):
             pre_matched = line[start:item.start()]
             lst.append(pre_matched)
-            is_single_ws = len(item.group()) == NUMBER.ONE
-            lst.append(self.ws_pattern if is_single_ws else self.multi_ws_pattern)
+            matched_txt = item.group()
+            first, last = item.groups()
+            is_single_ws = len(matched_txt) == NUMBER.ONE
+            if last:
+                lst.append(matched_txt)
+            else:
+                lst.append(self.ws_pattern if is_single_ws else self.multi_ws_pattern)
             start = item.end()
         if lst:
             post_matched = line[item.end():]
@@ -401,13 +476,13 @@ class Wildcard:
             return PATTERN.SPACES
 
         is_start_of_line = False
-        if line[:1] == SYMBOL.CARET:
-            line = line[1:]
+        if line[SLICE.GET_FIRST] == SYMBOL.CARET:
+            line = line[SLICE.SKIP_FROM_FIRST]
             is_start_of_line = True
 
         is_end_of_line = False
-        if line[-1:] == SYMBOL.DOLLAR_SIGN:
-            line = line[:-1]
+        if line[SLICE.GET_LAST] == SYMBOL.DOLLAR_SIGN:
+            line = line[SLICE.TAKE_TO_LAST]
             is_end_of_line = True
 
         is_started_space = bool(re.match(PATTERN.SPACE, line))
@@ -417,28 +492,40 @@ class Wildcard:
         line = self.mark_posix_char_class(line)
         line = self.mark_word_bound(line)
 
-        lst = []
-        start = NUMBER.ZERO
-        item = None
-        for item in re.finditer(r'\[.+?]', line):
-            pre_matched = line[start:item.start()]
-            parsed_pre_matched = self.parse_data(pre_matched)
-            lst.append(parsed_pre_matched)
-            matched_txt = item.group()
-            if matched_txt.startswith('[!'):
-                matched_txt = '[^%s' % matched_txt[2:]
-            lst.append(matched_txt)
-            start = item.end()
-
-        if lst:
-            post_matched = line[item.end():]
-            parsed_post_matched = self.parse_data(post_matched)
-            lst.append(parsed_post_matched)
-        else:
-            parsed_txt = self.parse_data(line)
-            lst.append(parsed_txt)
-
-        pattern = STRING.EMPTY.join(lst)
+        pattern = self.parse_round_bracket(line)
+        #
+        # lst = []
+        # start = NUMBER.ZERO
+        # item = None
+        #
+        # for item in re.finditer(r'(\\?)\((.+?)(\1\))', line):
+        #     pre_matched = line[start:item.start()]
+        #     # parsed_pre_matched = self.parse_data(pre_matched)
+        #     parsed_pre_matched = self.parse_round_bracket(pre_matched)
+        #     parsed_pre_matched = self.replace_whitespace(parsed_pre_matched)
+        #     lst.append(parsed_pre_matched)
+        #     left, middle, right = item.groups()
+        #     sub_pat = self.parse_square_bracket(middle)
+        #     if sub_pat == SYMBOL.BACK_SLASH:
+        #         parsed_matched_txt = '\\(%s\\)' % sub_pat
+        #     else:
+        #         parsed_matched_txt = '(%s)' % sub_pat
+        #     lst.append(parsed_matched_txt)
+        #     start = item.end()
+        #
+        # if lst:
+        #     post_matched = line[item.end():]
+        #     # parsed_post_matched = self.parse_data(post_matched)
+        #     parsed_post_matched = self.parse_square_bracket(post_matched)
+        #     parsed_post_matched = self.replace_whitespace(parsed_post_matched)
+        #     lst.append(parsed_post_matched)
+        # else:
+        #     # parsed_txt = self.parse_data(line)
+        #     parsed_txt = self.parse_square_bracket(line)
+        #     parsed_txt = self.replace_whitespace(parsed_txt)
+        #     lst.append(parsed_txt)
+        #
+        # pattern = STRING.EMPTY.join(lst)
         if is_started_space or self.is_prefix:
             pattern = '%s*%s' % (self.ws_pattern, pattern)
         if is_ended_space or self.is_postfix:
@@ -447,13 +534,82 @@ class Wildcard:
         pattern = self.replace_posix_char_class(pattern)
         pattern = self.replace_word_bound(pattern)
 
-        if is_start_of_line and pattern and pattern[:1] != SYMBOL.CARET:
+        if is_start_of_line and pattern and pattern[SLICE.GET_FIRST] != SYMBOL.CARET:
             pattern = '^%s' % pattern
 
-        if is_end_of_line and pattern and pattern[-1:] != SYMBOL.DOLLAR_SIGN:
+        if is_end_of_line and pattern and pattern[SLICE.GET_LAST] != SYMBOL.DOLLAR_SIGN:
             pattern = '%s$' % pattern
 
         return pattern
+
+    # def parse_line(self, data):
+    #     line = data
+    #     if not line:
+    #         return STRING.EMPTY
+    #     elif re.match(PATTERN.SPACES_AT_END_OF_STR, line):
+    #         return PATTERN.SPACES
+    #
+    #     is_start_of_line = False
+    #     if line[SLICE.GET_FIRST] == SYMBOL.CARET:
+    #         line = line[SLICE.SKIP_FROM_FIRST]
+    #         is_start_of_line = True
+    #
+    #     is_end_of_line = False
+    #     if line[SLICE.GET_LAST] == SYMBOL.DOLLAR_SIGN:
+    #         line = line[SLICE.TAKE_TO_LAST]
+    #         is_end_of_line = True
+    #
+    #     is_started_space = bool(re.match(PATTERN.SPACE, line))
+    #     is_ended_space = bool(re.search(PATTERN.SPACE_AT_END_OF_STR, line))
+    #     line = line.strip()
+    #
+    #     line = self.mark_posix_char_class(line)
+    #     line = self.mark_word_bound(line)
+    #
+    #     lst = []
+    #     start = NUMBER.ZERO
+    #     item = None
+    #     #
+    #     # for item in re.finditer(r'(\\?)\((.+?)(\1\))', line):
+    #     #     pass
+    #     #
+    #     for item in re.finditer(r'\[.+?]', line):
+    #         pre_matched = line[start:item.start()]
+    #         parsed_pre_matched = self.parse_data(pre_matched)
+    #         parsed_pre_matched = self.replace_whitespace(parsed_pre_matched)
+    #         lst.append(parsed_pre_matched)
+    #         matched_txt = item.group()
+    #         if matched_txt.startswith('[!'):
+    #             matched_txt = '[^%s' % matched_txt[SLICE.SKIP_FROM_SECOND]
+    #         lst.append(matched_txt)
+    #         start = item.end()
+    #
+    #     if lst:
+    #         post_matched = line[item.end():]
+    #         parsed_post_matched = self.parse_data(post_matched)
+    #         parsed_post_matched = self.replace_whitespace(parsed_post_matched)
+    #         lst.append(parsed_post_matched)
+    #     else:
+    #         parsed_txt = self.parse_data(line)
+    #         parsed_txt = self.replace_whitespace(parsed_txt)
+    #         lst.append(parsed_txt)
+    #
+    #     pattern = STRING.EMPTY.join(lst)
+    #     if is_started_space or self.is_prefix:
+    #         pattern = '%s*%s' % (self.ws_pattern, pattern)
+    #     if is_ended_space or self.is_postfix:
+    #         pattern = '%s%s*' % (pattern, self.ws_pattern)
+    #
+    #     pattern = self.replace_posix_char_class(pattern)
+    #     pattern = self.replace_word_bound(pattern)
+    #
+    #     if is_start_of_line and pattern and pattern[SLICE.GET_FIRST] != SYMBOL.CARET:
+    #         pattern = '^%s' % pattern
+    #
+    #     if is_end_of_line and pattern and pattern[SLICE.GET_LAST] != SYMBOL.DOLLAR_SIGN:
+    #         pattern = '%s$' % pattern
+    #
+    #     return pattern
 
     def parse_multiline(self, data):
         lst = []

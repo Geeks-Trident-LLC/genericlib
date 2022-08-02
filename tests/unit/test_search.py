@@ -781,3 +781,65 @@ class TestWildcard:
             for not_matched_result in not_matched_results:
                 matched = re.match(pattern, not_matched_result)
                 assert not bool(matched)
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern,matched_results,not_matched_results",
+        [
+            (
+                'a(b|c|d)e',
+                r'^a(b|c|d)e$',
+                ['abe', 'ace', 'ade'],
+                ['abc', 'abd']
+            ),
+            (
+                'a (b|c|d) e',
+                r'^a (b|c|d) e$',
+                ['a b e', 'a c e', 'a d e'],
+                ['a b c', 'a b d']
+            ),
+            (
+                'a  (b|c|d) e',
+                r'^a +(b|c|d) e$',
+                ['a b e', 'a   c e', 'a  d e'],
+                ['a  b c', 'a  b d']
+            ),
+            (
+                'a(b  |c |d)e',
+                r'^a(b +|c |d)e$',
+                ['ab e', 'ab   e', 'ab  e', 'ac e', 'ade'],
+                ['abe', 'ace', 'ad e']
+            ),
+            (
+                '([Tt](oday|his)) is',
+                r'^([Tt](oday|his)) is$',
+                ['Today is', 'today is', 'this is'],
+                ['Today  is', 'toDay is', 'ThIs is']
+            ),
+            (
+                '([Tt](oday*|his)) is',
+                r'^([Tt](oday.*|his)) is$',
+                ['Today is', 'today temperature is', 'this is'],
+                ['toDay is', 'ThIs is']
+            ),
+            (
+                '([Tt](oday+|his)) is',
+                r'^([Tt](oday.+|his)) is$',
+                ['today temperature is', 'this is'],
+                ['Today is', 'ThIs is']
+            ),
+        ]
+    )
+    def test_wildcard_round_bracket_case(self, data, expected_pattern,
+                                         matched_results, not_matched_results):
+        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+        for matched_result in matched_results:
+            matched = re.match(pattern, matched_result)
+            assert bool(matched)
+
+        if not_matched_results:
+            for not_matched_result in not_matched_results:
+                matched = re.match(pattern, not_matched_result)
+                assert not bool(matched)
