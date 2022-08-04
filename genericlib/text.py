@@ -1,29 +1,18 @@
-class Text(str):
-    def __new__(cls, *args, **kwargs):
-        if not args and not kwargs:
-            return str.__new__(cls, '')
-        encoding = kwargs.get('encoding', 'utf-8')
-        errors = kwargs.get('errors', 'strict')
-        obj = kwargs.get('object', '')
-        if args:
-            if len(args) == 1:
-                obj = args[0]
-                if isinstance(obj, bytes):
-                    return str.__new__(cls, obj, encoding=encoding, errors=errors)
-                elif isinstance(obj, BaseException):
-                    return str.__new__(cls, '{}: {}'.format(type(obj).__name__, obj))
-                else:
-                    return str.__new__(cls, obj)
-            else:
-                return str.__new__(cls, *args, **kwargs)
-        else:
-            if isinstance(obj, bytes):
-                return str.__new__(cls, obj, encoding=encoding, errors=errors)
-            elif isinstance(obj, BaseException):
-                return str.__new__(cls, '{}: {}'.format(type(obj).__name__, obj))
-            else:
-                return str.__new__(cls, obj)
+from time import time
 
+
+class BaseText(str):
+    def __new__(cls, *args, **kwargs):
+        arg0 = args[0] if args else None
+        if args and isinstance(arg0, BaseException):
+            txt = str.__new__(cls, '{}: {}'.format(type(arg0).__name__, arg0))
+            return txt
+        else:
+            txt = str.__new__(cls, *args, **kwargs)
+            return txt
+
+
+class Text(BaseText):
     @classmethod
     def format(cls, *args, **kwargs):
         if not args:
