@@ -3,6 +3,29 @@
 import pytest
 from genericlib.gp import CommonPhrase
 
+from genericlib.gp import TranslatedPattern
+
+from genericlib.gp import TranslatedDigitPattern
+from genericlib.gp import TranslatedDigitsPattern
+
+from genericlib.gp import TranslatedNumberPattern
+from genericlib.gp import TranslatedMixedNumberPattern
+
+from genericlib.gp import TranslatedLetterPattern
+from genericlib.gp import TranslatedLettersPattern
+
+from genericlib.gp import TranslatedAlphabetNumericPattern
+
+from genericlib.gp import TranslatedWordPattern
+from genericlib.gp import TranslatedWordsPattern
+from genericlib.gp import TranslatedMixedWordPattern
+from genericlib.gp import TranslatedMixedWordsPattern
+from genericlib.gp import TranslatedMixedFlexWordsPattern
+
+from genericlib.gp import TranslatedNonWhiteSpace
+from genericlib.gp import TranslatedNonWhiteSpaces
+from genericlib.gp import TranslatedNonWhiteSpaceGroup
+from genericlib.gp import TranslatedFlexNonWhiteSpaceGroup
 
 class TestCommonPhrase:
     """Test class for CommonPhrase."""
@@ -28,3 +51,54 @@ class TestCommonPhrase:
         node = CommonPhrase(data, is_generic=is_generic, is_flex_space=is_flex_space)
         pattern = node.pattern
         assert pattern == expected_result
+
+
+class TestTranslatedPattern:
+    """Test class for TranslatedPattern."""
+
+    @pytest.mark.parametrize(
+        "data1,data2,expected_pattern",
+        [
+            ('5', '4', '[0-9]'),
+            # ('5', '44', '[0-9]+'),
+        ]
+    )
+    def test_recommend_pattern(self, data1, data2, expected_pattern):
+
+        method = TranslatedPattern.recommend_pattern_using_data
+        recommended_pat_obj = method(data1, data2)
+        recommended_pat = recommended_pat_obj.pattern
+
+        assert recommended_pat == expected_pattern
+
+
+class TestTranslatedDigitPattern:
+    """Test class for TranslatedDigitPattern."""
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern",
+        [
+            ('5', '[0-9]'),
+            ('', ''),
+            ('123', ''),
+        ]
+    )
+    def test_digit_pattern(self, data, expected_pattern):
+        node = TranslatedDigitPattern(data)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "data,other,expected_pattern",
+        [
+            ('5', TranslatedDigitPattern('4'), '[0-9]'),
+            # ('5', TranslatedDigitsPattern('44'), '[0-9]+'),
+        ]
+    )
+    def test_digit_pattern(self, data, other, expected_pattern):
+        node = TranslatedDigitPattern(data)
+
+        recommended_pat_obj = node.recommend(other)
+        recommended_pat = recommended_pat_obj.pattern
+
+        assert recommended_pat == expected_pattern
