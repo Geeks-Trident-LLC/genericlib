@@ -236,7 +236,46 @@ class TranslatedDigitPattern(TranslatedPattern):
 
 
 class TranslatedDigitsPattern(TranslatedPattern):
-    pass
+
+    def __init__(self, data):
+        super().__init__(data)
+        self.name = 'digits'
+
+    def process(self):
+        match = re.match('[0-9]+$', self.data)   # noqa
+        if match:
+            self._pattern = '[0-9]+'
+
+    def recommend(self, other):
+
+        is_subset_pat = other.is_digits()
+        is_subset_pat |= other.is_number()
+        is_subset_pat |= other.is_mixed_number()
+        is_subset_pat |= other.is_alphabet_numeric()
+        is_subset_pat |= other.is_word()
+        is_subset_pat |= other.is_mixed_word()
+        is_subset_pat |= other.is_words()
+        is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_mixed_flex_words()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespace_group()
+        is_subset_pat |= other.is_flex_non_whitespace_group()
+
+        if other.is_digit():
+            new_instance = deepcopy(self)
+            return new_instance
+        elif is_subset_pat:
+            new_instance = deepcopy(other)
+            return new_instance
+        elif other.is_letter() or other.is_letters() or other.is_alphabet_numeric():
+            new_instance = TranslatedWordPattern(other.data)
+            return new_instance
+
+        elif other.is_non_whitespace():
+            new_instance = TranslatedNonWhiteSpaces(other.data)
+            return new_instance
+        else:
+            raise Exception('TODO: add exception here')
 
 
 class TranslatedNumberPattern(TranslatedPattern):
