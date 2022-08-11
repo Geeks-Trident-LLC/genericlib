@@ -466,6 +466,12 @@ class Misc:
         uniq_str = cls.get_clock_tick_str()
         return uniq_str
 
+    @classmethod
+    def get_instance_class_name(cls, obj):
+        cls_obj = type(obj)
+        cls_name = cls_obj.__class__.__name__
+        return cls_name
+
 
 class MiscOutput:
     @classmethod
