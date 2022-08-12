@@ -27,6 +27,7 @@ from genericlib.gp import TranslatedNonWhiteSpaces
 from genericlib.gp import TranslatedNonWhiteSpaceGroup
 from genericlib.gp import TranslatedFlexNonWhiteSpaceGroup
 
+
 class TestCommonPhrase:
     """Test class for CommonPhrase."""
 
@@ -212,6 +213,38 @@ class TestTranslatedMixedNumberPattern:
     def test_recommend_pattern(self, data, other, expected_pattern):
         node = TranslatedMixedNumberPattern(data)
 
+        recommended_pat_obj = node.recommend(other)
+        recommended_pat = recommended_pat_obj.pattern
+
+        assert recommended_pat == expected_pattern
+
+
+class TestTranslatedLetterPattern:
+    """Test class for TranslatedLetterPattern."""
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern",
+        [
+            ('', ''),
+            ('ab', ''),
+            ('b', '[a-zA-Z]'),
+        ]
+    )
+    def test_letter_pattern(self, data, expected_pattern):
+        node = TranslatedLetterPattern(data)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "data,other,expected_pattern",
+        [
+            ('a', TranslatedLetterPattern('a'), '[a-zA-Z]'),
+            # ('a', TranslatedDigitPattern('4'), ''),
+            # ('a', TranslatedDigitsPattern('4'), ''),
+        ]
+    )
+    def test_recommend_pattern(self, data, other, expected_pattern):
+        node = TranslatedLetterPattern(data)
         recommended_pat_obj = node.recommend(other)
         recommended_pat = recommended_pat_obj.pattern
 
