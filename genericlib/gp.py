@@ -37,33 +37,6 @@ class TranslatedPattern:
     def process(self):
         self._pattern = ''
 
-    def is_same_type(self, other):
-        curr_cls_name = Misc.get_instance_class_name(self)
-        other_cls_name = Misc.get_instance_class_name(other)
-        chk = curr_cls_name == other_cls_name
-        return chk
-
-    def is_same_group(self, other):
-        chk = self.name != STRING.EMPTY
-        chk &= other.name in self.name
-        chk |= self.name in other.name
-        return chk
-
-    def is_multiple_of(self, other):
-        if not self.is_same_group(other):
-            return False
-        chk = other.name != self.name
-        chk &= other.name in self.name
-        return chk
-
-    def is_singular_of(self, other):
-        if not self.is_same_group(other):
-            return False
-
-        chk = self.name != other.name
-        chk &= other.name in self.name
-        return chk
-
     def is_digit(self):
         return self.name == TEXT.DIGIT
 
