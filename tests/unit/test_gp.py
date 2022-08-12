@@ -62,6 +62,9 @@ class TestTranslatedPattern:
             ('5', '4', '[0-9]'),
             ('5', '44', '[0-9]+'),
             ('555', '4', '[0-9]+'),
+            ('1.1', '4', '[0-9]*[.]?[0-9]+'),
+            ('12', '4.1', '[0-9]*[.]?[0-9]+'),
+            ('12.3', '4.1', '[0-9]*[.]?[0-9]+'),
         ]
     )
     def test_recommend_pattern(self, data1, data2, expected_pattern):
@@ -94,9 +97,10 @@ class TestTranslatedDigitPattern:
         [
             ('5', TranslatedDigitPattern('4'), '[0-9]'),
             ('5', TranslatedDigitsPattern('44'), '[0-9]+'),
+            ('5', TranslatedNumberPattern('4.4'), '[0-9]*[.]?[0-9]+'),
         ]
     )
-    def test_digit_pattern(self, data, other, expected_pattern):
+    def test_recommend_pattern(self, data, other, expected_pattern):
         node = TranslatedDigitPattern(data)
 
         recommended_pat_obj = node.recommend(other)
@@ -116,7 +120,7 @@ class TestTranslatedDigitsPattern:
             ('123', '[0-9]+'),
         ]
     )
-    def test_digit_pattern(self, data, expected_pattern):
+    def test_digits_pattern(self, data, expected_pattern):
         node = TranslatedDigitsPattern(data)
         pattern = node.pattern
         assert pattern == expected_pattern
@@ -126,10 +130,46 @@ class TestTranslatedDigitsPattern:
         [
             ('5', TranslatedDigitPattern('4'), '[0-9]+'),
             ('5', TranslatedDigitsPattern('44'), '[0-9]+'),
+            ('5', TranslatedNumberPattern('4.4'), '[0-9]*[.]?[0-9]+'),
         ]
     )
-    def test_digits_pattern(self, data, other, expected_pattern):
+    def test_recommend_pattern(self, data, other, expected_pattern):
         node = TranslatedDigitsPattern(data)
+
+        recommended_pat_obj = node.recommend(other)
+        recommended_pat = recommended_pat_obj.pattern
+
+        assert recommended_pat == expected_pattern
+
+
+class TestTranslatedNumberPattern:
+    """Test class for TranslatedNumberPattern."""
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern",
+        [
+            ('', ''),
+            ('5', '[0-9]*[.]?[0-9]+'),
+            ('.5', '[0-9]*[.]?[0-9]+'),
+            ('0.5', '[0-9]*[.]?[0-9]+'),
+            ('-0.5', ''),
+        ]
+    )
+    def test_number_pattern(self, data, expected_pattern):
+        node = TranslatedNumberPattern(data)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "data,other,expected_pattern",
+        [
+            ('5.1', TranslatedDigitPattern('4'), '[0-9]*[.]?[0-9]+'),
+            ('5.1', TranslatedDigitsPattern('44'), '[0-9]*[.]?[0-9]+'),
+            ('5.1', TranslatedNumberPattern('4.4'), '[0-9]*[.]?[0-9]+'),
+        ]
+    )
+    def test_recommend_pattern(self, data, other, expected_pattern):
+        node = TranslatedNumberPattern(data)
 
         recommended_pat_obj = node.recommend(other)
         recommended_pat = recommended_pat_obj.pattern
