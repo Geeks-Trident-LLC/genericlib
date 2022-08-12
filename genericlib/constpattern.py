@@ -21,3 +21,23 @@ class PATTERN:
     CR_NL = CRNL
     MULTI_CRNL = r'[\r\n]+'
     MULTI_CRNL_BUT = r'[\r\n]*'
+
+    DIGIT = '[0-9]'
+    DIGITS = '%s+' % DIGIT
+
+    NUMBER = '[0-9]*[.]?[0-9]+'
+    MIXED_NUMBER = r'[\(+-]?[0-9]*[.]?[0-9]+[)]?'
+
+    LETTER = '[a-zA-Z]'
+    LETTERS = '%s+' % LETTER
+
+    ALPHABET_NUMERIC = '[a-zA-Z0-9]'
+
+    GRAPH = r'[\x21-\x7e]'
+
+    WORD = r'\w+'
+    WORDS = r'%s( %s)*' % (WORD, WORD)
+    FLEX_WORDS = r'%s( +%s)*' % (WORD, WORD)
+    MIXED_WORD = '%s+' % GRAPH
+    MIXED_WORDS = '%s( %s)*' % (GRAPH, GRAPH)
+    MIXED_FLEX_WORDS = '%s( +%s)*' % (GRAPH, GRAPH)

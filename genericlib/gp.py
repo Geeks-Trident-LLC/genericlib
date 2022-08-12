@@ -139,7 +139,7 @@ class TranslatedDigitPattern(TranslatedPattern):
 
     def __init__(self, data):
         super().__init__(data, name=TEXT.DIGIT,
-                         defined_pattern=r'[0-9]')
+                         defined_pattern=PATTERN.DIGIT)
 
     def recommend(self, other):
 
@@ -175,7 +175,7 @@ class TranslatedDigitsPattern(TranslatedPattern):
 
     def __init__(self, data):
         super().__init__(data, name=TEXT.DIGITS,
-                         defined_pattern=r'[0-9]+')
+                         defined_pattern=PATTERN.DIGITS)
 
     def recommend(self, other):
 
@@ -211,7 +211,7 @@ class TranslatedDigitsPattern(TranslatedPattern):
 class TranslatedNumberPattern(TranslatedPattern):
     def __init__(self, data):
         super().__init__(data, name=TEXT.NUMBER,
-                         defined_pattern=r'[0-9]*[.]?[0-9]+')
+                         defined_pattern=PATTERN.NUMBER)
 
     def recommend(self, other):
 
@@ -251,7 +251,7 @@ class TranslatedNumberPattern(TranslatedPattern):
 class TranslatedMixedNumberPattern(TranslatedPattern):
     def __init__(self, data):
         super().__init__(data, name=TEXT.MIXED_NUMBER,
-                         defined_pattern=r'[\(+-]?[0-9]*[.]?[0-9]+[)]?')
+                         defined_pattern=PATTERN.MIXED_NUMBER)
 
     def recommend(self, other):
 
@@ -290,7 +290,7 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
 class TranslatedLetterPattern(TranslatedPattern):
     def __init__(self, data):
         super().__init__(data, name=TEXT.LETTER,
-                         defined_pattern=r'[a-zA-Z]')
+                         defined_pattern=PATTERN.LETTER)
 
     def recommend(self, other):
 
@@ -325,7 +325,7 @@ class TranslatedLetterPattern(TranslatedPattern):
 class TranslatedLettersPattern(TranslatedPattern):
     def __init__(self, data):
         super().__init__(data, name=TEXT.LETTERS,
-                         defined_pattern=r'[a-zA-Z]+')
+                         defined_pattern=PATTERN.LETTERS)
 
     def recommend(self, other):
 
@@ -359,7 +359,7 @@ class TranslatedLettersPattern(TranslatedPattern):
 class TranslatedAlphabetNumericPattern(TranslatedPattern):
     def __init__(self, data):
         super().__init__(data, name=TEXT.ALPHABET_NUMERIC,
-                         defined_pattern=r'[a-zA-Z0-9]')
+                         defined_pattern=PATTERN.ALPHABET_NUMERIC)
 
     def recommend(self, other):
 
@@ -393,7 +393,7 @@ class TranslatedAlphabetNumericPattern(TranslatedPattern):
 class TranslatedWordPattern(TranslatedPattern):
     def __init__(self, data):
         super().__init__(data, name=TEXT.WORD,
-                         defined_pattern=r'\w+')
+                         defined_pattern=PATTERN.WORD)
 
     def recommend(self, other):
 
@@ -429,7 +429,7 @@ class TranslatedWordPattern(TranslatedPattern):
 class TranslatedWordsPattern(TranslatedPattern):
     def __init__(self, data):
         super().__init__(data, name=TEXT.WORDS,
-                         defined_pattern=r'\w+( \w+)*')
+                         defined_pattern=PATTERN.WORDS)
 
     def recommend(self, other):
 
@@ -464,7 +464,7 @@ class TranslatedWordsPattern(TranslatedPattern):
 class TranslatedFlexWordsPattern(TranslatedPattern):
     def __init__(self, data):
         super().__init__(data, name=TEXT.FLEX_WORDS,
-                         defined_pattern=r'\w+( +\w+)*')
+                         defined_pattern=PATTERN.FLEX_WORDS)
 
     def recommend(self, other):
 
