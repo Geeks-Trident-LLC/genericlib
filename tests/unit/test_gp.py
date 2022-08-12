@@ -18,6 +18,7 @@ from genericlib.gp import TranslatedAlphabetNumericPattern
 
 from genericlib.gp import TranslatedWordPattern
 from genericlib.gp import TranslatedWordsPattern
+from genericlib.gp import TranslatedFlexWordsPattern
 from genericlib.gp import TranslatedMixedWordPattern
 from genericlib.gp import TranslatedMixedWordsPattern
 from genericlib.gp import TranslatedMixedFlexWordsPattern
@@ -380,6 +381,43 @@ class TestTranslatedWordsPattern:
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
         node = TranslatedWordsPattern(data)
+        recommended_pat_obj = node.recommend(other)
+        recommended_pat = recommended_pat_obj.pattern
+
+        assert recommended_pat == expected_pattern
+
+
+class TestTranslatedFlexWordsPattern:
+    """Test class for TranslatedFlexWordsPattern."""
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern",
+        [
+            ('', ''),
+            ('ab  xy', '\\w+( +\\w+)*'),
+            ('1', '\\w+( +\\w+)*'),
+            ('ab xy', '\\w+( +\\w+)*'),
+        ]
+    )
+    def test_alphabet_numeric_pattern(self, data, expected_pattern):
+        node = TranslatedFlexWordsPattern(data)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "data,other,expected_pattern",
+        [
+            ('a', TranslatedLetterPattern('a'), '\\w+( +\\w+)*'),
+            ('a', TranslatedLettersPattern('ab'), '\\w+( +\\w+)*'),
+            ('a', TranslatedDigitPattern('1'), '\\w+( +\\w+)*'),
+            ('a', TranslatedDigitsPattern('4'), '\\w+( +\\w+)*'),
+            ('a', TranslatedAlphabetNumericPattern('4'), '\\w+( +\\w+)*'),
+            ('a', TranslatedWordPattern('4'), '\\w+( +\\w+)*'),
+            ('a', TranslatedWordsPattern('ab xy'), '\\w+( +\\w+)*'),
+        ]
+    )
+    def test_recommend_pattern(self, data, other, expected_pattern):
+        node = TranslatedFlexWordsPattern(data)
         recommended_pat_obj = node.recommend(other)
         recommended_pat = recommended_pat_obj.pattern
 

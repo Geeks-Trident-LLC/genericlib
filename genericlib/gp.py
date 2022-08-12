@@ -428,7 +428,7 @@ class TranslatedWordPattern(TranslatedPattern):
 
 class TranslatedWordsPattern(TranslatedPattern):
     def __init__(self, data):
-        super().__init__(data, name=TEXT.WORD,
+        super().__init__(data, name=TEXT.WORDS,
                          defined_pattern=r'\w+( \w+)*')
 
     def recommend(self, other):
@@ -446,13 +446,15 @@ class TranslatedWordsPattern(TranslatedPattern):
         is_superset_pat |= other.is_alphabet_numeric()
         is_superset_pat |= other.is_word()
 
+        is_unrelated_pat = other.is_number() or other.is_mixed_number()
+
         if is_subset_pat:
             new_instance = deepcopy(other)
             return new_instance
         elif is_superset_pat:
             new_instance = deepcopy(self)
             return new_instance
-        elif other.is_number() or other.is_mixed_number():
+        elif is_unrelated_pat:
             new_instance = TranslatedMixedWordsPattern(other.data)
             return new_instance
         else:
@@ -460,7 +462,45 @@ class TranslatedWordsPattern(TranslatedPattern):
 
 
 class TranslatedFlexWordsPattern(TranslatedPattern):
-    pass
+    def __init__(self, data):
+        super().__init__(data, name=TEXT.FLEX_WORDS,
+                         defined_pattern=r'\w+( +\w+)*')
+
+    def recommend(self, other):
+
+        is_subset_pat = other.is_flex_words()
+        is_subset_pat |= other.is_mixed_flex_words()
+        is_subset_pat |= other.is_flex_non_whitespace_group()
+
+        is_superset_pat = other.is_letter()
+        is_superset_pat |= other.is_letters()
+        is_superset_pat |= other.is_digit()
+        is_superset_pat |= other.is_digits()
+        is_superset_pat |= other.is_alphabet_numeric()
+        is_superset_pat |= other.is_word()
+        is_superset_pat |= other.is_words()
+
+        is_unrelated_pat_case1 = other.is_number()
+        is_unrelated_pat_case1 |= other.is_mixed_number()
+
+        is_unrelated_pat_case2 = other.is_non_whitespace()
+        is_unrelated_pat_case2 |= other.is_non_whitespaces()
+        is_unrelated_pat_case2 |= other.is_non_whitespace_group()
+
+        if is_subset_pat:
+            new_instance = deepcopy(other)
+            return new_instance
+        elif is_superset_pat:
+            new_instance = deepcopy(self)
+            return new_instance
+        elif is_unrelated_pat_case1:
+            new_instance = TranslatedMixedFlexWordsPattern(other.data)
+            return new_instance
+        elif is_unrelated_pat_case2:
+            new_instance = TranslatedFlexNonWhiteSpaceGroup(other.data)
+            return new_instance
+        else:
+            raise Exception('TODO: add exception here')
 
 
 class TranslatedMixedWordPattern(TranslatedPattern):
