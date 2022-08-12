@@ -15,14 +15,15 @@ from regexpro.collection import do_soft_regex_escape
 
 class TranslatedPattern:
 
-    def __init__(self, data):
+    def __init__(self, data, name='', defined_pattern=''):
         self.data = str(data)
+        self.defined_pattern = str(defined_pattern)
+        self.name = str(name)
         self._pattern = STRING.EMPTY
-        self.name = STRING.EMPTY
         self.process()
 
     def __len__(self):
-        chk = self._pattern == STRING.EMPTY
+        chk = self._pattern != STRING.EMPTY
         return chk
 
     @property
@@ -35,7 +36,9 @@ class TranslatedPattern:
         return self._pattern
 
     def process(self):
-        self._pattern = ''
+        match = re.match('%s$' % self.defined_pattern, self.data)
+        if match:
+            self._pattern = self.defined_pattern
 
     def is_digit(self):
         return self.name == TEXT.DIGIT
@@ -117,7 +120,7 @@ class TranslatedPattern:
         ]
         for class_ in classes:
             node = class_(data)
-            if node.translated:
+            if node:
                 return node
         raise Exception('TODO: add exception here')
 
@@ -137,13 +140,8 @@ class TranslatedPattern:
 class TranslatedDigitPattern(TranslatedPattern):
 
     def __init__(self, data):
-        super().__init__(data)
-        self.name = TEXT.DIGIT
-
-    def process(self):
-        match = re.match('[0-9]$', self.data)   # noqa
-        if match:
-            self._pattern = '[0-9]'
+        super().__init__(data, name=TEXT.DIGIT,
+                         defined_pattern=r'[0-9]')
 
     def recommend(self, other):
 
@@ -178,13 +176,8 @@ class TranslatedDigitPattern(TranslatedPattern):
 class TranslatedDigitsPattern(TranslatedPattern):
 
     def __init__(self, data):
-        super().__init__(data)
-        self.name = TEXT.DIGITS
-
-    def process(self):
-        match = re.match('[0-9]+$', self.data)   # noqa
-        if match:
-            self._pattern = '[0-9]+'
+        super().__init__(data, name=TEXT.DIGITS,
+                         defined_pattern=r'[0-9]+')
 
     def recommend(self, other):
 
@@ -219,14 +212,8 @@ class TranslatedDigitsPattern(TranslatedPattern):
 
 class TranslatedNumberPattern(TranslatedPattern):
     def __init__(self, data):
-        super().__init__(data)
-        self.name = TEXT.NUMBER
-
-    def process(self):
-        pat = '[0-9]*[.]?[0-9]+'
-        match = re.match('%s$' % pat, self.data)
-        if match:
-            self._pattern = pat
+        super().__init__(data, name=TEXT.NUMBER,
+                         defined_pattern=r'[0-9]*[.]?[0-9]+')
 
     def recommend(self, other):
 
@@ -265,14 +252,8 @@ class TranslatedNumberPattern(TranslatedPattern):
 
 class TranslatedMixedNumberPattern(TranslatedPattern):
     def __init__(self, data):
-        super().__init__(data)
-        self.name = TEXT.MIXED_NUMBER
-
-    def process(self):
-        pat = r'[\(+-]?[0-9]*[.]?[0-9]+[)]?'
-        match = re.match('%s$' % pat, self.data)
-        if match:
-            self._pattern = pat
+        super().__init__(data, name=TEXT.MIXED_NUMBER,
+                         defined_pattern=r'[\(+-]?[0-9]*[.]?[0-9]+[)]?')
 
     def recommend(self, other):
 
@@ -310,14 +291,8 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
 
 class TranslatedLetterPattern(TranslatedPattern):
     def __init__(self, data):
-        super().__init__(data)
-        self.name = TEXT.LETTER
-
-    def process(self):
-        pat = '[a-zA-Z]'
-        match = re.match('%s$' % pat, self.data)
-        if match:
-            self._pattern = pat
+        super().__init__(data, name=TEXT.LETTER,
+                         defined_pattern=r'[a-zA-Z]')
 
     def recommend(self, other):
 
