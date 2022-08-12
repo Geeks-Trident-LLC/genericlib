@@ -12,6 +12,7 @@ from .constant import ICSStripValue
 from .constant import ECODE
 from .constant import STRING
 from .constant import STR
+from .constant import TEXT
 from .constnum import NUMBER
 from .constsymbol import SYMBOL
 from .constpattern import PATTERN
@@ -44,6 +45,7 @@ __all__ = [
 
     'STRUCT',
     'SLICE',
+    'TEXT',
 
     'File',
 

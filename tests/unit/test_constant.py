@@ -4,6 +4,7 @@ from genericlib import ECODE
 from genericlib import ICSValue
 from genericlib import ICSStripValue
 from genericlib import STRING
+from genericlib import TEXT
 
 
 class TestICSValue:
@@ -105,3 +106,31 @@ class TestString:
     )
     def test_constant_string(self, constant_string, expected_result):
         assert constant_string == expected_result
+
+
+class TestText:
+
+    @pytest.mark.parametrize(
+        "constant_text,expected_result",
+        [
+            (TEXT.ALPHABET_NUMERIC, 'alphabet_numeric'),
+            (TEXT.DIGIT, 'digit'),
+            (TEXT.DIGITS, 'digits'),
+            (TEXT.FLEX_MIXED_WORDS, 'flex_mixed_words'),
+            (TEXT.FLEX_NON_WHITESPACE_GROUP, 'flex_non_whitespace_group'),
+            (TEXT.FLEX_WORDS, 'flex_words'),
+            (TEXT.LETTER, 'letter'),
+            (TEXT.LETTERS, 'letters'),
+            (TEXT.NUMBER, 'number'),
+            (TEXT.MIXED_NUMBER, 'mixed_number'),
+            (TEXT.MIXED_WORD, 'mixed_word'),
+            (TEXT.MIXED_WORDS, 'mixed_words'),
+            (TEXT.NON_WHITESPACE, 'non_whitespace'),
+            (TEXT.NON_WHITESPACE_GROUP, 'non_whitespace_group'),
+            (TEXT.NON_WHITESPACES, 'non_whitespaces'),
+            (TEXT.WORD, 'word'),
+            (TEXT.WORDS, 'words'),
+        ]
+    )
+    def test_constant_text(self, constant_text, expected_result):
+        assert constant_text == expected_result
