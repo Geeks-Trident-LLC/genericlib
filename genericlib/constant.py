@@ -131,20 +131,27 @@ class LSSTRING:
 
 class TEXT:
     ALPHABET_NUMERIC = 'alphabet_numeric'
+
     DIGIT = 'digit'
     DIGITS = 'digits'
-    FLEX_MIXED_WORDS = 'flex_mixed_words'
+
     FLEX_NON_WHITESPACE_GROUP = 'flex_non_whitespace_group'
     FLEX_WORDS = 'flex_words'
+
     LETTER = 'letter'
     LETTERS = 'letters'
+
     NUMBER = 'number'
+
+    MIXED_FLEX_WORDS = 'mixed_flex_words'
     MIXED_NUMBER = 'mixed_number'
     MIXED_WORD = 'mixed_word'
     MIXED_WORDS = 'mixed_words'
+
     NON_WHITESPACE = 'non_whitespace'
     NON_WHITESPACE_GROUP = 'non_whitespace_group'
     NON_WHITESPACES = 'non_whitespaces'
+
     WORD = 'word'
     WORDS = 'words'
 

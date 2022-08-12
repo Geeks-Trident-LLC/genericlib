@@ -5,6 +5,7 @@ from copy import deepcopy
 from genericlib import NUMBER
 from genericlib import STRING
 from genericlib import PATTERN
+from genericlib import TEXT
 
 from genericlib import Misc
 
@@ -64,89 +65,55 @@ class TranslatedPattern:
         return chk
 
     def is_digit(self):
-        node = TranslatedDigitPattern(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.DIGIT
 
     def is_digits(self):
-        node = TranslatedDigitsPattern(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.DIGITS
 
     def is_number(self):
-        node = TranslatedNumberPattern(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.NUMBER
 
     def is_mixed_number(self):
-        node = TranslatedMixedNumberPattern(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.MIXED_NUMBER
 
     def is_letter(self):
-        node = TranslatedLetterPattern(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.LETTER
 
     def is_letters(self):
-        node = TranslatedLettersPattern(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.LETTERS
 
     def is_alphabet_numeric(self):
-        node = TranslatedAlphabetNumericPattern(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.ALPHABET_NUMERIC
 
     def is_word(self):
-        node = TranslatedWordPattern(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.WORD
 
     def is_words(self):
-        node = TranslatedWordsPattern(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.WORDS
 
     def is_flex_words(self):
-        node = TranslatedFlexWordsPattern(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.FLEX_WORDS
 
     def is_mixed_word(self):
-        node = TranslatedMixedWordPattern(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.MIXED_WORD
 
     def is_mixed_words(self):
-        node = TranslatedMixedWordsPattern(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.MIXED_WORDS
 
     def is_mixed_flex_words(self):
-        node = TranslatedMixedFlexWordsPattern(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.MIXED_FLEX_WORDS
 
     def is_non_whitespace(self):
-        node = TranslatedNonWhiteSpace(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.NON_WHITESPACE
 
     def is_non_whitespaces(self):
-        node = TranslatedNonWhiteSpaces(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.NON_WHITESPACES
 
     def is_non_whitespace_group(self):
-        node = TranslatedNonWhiteSpaceGroup(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.NON_WHITESPACE_GROUP
 
     def is_flex_non_whitespace_group(self):
-        node = TranslatedFlexNonWhiteSpaceGroup(self.data)
-        chk = node.translated
-        return chk
+        return self.name == TEXT.FLEX_NON_WHITESPACE_GROUP
 
     @classmethod
     def get_translated_pattern_object(cls, data):
@@ -198,7 +165,7 @@ class TranslatedDigitPattern(TranslatedPattern):
 
     def __init__(self, data):
         super().__init__(data)
-        self.name = 'digit'
+        self.name = TEXT.DIGIT
 
     def process(self):
         match = re.match('[0-9]$', self.data)   # noqa
@@ -239,7 +206,7 @@ class TranslatedDigitsPattern(TranslatedPattern):
 
     def __init__(self, data):
         super().__init__(data)
-        self.name = 'digits'
+        self.name = TEXT.DIGITS
 
     def process(self):
         match = re.match('[0-9]+$', self.data)   # noqa
@@ -280,7 +247,7 @@ class TranslatedDigitsPattern(TranslatedPattern):
 class TranslatedNumberPattern(TranslatedPattern):
     def __init__(self, data):
         super().__init__(data)
-        self.name = 'number'
+        self.name = TEXT.NUMBER
 
     def process(self):
         pat = '[0-9]*[.]?[0-9]+'
@@ -326,7 +293,7 @@ class TranslatedNumberPattern(TranslatedPattern):
 class TranslatedMixedNumberPattern(TranslatedPattern):
     def __init__(self, data):
         super().__init__(data)
-        self.name = 'mixed_number'
+        self.name = TEXT.MIXED_NUMBER
 
     def process(self):
         pat = r'[\(+-]?[0-9]*[.]?[0-9]+[)]?'
