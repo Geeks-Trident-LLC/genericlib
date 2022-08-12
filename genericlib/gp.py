@@ -325,7 +325,37 @@ class TranslatedLetterPattern(TranslatedPattern):
 
 
 class TranslatedLettersPattern(TranslatedPattern):
-    pass
+    def __init__(self, data):
+        super().__init__(data, name=TEXT.LETTERS,
+                         defined_pattern=r'[a-zA-Z]+')
+
+    def recommend(self, other):
+
+        is_subset_pat = other.is_letters()
+        is_subset_pat |= other.is_word()
+        is_subset_pat |= other.is_words()
+        is_subset_pat |= other.is_mixed_word()
+        is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_mixed_flex_words()
+        is_subset_pat |= other.is_non_whitespace()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespace_group()
+        is_subset_pat |= other.is_flex_non_whitespace_group()
+
+        if is_subset_pat:
+            new_instance = deepcopy(other)
+            return new_instance
+        elif other.is_letter():
+            new_instance = deepcopy(self)
+            return new_instance
+        elif other.is_digit() or other.is_digits():
+            new_instance = TranslatedWordPattern(other.data)
+            return new_instance
+        elif other.is_number() or other.is_mixed_number():
+            new_instance = TranslatedMixedWordPattern(other.data)
+            return new_instance
+        else:
+            raise Exception('TODO: add exception here')
 
 
 class TranslatedAlphabetNumericPattern(TranslatedPattern):

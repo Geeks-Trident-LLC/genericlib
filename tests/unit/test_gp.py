@@ -249,3 +249,35 @@ class TestTranslatedLetterPattern:
         recommended_pat = recommended_pat_obj.pattern
 
         assert recommended_pat == expected_pattern
+
+
+class TestTranslatedLettersPattern:
+    """Test class for TranslatedLettersPattern."""
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern",
+        [
+            ('', ''),
+            ('ab', '[a-zA-Z]+'),
+            ('b', '[a-zA-Z]+'),
+        ]
+    )
+    def test_letters_pattern(self, data, expected_pattern):
+        node = TranslatedLettersPattern(data)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "data,other,expected_pattern",
+        [
+            ('a', TranslatedLetterPattern('a'), '[a-zA-Z]+'),
+            ('a', TranslatedLettersPattern('ac'), '[a-zA-Z]+'),
+            # ('a', TranslatedDigitsPattern('4'), ''),
+        ]
+    )
+    def test_recommend_pattern(self, data, other, expected_pattern):
+        node = TranslatedLettersPattern(data)
+        recommended_pat_obj = node.recommend(other)
+        recommended_pat = recommended_pat_obj.pattern
+
+        assert recommended_pat == expected_pattern
