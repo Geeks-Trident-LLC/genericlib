@@ -159,17 +159,23 @@ class TranslatedDigitPattern(TranslatedPattern):
         is_subset_pat |= other.is_non_whitespace_group()
         is_subset_pat |= other.is_flex_non_whitespace_group()
 
+        is_new_pat_case1 = other.is_letter()
+        is_new_pat_case2 = other.is_letters()
+
         if is_subset_pat:
             new_instance = deepcopy(other)
             return new_instance
-        elif other.is_letter():
+        elif is_new_pat_case1:
             new_instance = TranslatedAlphabetNumericPattern(other.data)
             return new_instance
-        elif other.is_letters():
+        elif is_new_pat_case2:
             new_instance = TranslatedWordPattern(other.data)
             return new_instance
         else:
-            raise Exception('TODO: add exception here')
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
 
 
 class TranslatedDigitsPattern(TranslatedPattern):
@@ -188,25 +194,25 @@ class TranslatedDigitsPattern(TranslatedPattern):
         is_subset_pat |= other.is_words()
         is_subset_pat |= other.is_mixed_words()
         is_subset_pat |= other.is_mixed_flex_words()
-        is_subset_pat |= other.is_non_whitespaces()
-        is_subset_pat |= other.is_non_whitespace_group()
-        is_subset_pat |= other.is_flex_non_whitespace_group()
 
-        if other.is_digit():
-            new_instance = deepcopy(self)
-            return new_instance
-        elif is_subset_pat:
+        is_superset_pat = other.is_digit()
+
+        is_new_pat = other.is_letter() or other.is_letters() or other.is_alphabet_numeric()
+
+        if is_subset_pat:
             new_instance = deepcopy(other)
             return new_instance
-        elif other.is_letter() or other.is_letters() or other.is_alphabet_numeric():
+        elif is_superset_pat:
+            new_instance = deepcopy(self)
+            return new_instance
+        elif is_new_pat:
             new_instance = TranslatedWordPattern(other.data)
             return new_instance
-
-        elif other.is_non_whitespace():
-            new_instance = TranslatedNonWhiteSpaces(other.data)
-            return new_instance
         else:
-            raise Exception('TODO: add exception here')
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
 
 
 class TranslatedNumberPattern(TranslatedPattern):
@@ -221,32 +227,33 @@ class TranslatedNumberPattern(TranslatedPattern):
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
         is_subset_pat |= other.is_mixed_flex_words()
-        is_subset_pat |= other.is_non_whitespaces()
-        is_subset_pat |= other.is_non_whitespace_group()
-        is_subset_pat |= other.is_flex_non_whitespace_group()
 
-        is_singular_unrelated_pat = other.is_letter()
-        is_singular_unrelated_pat |= other.is_letters()
-        is_singular_unrelated_pat |= other.is_alphabet_numeric()
-        is_singular_unrelated_pat |= other.is_word()
+        is_superset_pat = other.is_digit() or other.is_digits()
 
-        if other.is_digit() or other.is_digits():
-            new_instance = deepcopy(self)
-            return new_instance
-        elif is_subset_pat:
+        is_new_pat_case1 = other.is_letter()
+        is_new_pat_case1 |= other.is_letters()
+        is_new_pat_case1 |= other.is_alphabet_numeric()
+        is_new_pat_case1 |= other.is_word()
+
+        is_new_pat_case2 = other.is_words()
+
+        if is_subset_pat:
             new_instance = deepcopy(other)
             return new_instance
-        elif is_singular_unrelated_pat:
+        elif is_superset_pat:
+            new_instance = deepcopy(self)
+            return new_instance
+        elif is_new_pat_case1:
             new_instance = TranslatedMixedWordPattern(other.data)
             return new_instance
-        elif other.is_words():
+        elif is_new_pat_case2:
             new_instance = TranslatedMixedWordsPattern(other.data)
             return new_instance
-        elif other.is_non_whitespace():
-            new_instance = TranslatedNonWhiteSpaces(other.data)
-            return new_instance
         else:
-            raise Exception('TODO: add exception here')
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
 
 
 class TranslatedMixedNumberPattern(TranslatedPattern):
@@ -260,32 +267,33 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
         is_subset_pat |= other.is_mixed_flex_words()
-        is_subset_pat |= other.is_non_whitespaces()
-        is_subset_pat |= other.is_non_whitespace_group()
-        is_subset_pat |= other.is_flex_non_whitespace_group()
 
-        is_singular_unrelated_pat = other.is_letter()
-        is_singular_unrelated_pat |= other.is_letters()
-        is_singular_unrelated_pat |= other.is_alphabet_numeric()
-        is_singular_unrelated_pat |= other.is_word()
+        is_superset_pat = other.is_digit() or other.is_digits() or other.is_number()
 
-        if other.is_digit() or other.is_digits() or other.is_number():
-            new_instance = deepcopy(self)
-            return new_instance
-        elif is_subset_pat:
+        is_new_pat_case1 = other.is_letter()
+        is_new_pat_case1 |= other.is_letters()
+        is_new_pat_case1 |= other.is_alphabet_numeric()
+        is_new_pat_case1 |= other.is_word()
+
+        is_new_pat_case2 = other.is_words()
+
+        if is_subset_pat:
             new_instance = deepcopy(other)
             return new_instance
-        elif is_singular_unrelated_pat:
+        if is_superset_pat:
+            new_instance = deepcopy(self)
+            return new_instance
+        elif is_new_pat_case1:
             new_instance = TranslatedMixedWordPattern(other.data)
             return new_instance
-        elif other.is_words():
+        elif is_new_pat_case2:
             new_instance = TranslatedMixedWordsPattern(other.data)
             return new_instance
-        elif other.is_non_whitespace():
-            new_instance = TranslatedNonWhiteSpaces(other.data)
-            return new_instance
         else:
-            raise Exception('TODO: add exception here')
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
 
 
 class TranslatedLetterPattern(TranslatedPattern):
@@ -302,25 +310,28 @@ class TranslatedLetterPattern(TranslatedPattern):
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
         is_subset_pat |= other.is_mixed_flex_words()
-        is_subset_pat |= other.is_non_whitespace()
-        is_subset_pat |= other.is_non_whitespaces()
-        is_subset_pat |= other.is_non_whitespace_group()
-        is_subset_pat |= other.is_flex_non_whitespace_group()
+
+        is_new_pat_case1 = other.is_digit()
+        is_new_pat_case2 = other.is_digits()
+        is_new_pat_case3 = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
             new_instance = deepcopy(other)
             return new_instance
-        elif other.is_digit():
+        elif is_new_pat_case1:
             new_instance = TranslatedAlphabetNumericPattern(other.data)
             return new_instance
-        elif other.is_digits():
+        elif is_new_pat_case2:
             new_instance = TranslatedWordPattern(other.data)
             return new_instance
-        elif other.is_number() or other.is_mixed_number():
+        elif is_new_pat_case3:
             new_instance = TranslatedMixedWordPattern(other.data)
             return new_instance
         else:
-            raise Exception('TODO: add exception here')
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
 
 
 class TranslatedLettersPattern(TranslatedPattern):
@@ -336,25 +347,29 @@ class TranslatedLettersPattern(TranslatedPattern):
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
         is_subset_pat |= other.is_mixed_flex_words()
-        is_subset_pat |= other.is_non_whitespace()
-        is_subset_pat |= other.is_non_whitespaces()
-        is_subset_pat |= other.is_non_whitespace_group()
-        is_subset_pat |= other.is_flex_non_whitespace_group()
+
+        is_superset_pat = other.is_letter()
+
+        is_new_pat_case1 = other.is_digit() or other.is_digits()
+        is_new_pat_case2 = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
             new_instance = deepcopy(other)
             return new_instance
-        elif other.is_letter():
+        elif is_superset_pat:
             new_instance = deepcopy(self)
             return new_instance
-        elif other.is_digit() or other.is_digits():
+        elif is_new_pat_case1:
             new_instance = TranslatedWordPattern(other.data)
             return new_instance
-        elif other.is_number() or other.is_mixed_number():
+        elif is_new_pat_case2:
             new_instance = TranslatedMixedWordPattern(other.data)
             return new_instance
         else:
-            raise Exception('TODO: add exception here')
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
 
 
 class TranslatedAlphabetNumericPattern(TranslatedPattern):
@@ -370,25 +385,29 @@ class TranslatedAlphabetNumericPattern(TranslatedPattern):
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
         is_subset_pat |= other.is_mixed_flex_words()
-        is_subset_pat |= other.is_non_whitespace()
-        is_subset_pat |= other.is_non_whitespaces()
-        is_subset_pat |= other.is_non_whitespace_group()
-        is_subset_pat |= other.is_flex_non_whitespace_group()
+
+        is_superset_pat = other.is_letter() or other.is_letters() or other.is_digit()
+
+        is_new_pat_case1 = other.is_digits()
+        is_new_pat_case2 = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
             new_instance = deepcopy(other)
             return new_instance
-        elif other.is_letter() or other.is_letters() or other.is_digit():
+        elif is_superset_pat:
             new_instance = deepcopy(self)
             return new_instance
-        elif other.is_digits():
+        elif is_new_pat_case1:
             new_instance = TranslatedWordPattern(other.data)
             return new_instance
-        elif other.is_number() or other.is_mixed_number():
+        elif is_new_pat_case2:
             new_instance = TranslatedMixedWordPattern(other.data)
             return new_instance
         else:
-            raise Exception('TODO: add exception here')
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
 
 
 class TranslatedWordPattern(TranslatedPattern):
@@ -403,10 +422,6 @@ class TranslatedWordPattern(TranslatedPattern):
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
         is_subset_pat |= other.is_mixed_flex_words()
-        is_subset_pat |= other.is_non_whitespace()
-        is_subset_pat |= other.is_non_whitespaces()
-        is_subset_pat |= other.is_non_whitespace_group()
-        is_subset_pat |= other.is_flex_non_whitespace_group()
 
         is_superset_pat = other.is_letter()
         is_superset_pat |= other.is_letters()
@@ -414,17 +429,22 @@ class TranslatedWordPattern(TranslatedPattern):
         is_superset_pat |= other.is_digits()
         is_superset_pat |= other.is_alphabet_numeric()
 
+        is_new_pat = other.is_number() or other.is_mixed_number()
+
         if is_subset_pat:
             new_instance = deepcopy(other)
             return new_instance
         elif is_superset_pat:
             new_instance = deepcopy(self)
             return new_instance
-        elif other.is_number() or other.is_mixed_number():
+        elif is_new_pat:
             new_instance = TranslatedMixedWordPattern(other.data)
             return new_instance
         else:
-            raise Exception('TODO: add exception here')
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
 
 
 class TranslatedWordsPattern(TranslatedPattern):
@@ -437,8 +457,6 @@ class TranslatedWordsPattern(TranslatedPattern):
         is_subset_pat = other.is_words()
         is_subset_pat |= other.is_mixed_words()
         is_subset_pat |= other.is_mixed_flex_words()
-        is_subset_pat |= other.is_non_whitespace_group()
-        is_subset_pat |= other.is_flex_non_whitespace_group()
 
         is_superset_pat = other.is_letter()
         is_superset_pat |= other.is_letters()
@@ -447,7 +465,7 @@ class TranslatedWordsPattern(TranslatedPattern):
         is_superset_pat |= other.is_alphabet_numeric()
         is_superset_pat |= other.is_word()
 
-        is_unrelated_pat = other.is_number() or other.is_mixed_number()
+        is_new_pat = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
             new_instance = deepcopy(other)
@@ -455,11 +473,14 @@ class TranslatedWordsPattern(TranslatedPattern):
         elif is_superset_pat:
             new_instance = deepcopy(self)
             return new_instance
-        elif is_unrelated_pat:
+        elif is_new_pat:
             new_instance = TranslatedMixedWordsPattern(other.data)
             return new_instance
         else:
-            raise Exception('TODO: add exception here')
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
 
 
 class TranslatedFlexWordsPattern(TranslatedPattern):
@@ -471,7 +492,6 @@ class TranslatedFlexWordsPattern(TranslatedPattern):
 
         is_subset_pat = other.is_flex_words()
         is_subset_pat |= other.is_mixed_flex_words()
-        is_subset_pat |= other.is_flex_non_whitespace_group()
 
         is_superset_pat = other.is_letter()
         is_superset_pat |= other.is_letters()
@@ -481,12 +501,8 @@ class TranslatedFlexWordsPattern(TranslatedPattern):
         is_superset_pat |= other.is_word()
         is_superset_pat |= other.is_words()
 
-        is_unrelated_pat_case1 = other.is_number()
-        is_unrelated_pat_case1 |= other.is_mixed_number()
-
-        is_unrelated_pat_case2 = other.is_non_whitespace()
-        is_unrelated_pat_case2 |= other.is_non_whitespaces()
-        is_unrelated_pat_case2 |= other.is_non_whitespace_group()
+        is_new_pat = other.is_number()
+        is_new_pat |= other.is_mixed_number()
 
         if is_subset_pat:
             new_instance = deepcopy(other)
@@ -494,14 +510,14 @@ class TranslatedFlexWordsPattern(TranslatedPattern):
         elif is_superset_pat:
             new_instance = deepcopy(self)
             return new_instance
-        elif is_unrelated_pat_case1:
+        elif is_new_pat:
             new_instance = TranslatedMixedFlexWordsPattern(other.data)
             return new_instance
-        elif is_unrelated_pat_case2:
-            new_instance = TranslatedFlexNonWhiteSpaceGroup(other.data)
-            return new_instance
         else:
-            raise Exception('TODO: add exception here')
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
 
 
 class TranslatedMixedWordPattern(TranslatedPattern):
