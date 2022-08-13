@@ -7,6 +7,7 @@ from genericlib import STRING
 from genericlib import PATTERN
 from genericlib import TEXT
 
+from genericlib import Misc
 
 from regexpro.collection import do_soft_regex_escape
 
@@ -504,7 +505,43 @@ class TranslatedFlexWordsPattern(TranslatedPattern):
 
 
 class TranslatedMixedWordPattern(TranslatedPattern):
-    pass
+    def __init__(self, data):
+        super().__init__(data, name=TEXT.MIXED_WORDS,
+                         defined_pattern=PATTERN.MIXED_WORD)
+
+    def recommend(self, other):
+
+        is_subset_pat = other.is_mixed_word()
+        is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_mixed_flex_words()
+
+        is_superset_pat = other.is_letter()
+        is_superset_pat |= other.is_letters()
+        is_superset_pat |= other.is_digit()
+        is_superset_pat |= other.is_digits()
+        is_superset_pat |= other.is_alphabet_numeric()
+        is_superset_pat |= other.is_word()
+
+        is_new_pat_case1 = other.is_words()
+        is_new_pat_case2 = other.is_flex_words()
+
+        if is_subset_pat:
+            new_instance = deepcopy(other)
+            return new_instance
+        elif is_superset_pat:
+            new_instance = deepcopy(self)
+            return new_instance
+        elif is_new_pat_case1:
+            new_instance = TranslatedMixedWordsPattern(other.data)
+            return new_instance
+        elif is_new_pat_case2:
+            new_instance = TranslatedMixedFlexWordsPattern(other.data)
+            return new_instance
+        else:
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
 
 
 class TranslatedMixedWordsPattern(TranslatedPattern):
