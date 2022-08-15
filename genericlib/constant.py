@@ -138,6 +138,8 @@ class TEXT:
     FLEX_NON_WHITESPACE_GROUP = 'flex_non_whitespace_group'
     FLEX_WORDS = 'flex_words'
 
+    GRAPH = 'graph'
+
     LETTER = 'letter'
     LETTERS = 'letters'
 
@@ -151,6 +153,10 @@ class TEXT:
     NON_WHITESPACE = 'non_whitespace'
     NON_WHITESPACE_GROUP = 'non_whitespace_group'
     NON_WHITESPACES = 'non_whitespaces'
+
+    PUNCT = 'punct'
+    PUNCTS = 'puncts'
+    PUNCTS_GROUP = 'puncts_group'
 
     WORD = 'word'
     WORDS = 'words'
