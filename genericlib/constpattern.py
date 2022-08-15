@@ -33,6 +33,10 @@ class PATTERN:
 
     ALPHABET_NUMERIC = '[a-zA-Z0-9]'
 
+    SYMBOL = r'[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]'
+    SYMBOLS = '%s+' % SYMBOL
+    SYMBOLS_GROUP = '%s( +%s)+' % (SYMBOLS, SYMBOLS)
+
     GRAPH = r'[\x21-\x7e]'
 
     WORD = r'\w+'

@@ -60,6 +60,18 @@ class TranslatedPattern:
     def is_alphabet_numeric(self):
         return self.name == TEXT.ALPHABET_NUMERIC
 
+    def is_symbol(self):
+        return self.name == TEXT.SYMBOL
+
+    def is_symbols(self):
+        return self.name == TEXT.SYMBOLS
+
+    def is_symbols_group(self):
+        return self.name == TEXT.SYMBOLS_GROUP
+
+    def is_graph(self):
+        return self.name == TEXT.GRAPH
+
     def is_word(self):
         return self.name == TEXT.WORD
 
@@ -106,6 +118,12 @@ class TranslatedPattern:
             TranslatedLettersPattern,
 
             TranslatedAlphabetNumericPattern,
+
+            TranslatedSymbolPattern,
+            TranslatedSymbolsPattern,
+            TranslatedSymbolsGroupPattern,
+
+            TranslatedGraphPattern,
 
             TranslatedWordPattern,
             TranslatedWordsPattern,
@@ -407,6 +425,101 @@ class TranslatedAlphabetNumericPattern(TranslatedPattern):
         elif is_new_pat_case2:
             new_instance = TranslatedMixedWordPattern(other.data)
             return new_instance
+        else:
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
+
+
+class TranslatedSymbolPattern(TranslatedPattern):
+    def __init__(self, data):
+        super().__init__(data, name=TEXT.SYMBOL,
+                         defined_pattern=PATTERN.SYMBOL)
+
+    def recommend(self, other):
+
+        is_subset_pat = other.is_symbol()
+        is_subset_pat |= other.is_graph()
+        is_subset_pat |= other.is_symbols()
+        is_subset_pat |= other.is_symbols_group()
+        is_subset_pat |= other.is_mixed_word()
+        is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_mixed_flex_words()
+
+        is_new_pat_case1 = other.is_letter() or other.is_digit()
+        is_new_pat_case1 |= other.is_alphabet_numeric()
+
+        is_new_pat_case2 = other.is_letters() or other.is_digits()
+        is_new_pat_case2 |= other.is_number() or other.is_mixed_number()
+        is_new_pat_case2 |= other.is_word()
+
+        is_new_pat_case3 = other.is_words()
+
+        is_new_pat_case4 = other.is_flex_words()
+
+        if is_subset_pat:
+            new_instance = other.copy()
+            return new_instance
+        elif is_new_pat_case1:
+            new_instance = TranslatedGraphPattern(other.data)
+            return new_instance
+        elif is_new_pat_case2:
+            new_instance = TranslatedMixedWordPattern(other.data)
+            return new_instance
+        elif is_new_pat_case3:
+            new_instance = TranslatedMixedWordsPattern(other.data)
+            return new_instance
+        elif is_new_pat_case4:
+            new_instance = TranslatedMixedFlexWordsPattern(other.data)
+            return new_instance
+        else:
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
+
+
+class TranslatedSymbolsPattern(TranslatedPattern):
+    def __init__(self, data):
+        super().__init__(data, name=TEXT.SYMBOLS,
+                         defined_pattern=PATTERN.SYMBOLS)
+
+    def recommend(self, other):
+
+        if True:
+            return other
+        else:
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
+
+
+class TranslatedSymbolsGroupPattern(TranslatedPattern):
+    def __init__(self, data):
+        super().__init__(data, name=TEXT.SYMBOLS_GROUP,
+                         defined_pattern=PATTERN.SYMBOLS_GROUP)
+
+    def recommend(self, other):
+        if True:
+            return other
+        else:
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
+
+
+class TranslatedGraphPattern(TranslatedPattern):
+    def __init__(self, data):
+        super().__init__(data, name=TEXT.GRAPH,
+                         defined_pattern=PATTERN.GRAPH)
+
+    def recommend(self, other):
+
+        if True:
+            return other
         else:
             cls_name = Misc.get_instance_class_name(self)
             fmt = 'Need to implement this case (%r, %r) for %s'

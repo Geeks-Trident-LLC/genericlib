@@ -158,6 +158,10 @@ class TEXT:
     PUNCTS = 'puncts'
     PUNCTS_GROUP = 'puncts_group'
 
+    SYMBOL = 'symbol'
+    SYMBOLS = 'symbols'
+    SYMBOLS_GROUP = 'symbols_group'
+
     WORD = 'word'
     WORDS = 'words'
 
