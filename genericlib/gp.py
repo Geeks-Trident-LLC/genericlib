@@ -487,8 +487,40 @@ class TranslatedSymbolsPattern(TranslatedPattern):
 
     def recommend(self, other):
 
-        if True:
-            return other
+        is_subset_pat = other.is_symbols()
+        is_subset_pat |= other.is_symbols_group()
+        is_subset_pat |= other.is_mixed_word()
+        is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_mixed_flex_words()
+
+        is_superset_pat = other.is_symbol()
+
+        is_new_pat_case1 = other.is_letter() or other.is_digit()
+        is_new_pat_case1 |= other.is_alphabet_numeric() or other.is_graph()
+        is_new_pat_case1 |= other.is_letters() or other.is_digits()
+        is_new_pat_case1 |= other.is_number() or other.is_mixed_number()
+        is_new_pat_case1 |= other.is_word()
+
+        is_new_pat_case2 = other.is_words()
+
+        is_new_pat_case3 = other.is_flex_words()
+
+        if is_subset_pat:
+            new_instance = other.copy()
+            return new_instance
+        elif is_superset_pat:
+            new_instance = self.copy()
+            return new_instance
+        elif is_new_pat_case1:
+            new_instance = TranslatedMixedWordPattern(other.data)
+            return new_instance
+            return new_instance
+        elif is_new_pat_case2:
+            new_instance = TranslatedMixedWordsPattern(other.data)
+            return new_instance
+        elif is_new_pat_case3:
+            new_instance = TranslatedMixedFlexWordsPattern(other.data)
+            return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
             fmt = 'Need to implement this case (%r, %r) for %s'

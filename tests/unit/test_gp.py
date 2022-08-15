@@ -570,12 +570,51 @@ class TestTranslatedSymbolPattern:
             ('*', TranslatedDigitsPattern('42'), '[\\x21-\\x7e]+'),
             ('{', TranslatedAlphabetNumericPattern('4'), '[\\x21-\\x7e]'),
             ('}', TranslatedWordPattern('4'), '[\\x21-\\x7e]+'),
-            ('}', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            ('}', TranslatedFlexWordsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
+            ('=', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            (':', TranslatedFlexWordsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
         node = TranslatedSymbolPattern(data)
+        recommended_pat_obj = node.recommend(other)
+        recommended_pat = recommended_pat_obj.pattern
+
+        assert recommended_pat == expected_pattern
+
+
+class TestTranslatedSymbolsPattern:
+    """Test class for TranslatedSymbolsPattern."""
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern",
+        [
+            ('', ''),
+            ('a', ''),
+            ('1.', ''),
+            ('@', '[\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e]+'),
+            ('+-', '[\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e]+'),
+        ]
+    )
+    def test_symbols_pattern(self, data, expected_pattern):
+        node = TranslatedSymbolsPattern(data)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "data,other,expected_pattern",
+        [
+            ('@', TranslatedLetterPattern('a'), '[\\x21-\\x7e]+'),
+            ('.', TranslatedLettersPattern('ab'), '[\\x21-\\x7e]+'),
+            ('+', TranslatedDigitPattern('1'), '[\\x21-\\x7e]+'),
+            ('*', TranslatedDigitsPattern('42'), '[\\x21-\\x7e]+'),
+            ('{', TranslatedAlphabetNumericPattern('4'), '[\\x21-\\x7e]+'),
+            ('}', TranslatedWordPattern('4'), '[\\x21-\\x7e]+'),
+            ('=', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            (':', TranslatedFlexWordsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
+        ]
+    )
+    def test_recommend_pattern(self, data, other, expected_pattern):
+        node = TranslatedSymbolsPattern(data)
         recommended_pat_obj = node.recommend(other)
         recommended_pat = recommended_pat_obj.pattern
 
