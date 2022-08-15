@@ -658,3 +658,42 @@ class TestTranslatedSymbolsGroupPattern:
         recommended_pat = recommended_pat_obj.pattern
 
         assert recommended_pat == expected_pattern
+
+
+class TestTranslatedGraphPattern:
+    """Test class for TranslatedGraphPattern."""
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern",
+        [
+            ('', ''),
+            ('aa', ''),
+            ('1', r'[\x21-\x7e]'),
+            ('+', r'[\x21-\x7e]'),
+            ('a', r'[\x21-\x7e]'),
+        ]
+    )
+    def test_graph_pattern(self, data, expected_pattern):
+        node = TranslatedGraphPattern(data)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "data,other,expected_pattern",
+        [
+            ('-', TranslatedLetterPattern('a'), r'[\x21-\x7e]'),
+            ('.', TranslatedLettersPattern('ab'), r'[\x21-\x7e]+'),
+            ('+', TranslatedDigitPattern('1'), r'[\x21-\x7e]'),
+            ('*', TranslatedDigitsPattern('42'), r'[\x21-\x7e]+'),
+            ('a', TranslatedAlphabetNumericPattern('4'), r'[\x21-\x7e]'),
+            ('}', TranslatedWordPattern('4'), r'[\x21-\x7e]+'),
+            ('=', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            (':', TranslatedFlexWordsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
+        ]
+    )
+    def test_recommend_pattern(self, data, other, expected_pattern):
+        node = TranslatedGraphPattern(data)
+        recommended_pat_obj = node.recommend(other)
+        recommended_pat = recommended_pat_obj.pattern
+
+        assert recommended_pat == expected_pattern
