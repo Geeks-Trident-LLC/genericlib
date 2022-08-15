@@ -23,6 +23,7 @@ from .utils import Printer
 from .utils import Misc
 from .utils import MiscOutput
 from .utils import MiscFunction
+from .utils import MiscObject
 from .utils import Tabular
 from .utils import get_data_as_tabular
 from .utils import print_data_as_tabular
@@ -54,6 +55,7 @@ __all__ = [
     'Misc',
     'MiscFunction',
     'MiscOutput',
+    'MiscObject',
 
     'Printer',
 

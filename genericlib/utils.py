@@ -3,6 +3,7 @@
 import platform
 import sys
 import re
+import copy
 
 import subprocess
 
@@ -539,6 +540,16 @@ class MiscFunction:
         sys.stderr = stderr_bak
 
         return result
+
+
+class MiscObject:
+    @classmethod
+    def copy(cls, instance, is_deep_copy=True):
+        if is_deep_copy:
+            new_instance = copy.deepcopy(instance)
+        else:
+            new_instance = copy.copy(instance)
+        return new_instance
 
 
 class Tabular:
