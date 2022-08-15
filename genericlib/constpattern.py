@@ -39,5 +39,5 @@ class PATTERN:
     WORDS = r'%s( %s)*' % (WORD, WORD)
     FLEX_WORDS = r'%s( +%s)*' % (WORD, WORD)
     MIXED_WORD = '%s+' % GRAPH
-    MIXED_WORDS = '%s( %s)*' % (GRAPH, GRAPH)
-    MIXED_FLEX_WORDS = '%s( +%s)*' % (GRAPH, GRAPH)
+    MIXED_WORDS = '%s( %s)*' % (MIXED_WORD, MIXED_WORD)
+    MIXED_FLEX_WORDS = '%s( +%s)*' % (MIXED_WORD, MIXED_WORD)
