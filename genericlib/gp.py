@@ -1,5 +1,4 @@
 import re
-from copy import deepcopy
 # from difflib import SequenceMatcher
 
 from genericlib import NUMBER
@@ -8,6 +7,7 @@ from genericlib import PATTERN
 from genericlib import TEXT
 
 from genericlib import Misc
+from genericlib import MiscObject
 
 from regexpro.collection import do_soft_regex_escape
 
@@ -90,6 +90,10 @@ class TranslatedPattern:
     def is_flex_non_whitespace_group(self):
         return self.name == TEXT.FLEX_NON_WHITESPACE_GROUP
 
+    def copy(self):
+        copied_instance = MiscObject.copy(self)
+        return copied_instance
+
     @classmethod
     def get_translated_pattern_object(cls, data):
         classes = [
@@ -163,7 +167,7 @@ class TranslatedDigitPattern(TranslatedPattern):
         is_new_pat_case2 = other.is_letters()
 
         if is_subset_pat:
-            new_instance = deepcopy(other)
+            new_instance = other.copy()
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedAlphabetNumericPattern(other.data)
@@ -200,10 +204,10 @@ class TranslatedDigitsPattern(TranslatedPattern):
         is_new_pat = other.is_letter() or other.is_letters() or other.is_alphabet_numeric()
 
         if is_subset_pat:
-            new_instance = deepcopy(other)
+            new_instance = other.copy()
             return new_instance
         elif is_superset_pat:
-            new_instance = deepcopy(self)
+            new_instance = self.copy()
             return new_instance
         elif is_new_pat:
             new_instance = TranslatedWordPattern(other.data)
@@ -238,10 +242,10 @@ class TranslatedNumberPattern(TranslatedPattern):
         is_new_pat_case2 = other.is_words()
 
         if is_subset_pat:
-            new_instance = deepcopy(other)
+            new_instance = other.copy()
             return new_instance
         elif is_superset_pat:
-            new_instance = deepcopy(self)
+            new_instance = self.copy()
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedMixedWordPattern(other.data)
@@ -278,10 +282,10 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
         is_new_pat_case2 = other.is_words()
 
         if is_subset_pat:
-            new_instance = deepcopy(other)
+            new_instance = other.copy()
             return new_instance
         if is_superset_pat:
-            new_instance = deepcopy(self)
+            new_instance = self.copy()
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedMixedWordPattern(other.data)
@@ -316,7 +320,7 @@ class TranslatedLetterPattern(TranslatedPattern):
         is_new_pat_case3 = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
-            new_instance = deepcopy(other)
+            new_instance = other.copy()
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedAlphabetNumericPattern(other.data)
@@ -354,10 +358,10 @@ class TranslatedLettersPattern(TranslatedPattern):
         is_new_pat_case2 = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
-            new_instance = deepcopy(other)
+            new_instance = other.copy()
             return new_instance
         elif is_superset_pat:
-            new_instance = deepcopy(self)
+            new_instance = self.copy()
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedWordPattern(other.data)
@@ -392,10 +396,10 @@ class TranslatedAlphabetNumericPattern(TranslatedPattern):
         is_new_pat_case2 = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
-            new_instance = deepcopy(other)
+            new_instance = other.copy()
             return new_instance
         elif is_superset_pat:
-            new_instance = deepcopy(self)
+            new_instance = self.copy()
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedWordPattern(other.data)
@@ -432,10 +436,10 @@ class TranslatedWordPattern(TranslatedPattern):
         is_new_pat = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
-            new_instance = deepcopy(other)
+            new_instance = other.copy()
             return new_instance
         elif is_superset_pat:
-            new_instance = deepcopy(self)
+            new_instance = self.copy()
             return new_instance
         elif is_new_pat:
             new_instance = TranslatedMixedWordPattern(other.data)
@@ -468,10 +472,10 @@ class TranslatedWordsPattern(TranslatedPattern):
         is_new_pat = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
-            new_instance = deepcopy(other)
+            new_instance = other.copy()
             return new_instance
         elif is_superset_pat:
-            new_instance = deepcopy(self)
+            new_instance = self.copy()
             return new_instance
         elif is_new_pat:
             new_instance = TranslatedMixedWordsPattern(other.data)
@@ -505,10 +509,10 @@ class TranslatedFlexWordsPattern(TranslatedPattern):
         is_new_pat |= other.is_mixed_number()
 
         if is_subset_pat:
-            new_instance = deepcopy(other)
+            new_instance = other.copy()
             return new_instance
         elif is_superset_pat:
-            new_instance = deepcopy(self)
+            new_instance = self.copy()
             return new_instance
         elif is_new_pat:
             new_instance = TranslatedMixedFlexWordsPattern(other.data)
@@ -542,10 +546,10 @@ class TranslatedMixedWordPattern(TranslatedPattern):
         is_new_pat_case2 = other.is_flex_words()
 
         if is_subset_pat:
-            new_instance = deepcopy(other)
+            new_instance = other.copy()
             return new_instance
         elif is_superset_pat:
-            new_instance = deepcopy(self)
+            new_instance = self.copy()
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedMixedWordsPattern(other.data)
@@ -582,10 +586,10 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
         is_new_pat_case = other.is_flex_words()
 
         if is_subset_pat:
-            new_instance = deepcopy(other)
+            new_instance = other.copy()
             return new_instance
         elif is_superset_pat:
-            new_instance = deepcopy(self)
+            new_instance = self.copy()
             return new_instance
         elif is_new_pat_case:
             new_instance = TranslatedMixedFlexWordsPattern(other.data)
@@ -618,10 +622,10 @@ class TranslatedMixedFlexWordsPattern(TranslatedPattern):
         is_superset_pat |= other.is_mixed_words()
 
         if is_subset_pat:
-            new_instance = deepcopy(other)
+            new_instance = other.copy()
             return new_instance
         elif is_superset_pat:
-            new_instance = deepcopy(self)
+            new_instance = self.copy()
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
