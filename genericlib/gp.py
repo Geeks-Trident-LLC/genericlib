@@ -14,9 +14,13 @@ from regexpro.collection import do_soft_regex_escape
 
 class TranslatedPattern:
 
-    def __init__(self, data, name='', defined_pattern=''):
+    def __init__(self, data, *other, name='',
+                 defined_pattern='', defined_patterns=None):
         self.data = str(data)
+        self.other_data = other[NUMBER.ZERO] if other else STRING.EMPTY
         self.defined_pattern = str(defined_pattern)
+        lst = defined_patterns if isinstance(defined_patterns, list) else []
+        self.defined_patterns = lst
         self.name = str(name)
         self._pattern = STRING.EMPTY
         self.process()
@@ -35,9 +39,26 @@ class TranslatedPattern:
         return self._pattern
 
     def process(self):
-        match = re.match('%s$' % self.defined_pattern, self.data)
-        if match:
-            self._pattern = self.defined_pattern
+        if self.defined_patterns:
+            for pat in self.defined_patterns[::-NUMBER.ONE]:
+                matched_pat = self.check_matching(pat)
+                if matched_pat:
+                    self._pattern = matched_pat
+                    break
+        else:
+            matched_pat = self.check_matching(self.defined_pattern)
+            self._pattern = matched_pat
+
+    def check_matching(self, pattern):
+        pat = '%s$' % pattern
+        match = re.match(pat, self.data)
+        if self.other_data:
+            other_match = re.match(pat, self.other_data)
+            matched_pat = pattern if match and other_match else STRING.EMPTY
+        else:
+            matched_pat = pattern if match else STRING.EMPTY
+
+        return matched_pat
 
     def is_digit(self):
         return self.name == TEXT.DIGIT
