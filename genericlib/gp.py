@@ -99,17 +99,11 @@ class TranslatedPattern:
     def is_words(self):
         return self.name == TEXT.WORDS
 
-    def is_flex_words(self):
-        return self.name == TEXT.FLEX_WORDS
-
     def is_mixed_word(self):
         return self.name == TEXT.MIXED_WORD
 
     def is_mixed_words(self):
         return self.name == TEXT.MIXED_WORDS
-
-    def is_mixed_flex_words(self):
-        return self.name == TEXT.MIXED_FLEX_WORDS
 
     def is_non_whitespace(self):
         return self.name == TEXT.NON_WHITESPACE
@@ -119,9 +113,6 @@ class TranslatedPattern:
 
     def is_non_whitespace_group(self):
         return self.name == TEXT.NON_WHITESPACE_GROUP
-
-    def is_flex_non_whitespace_group(self):
-        return self.name == TEXT.FLEX_NON_WHITESPACE_GROUP
 
     def copy(self):
         copied_instance = MiscObject.copy(self)
@@ -153,12 +144,10 @@ class TranslatedPattern:
             TranslatedMixedWordPattern,
 
             TranslatedMixedWordsPattern,
-            TranslatedMixedFlexWordsPattern,
 
             TranslatedNonWhiteSpace,
             TranslatedNonWhiteSpaces,
             TranslatedNonWhiteSpaceGroup,
-            TranslatedFlexNonWhiteSpaceGroup
         ]
         for class_ in classes:
             node = class_(data)
@@ -196,11 +185,9 @@ class TranslatedDigitPattern(TranslatedPattern):
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_words()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
         is_subset_pat |= other.is_non_whitespace()
         is_subset_pat |= other.is_non_whitespaces()
         is_subset_pat |= other.is_non_whitespace_group()
-        is_subset_pat |= other.is_flex_non_whitespace_group()
 
         is_new_pat_case1 = other.is_letter()
         is_new_pat_case2 = other.is_letters()
@@ -236,7 +223,6 @@ class TranslatedDigitsPattern(TranslatedPattern):
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_words()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_superset_pat = other.is_digit()
 
@@ -269,7 +255,6 @@ class TranslatedNumberPattern(TranslatedPattern):
         is_subset_pat |= other.is_mixed_number()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_superset_pat = other.is_digit() or other.is_digits()
 
@@ -309,7 +294,6 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
         is_subset_pat = other.is_mixed_number()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_superset_pat = other.is_digit() or other.is_digits() or other.is_number()
 
@@ -352,7 +336,6 @@ class TranslatedLetterPattern(TranslatedPattern):
         is_subset_pat |= other.is_words()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_new_pat_case1 = other.is_digit()
         is_new_pat_case2 = other.is_digits()
@@ -389,7 +372,6 @@ class TranslatedLettersPattern(TranslatedPattern):
         is_subset_pat |= other.is_words()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_superset_pat = other.is_letter()
 
@@ -427,7 +409,6 @@ class TranslatedAlphabetNumericPattern(TranslatedPattern):
         is_subset_pat |= other.is_words()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_superset_pat = other.is_letter() or other.is_letters() or other.is_digit()
 
@@ -466,7 +447,6 @@ class TranslatedSymbolPattern(TranslatedPattern):
         is_subset_pat |= other.is_symbols_group()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_new_pat_case1 = other.is_letter() or other.is_digit()
         is_new_pat_case1 |= other.is_alphabet_numeric()
@@ -476,8 +456,6 @@ class TranslatedSymbolPattern(TranslatedPattern):
         is_new_pat_case2 |= other.is_word()
 
         is_new_pat_case3 = other.is_words()
-
-        is_new_pat_case4 = other.is_flex_words()
 
         if is_subset_pat:
             new_instance = other.copy()
@@ -490,9 +468,6 @@ class TranslatedSymbolPattern(TranslatedPattern):
             return new_instance
         elif is_new_pat_case3:
             new_instance = TranslatedMixedWordsPattern(other.data)
-            return new_instance
-        elif is_new_pat_case4:
-            new_instance = TranslatedMixedFlexWordsPattern(other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -512,7 +487,6 @@ class TranslatedSymbolsPattern(TranslatedPattern):
         is_subset_pat |= other.is_symbols_group()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_superset_pat = other.is_symbol()
 
@@ -523,8 +497,6 @@ class TranslatedSymbolsPattern(TranslatedPattern):
         is_new_pat_case1 |= other.is_word()
 
         is_new_pat_case2 = other.is_words()
-
-        is_new_pat_case3 = other.is_flex_words()
 
         if is_subset_pat:
             new_instance = other.copy()
@@ -538,9 +510,6 @@ class TranslatedSymbolsPattern(TranslatedPattern):
             return new_instance
         elif is_new_pat_case2:
             new_instance = TranslatedMixedWordsPattern(other.data)
-            return new_instance
-        elif is_new_pat_case3:
-            new_instance = TranslatedMixedFlexWordsPattern(other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -559,7 +528,6 @@ class TranslatedSymbolsGroupPattern(TranslatedPattern):
         is_subset_pat = other.is_symbols_group()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_superset_pat = other.is_symbol() or other.is_symbols()
 
@@ -569,8 +537,6 @@ class TranslatedSymbolsGroupPattern(TranslatedPattern):
         is_new_pat_case1 |= other.is_number() or other.is_mixed_number()
         is_new_pat_case1 |= other.is_word() or other.is_words()
 
-        is_new_pat_case2 = other.is_flex_words()
-
         if is_subset_pat:
             new_instance = other.copy()
             return new_instance
@@ -579,9 +545,6 @@ class TranslatedSymbolsGroupPattern(TranslatedPattern):
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedMixedWordsPattern(other.data)
-            return new_instance
-        elif is_new_pat_case2:
-            new_instance = TranslatedMixedFlexWordsPattern(other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -599,7 +562,6 @@ class TranslatedGraphPattern(TranslatedPattern):
 
         is_subset_pat = other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_superset_pat = other.is_letter() or other.is_digit()
         is_superset_pat |= other.is_alphabet_numeric() or other.is_symbol()
@@ -609,8 +571,6 @@ class TranslatedGraphPattern(TranslatedPattern):
         is_new_pat_case1 |= other.is_word()
 
         is_new_pat_case2 = other.is_words()
-
-        is_new_pat_case3 = other.is_flex_words()
 
         if is_subset_pat:
             new_instance = other.copy()
@@ -623,9 +583,6 @@ class TranslatedGraphPattern(TranslatedPattern):
             return new_instance
         elif is_new_pat_case2:
             new_instance = TranslatedMixedWordsPattern(other.data)
-            return new_instance
-        elif is_new_pat_case3:
-            new_instance = TranslatedMixedFlexWordsPattern(other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -645,7 +602,6 @@ class TranslatedWordPattern(TranslatedPattern):
         is_subset_pat |= other.is_words()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_superset_pat = other.is_letter()
         is_superset_pat |= other.is_letters()
@@ -680,7 +636,6 @@ class TranslatedWordsPattern(TranslatedPattern):
 
         is_subset_pat = other.is_words()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_superset_pat = other.is_letter()
         is_superset_pat |= other.is_letters()
@@ -707,43 +662,6 @@ class TranslatedWordsPattern(TranslatedPattern):
             raise Exception(err_msg)
 
 
-class TranslatedFlexWordsPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.FLEX_WORDS,
-                         defined_pattern=PATTERN.FLEX_WORDS)
-
-    def recommend(self, other):
-
-        is_subset_pat = other.is_flex_words()
-        is_subset_pat |= other.is_mixed_flex_words()
-
-        is_superset_pat = other.is_letter()
-        is_superset_pat |= other.is_letters()
-        is_superset_pat |= other.is_digit()
-        is_superset_pat |= other.is_digits()
-        is_superset_pat |= other.is_alphabet_numeric()
-        is_superset_pat |= other.is_word()
-        is_superset_pat |= other.is_words()
-
-        is_new_pat = other.is_number()
-        is_new_pat |= other.is_mixed_number()
-
-        if is_subset_pat:
-            new_instance = other.copy()
-            return new_instance
-        elif is_superset_pat:
-            new_instance = self.copy()
-            return new_instance
-        elif is_new_pat:
-            new_instance = TranslatedMixedFlexWordsPattern(other.data)
-            return new_instance
-        else:
-            cls_name = Misc.get_instance_class_name(self)
-            fmt = 'Need to implement this case (%r, %r) for %s'
-            err_msg = fmt % (self.data, other.data, cls_name)
-            raise Exception(err_msg)
-
-
 class TranslatedMixedWordPattern(TranslatedPattern):
     def __init__(self, data):
         super().__init__(data, name=TEXT.MIXED_WORD,
@@ -753,7 +671,6 @@ class TranslatedMixedWordPattern(TranslatedPattern):
 
         is_subset_pat = other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_superset_pat = other.is_letter()
         is_superset_pat |= other.is_letters()
@@ -763,7 +680,6 @@ class TranslatedMixedWordPattern(TranslatedPattern):
         is_superset_pat |= other.is_word()
 
         is_new_pat_case1 = other.is_words()
-        is_new_pat_case2 = other.is_flex_words()
 
         if is_subset_pat:
             new_instance = other.copy()
@@ -773,9 +689,6 @@ class TranslatedMixedWordPattern(TranslatedPattern):
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedMixedWordsPattern(other.data)
-            return new_instance
-        elif is_new_pat_case2:
-            new_instance = TranslatedMixedFlexWordsPattern(other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -792,7 +705,6 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
     def recommend(self, other):
 
         is_subset_pat = other.is_mixed_words()
-        is_subset_pat |= other.is_mixed_flex_words()
 
         is_superset_pat = other.is_letter()
         is_superset_pat |= other.is_letters()
@@ -802,44 +714,6 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
         is_superset_pat |= other.is_word()
         is_superset_pat |= other.is_words()
         is_superset_pat |= other.is_mixed_word()
-
-        is_new_pat_case = other.is_flex_words()
-
-        if is_subset_pat:
-            new_instance = other.copy()
-            return new_instance
-        elif is_superset_pat:
-            new_instance = self.copy()
-            return new_instance
-        elif is_new_pat_case:
-            new_instance = TranslatedMixedFlexWordsPattern(other.data)
-            return new_instance
-        else:
-            cls_name = Misc.get_instance_class_name(self)
-            fmt = 'Need to implement this case (%r, %r) for %s'
-            err_msg = fmt % (self.data, other.data, cls_name)
-            raise Exception(err_msg)
-
-
-class TranslatedMixedFlexWordsPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.MIXED_FLEX_WORDS,
-                         defined_pattern=PATTERN.MIXED_FLEX_WORDS)
-
-    def recommend(self, other):
-
-        is_subset_pat = other.is_mixed_flex_words()
-
-        is_superset_pat = other.is_letter()
-        is_superset_pat |= other.is_letters()
-        is_superset_pat |= other.is_digit()
-        is_superset_pat |= other.is_digits()
-        is_superset_pat |= other.is_alphabet_numeric()
-        is_superset_pat |= other.is_word()
-        is_superset_pat |= other.is_words()
-        is_superset_pat |= other.is_flex_words()
-        is_superset_pat |= other.is_mixed_word()
-        is_superset_pat |= other.is_mixed_words()
 
         if is_subset_pat:
             new_instance = other.copy()
@@ -863,10 +737,6 @@ class TranslatedNonWhiteSpaces(TranslatedPattern):
 
 
 class TranslatedNonWhiteSpaceGroup(TranslatedPattern):
-    pass
-
-
-class TranslatedFlexNonWhiteSpaceGroup(TranslatedPattern):
     pass
 
 

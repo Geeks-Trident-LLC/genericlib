@@ -1,6 +1,6 @@
 # import re
 
-import pytest
+import pytest           # noqa
 from genericlib.gp import CommonPhrase
 
 from genericlib.gp import TranslatedPattern
@@ -23,15 +23,12 @@ from genericlib.gp import TranslatedGraphPattern
 
 from genericlib.gp import TranslatedWordPattern
 from genericlib.gp import TranslatedWordsPattern
-from genericlib.gp import TranslatedFlexWordsPattern
 from genericlib.gp import TranslatedMixedWordPattern
 from genericlib.gp import TranslatedMixedWordsPattern
-from genericlib.gp import TranslatedMixedFlexWordsPattern
 
-from genericlib.gp import TranslatedNonWhiteSpace
-from genericlib.gp import TranslatedNonWhiteSpaces
-from genericlib.gp import TranslatedNonWhiteSpaceGroup
-from genericlib.gp import TranslatedFlexNonWhiteSpaceGroup
+# from genericlib.gp import TranslatedNonWhiteSpace
+# from genericlib.gp import TranslatedNonWhiteSpaces
+# from genericlib.gp import TranslatedNonWhiteSpaceGroup
 
 
 class TestCommonPhrase:
@@ -392,43 +389,6 @@ class TestTranslatedWordsPattern:
         assert recommended_pat == expected_pattern
 
 
-class TestTranslatedFlexWordsPattern:
-    """Test class for TranslatedFlexWordsPattern."""
-
-    @pytest.mark.parametrize(
-        "data,expected_pattern",
-        [
-            ('', ''),
-            ('ab  xy', '\\w+( +\\w+)*'),
-            ('1', '\\w+( +\\w+)*'),
-            ('ab xy', '\\w+( +\\w+)*'),
-        ]
-    )
-    def test_flex_words_pattern(self, data, expected_pattern):
-        node = TranslatedFlexWordsPattern(data)
-        pattern = node.pattern
-        assert pattern == expected_pattern
-
-    @pytest.mark.parametrize(
-        "data,other,expected_pattern",
-        [
-            ('a', TranslatedLetterPattern('a'), '\\w+( +\\w+)*'),
-            ('a', TranslatedLettersPattern('ab'), '\\w+( +\\w+)*'),
-            ('a', TranslatedDigitPattern('1'), '\\w+( +\\w+)*'),
-            ('a', TranslatedDigitsPattern('4'), '\\w+( +\\w+)*'),
-            ('a', TranslatedAlphabetNumericPattern('4'), '\\w+( +\\w+)*'),
-            ('a', TranslatedWordPattern('4'), '\\w+( +\\w+)*'),
-            ('a', TranslatedWordsPattern('ab xy'), '\\w+( +\\w+)*'),
-        ]
-    )
-    def test_recommend_pattern(self, data, other, expected_pattern):
-        node = TranslatedFlexWordsPattern(data)
-        recommended_pat_obj = node.recommend(other)
-        recommended_pat = recommended_pat_obj.pattern
-
-        assert recommended_pat == expected_pattern
-
-
 class TestTranslatedMixedWordPattern:
     """Test class for TranslatedMixedWordPattern."""
 
@@ -505,44 +465,6 @@ class TestTranslatedMixedWordsPattern:
         assert recommended_pat == expected_pattern
 
 
-class TestTranslatedMixedFlexWordsPattern:
-    """Test class for TranslatedMixedFlexWordsPattern."""
-
-    @pytest.mark.parametrize(
-        "data,expected_pattern",
-        [
-            ('', ''),
-            ('ab xy', '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
-            ('1', '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
-            ('abc', '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
-            ('192.168.0.1', '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
-            ('a::b', '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
-        ]
-    )
-    def test_mixed_flex_words_pattern(self, data, expected_pattern):
-        node = TranslatedMixedFlexWordsPattern(data)
-        pattern = node.pattern
-        assert pattern == expected_pattern
-
-    @pytest.mark.parametrize(
-        "data,other,expected_pattern",
-        [
-            ('a', TranslatedLetterPattern('a'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
-            ('a', TranslatedLettersPattern('ab'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
-            ('a', TranslatedDigitPattern('1'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
-            ('a', TranslatedDigitsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
-            ('a', TranslatedAlphabetNumericPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
-            ('a', TranslatedWordPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
-        ]
-    )
-    def test_recommend_pattern(self, data, other, expected_pattern):
-        node = TranslatedMixedFlexWordsPattern(data)
-        recommended_pat_obj = node.recommend(other)
-        recommended_pat = recommended_pat_obj.pattern
-
-        assert recommended_pat == expected_pattern
-
-
 class TestTranslatedSymbolPattern:
     """Test class for TranslatedSymbolPattern."""
 
@@ -571,7 +493,6 @@ class TestTranslatedSymbolPattern:
             ('{', TranslatedAlphabetNumericPattern('4'), '[\\x21-\\x7e]'),
             ('}', TranslatedWordPattern('4'), '[\\x21-\\x7e]+'),
             ('=', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            (':', TranslatedFlexWordsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -610,7 +531,6 @@ class TestTranslatedSymbolsPattern:
             ('{', TranslatedAlphabetNumericPattern('4'), '[\\x21-\\x7e]+'),
             ('}', TranslatedWordPattern('4'), '[\\x21-\\x7e]+'),
             ('=', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            (':', TranslatedFlexWordsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -649,7 +569,6 @@ class TestTranslatedSymbolsGroupPattern:
             ('{{ {{', TranslatedAlphabetNumericPattern('4'), r'[\x21-\x7e]+( [\x21-\x7e]+)*'),
             ('}} }}', TranslatedWordPattern('4'), r'[\x21-\x7e]+( [\x21-\x7e]+)*'),
             ('== ==', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            (':: ::', TranslatedFlexWordsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -688,7 +607,6 @@ class TestTranslatedGraphPattern:
             ('a', TranslatedAlphabetNumericPattern('4'), r'[\x21-\x7e]'),
             ('}', TranslatedWordPattern('4'), r'[\x21-\x7e]+'),
             ('=', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            (':', TranslatedFlexWordsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
