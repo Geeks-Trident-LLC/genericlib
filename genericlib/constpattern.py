@@ -26,7 +26,7 @@ class PATTERN:
     DIGITS = '%s+' % DIGIT
 
     NUMBER = '[0-9]*[.]?[0-9]+'
-    MIXED_NUMBER = r'[\(+-]?[0-9]*[.]?[0-9]+[)]?'
+    MIXED_NUMBER = r'[$\(+-]?[0-9]*[.]?[0-9]+[)%]?'
 
     LETTER = '[a-zA-Z]'
     LETTERS = '%s+' % LETTER
@@ -41,7 +41,18 @@ class PATTERN:
 
     WORD = r'\w+'
     WORDS = r'%s( %s)*' % (WORD, WORD)
+    WORD_GROUP = r'%s( %s)+' % (WORD, WORD)
     FLEX_WORDS = r'%s( +%s)*' % (WORD, WORD)
+    WORD_FLEX_GROUP = r'%s( +%s)+' % (WORD, WORD)
+
     MIXED_WORD = '%s+' % GRAPH
     MIXED_WORDS = '%s( %s)*' % (MIXED_WORD, MIXED_WORD)
+    MIXED_WORD_GROUP = '%s( %s)+' % (MIXED_WORD, MIXED_WORD)
     MIXED_FLEX_WORDS = '%s( +%s)*' % (MIXED_WORD, MIXED_WORD)
+    MIXED_WORD_FLEX_GROUP = '%s( +%s)+' % (MIXED_WORD, MIXED_WORD)
+
+    NON_WHITESPACE = r'\S'
+    NON_WHITESPACES = r'%s+' % NON_WHITESPACE
+    NON_WHITESPACES_GROUP_OR = r'%s( %s)*' % (NON_WHITESPACES, NON_WHITESPACES)
+    NON_WHITESPACES_GROUP = r'%s( %s)+' % (NON_WHITESPACES, NON_WHITESPACES)
+    NON_WHITESPACES_FLEX_GROUP = r'%s( +%s)+' % (NON_WHITESPACES, NON_WHITESPACES)
