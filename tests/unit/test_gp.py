@@ -325,8 +325,8 @@ class TestTranslatedWordPattern:
         "data,expected_pattern",
         [
             ('', ''),
-            ('1', '\\w+'),
-            ('ab', '\\w+'),
+            ('1', '[a-zA-Z0-9]+'),
+            ('ab', '[a-zA-Z0-9]+'),
         ]
     )
     def test_word_pattern(self, data, expected_pattern):
@@ -337,11 +337,11 @@ class TestTranslatedWordPattern:
     @pytest.mark.parametrize(
         "data,other,expected_pattern",
         [
-            ('a', TranslatedLetterPattern('a'), '\\w+'),
-            ('a', TranslatedLettersPattern('ab'), '\\w+'),
-            ('a', TranslatedDigitPattern('1'), '\\w+'),
-            ('a', TranslatedDigitsPattern('4'), '\\w+'),
-            ('a', TranslatedAlphabetNumericPattern('4'), '\\w+'),
+            ('a', TranslatedLetterPattern('a'), '[a-zA-Z0-9]+'),
+            ('a', TranslatedLettersPattern('ab'), '[a-zA-Z0-9]+'),
+            ('a', TranslatedDigitPattern('1'), '[a-zA-Z0-9]+'),
+            ('a', TranslatedDigitsPattern('4'), '[a-zA-Z0-9]+'),
+            ('a', TranslatedAlphabetNumericPattern('4'), '[a-zA-Z0-9]+'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -359,9 +359,9 @@ class TestTranslatedWordsPattern:
         "data,expected_pattern",
         [
             ('', ''),
-            ('ab  xy', ''),
-            ('1', '\\w+( \\w+)*'),
-            ('ab xy', '\\w+( \\w+)*'),
+            ('ab  xy', '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
+            ('1 2', '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
+            ('ab xy', '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
         ]
     )
     def test_words_pattern(self, data, expected_pattern):
@@ -372,13 +372,13 @@ class TestTranslatedWordsPattern:
     @pytest.mark.parametrize(
         "data,other,expected_pattern",
         [
-            ('a', TranslatedLetterPattern('a'), '\\w+( \\w+)*'),
-            ('a', TranslatedLettersPattern('ab'), '\\w+( \\w+)*'),
-            ('a', TranslatedDigitPattern('1'), '\\w+( \\w+)*'),
-            ('a', TranslatedDigitsPattern('4'), '\\w+( \\w+)*'),
-            ('a', TranslatedAlphabetNumericPattern('4'), '\\w+( \\w+)*'),
-            ('a', TranslatedWordPattern('4'), '\\w+( \\w+)*'),
-            ('a', TranslatedWordsPattern('ab xy'), '\\w+( \\w+)*'),
+            ('a b', TranslatedLetterPattern('a'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
+            ('a b', TranslatedLettersPattern('ab'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
+            ('a b', TranslatedDigitPattern('1'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
+            ('a b', TranslatedDigitsPattern('4'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
+            ('a b', TranslatedAlphabetNumericPattern('4'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
+            ('a b', TranslatedWordPattern('4'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
+            ('a b', TranslatedWordsPattern('ab xy'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -434,11 +434,11 @@ class TestTranslatedMixedWordsPattern:
         "data,expected_pattern",
         [
             ('', ''),
-            ('ab xy', '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            ('1', '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            ('abc', '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            ('192.168.0.1', '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            ('a::b', '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('ab xy', '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)+'),
+            ('1', '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
+            ('abc', '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
+            ('192.168.0.1', '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
+            ('a::b', '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
         ]
     )
     def test_mixed_words_pattern(self, data, expected_pattern):
@@ -449,12 +449,12 @@ class TestTranslatedMixedWordsPattern:
     @pytest.mark.parametrize(
         "data,other,expected_pattern",
         [
-            ('a', TranslatedLetterPattern('a'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            ('a', TranslatedLettersPattern('ab'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            ('a', TranslatedDigitPattern('1'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            ('a', TranslatedDigitsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            ('a', TranslatedAlphabetNumericPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
-            ('a', TranslatedWordPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('a b', TranslatedLetterPattern('a'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)+'),
+            ('a b', TranslatedLettersPattern('ab'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)+'),
+            ('a b', TranslatedDigitPattern('1'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)+'),
+            ('a b', TranslatedDigitsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)+'),
+            ('a b', TranslatedAlphabetNumericPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)+'),
+            ('a b', TranslatedWordPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)+'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -492,7 +492,7 @@ class TestTranslatedSymbolPattern:
             ('*', TranslatedDigitsPattern('42'), '[\\x21-\\x7e]+'),
             ('{', TranslatedAlphabetNumericPattern('4'), '[\\x21-\\x7e]'),
             ('}', TranslatedWordPattern('4'), '[\\x21-\\x7e]+'),
-            ('=', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('=', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -530,7 +530,7 @@ class TestTranslatedSymbolsPattern:
             ('*', TranslatedDigitsPattern('42'), '[\\x21-\\x7e]+'),
             ('{', TranslatedAlphabetNumericPattern('4'), '[\\x21-\\x7e]+'),
             ('}', TranslatedWordPattern('4'), '[\\x21-\\x7e]+'),
-            ('=', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('=', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -562,13 +562,13 @@ class TestTranslatedSymbolsGroupPattern:
     @pytest.mark.parametrize(
         "data,other,expected_pattern",
         [
-            ('-- --', TranslatedLetterPattern('a'), r'[\x21-\x7e]+( [\x21-\x7e]+)*'),
-            ('.. ..', TranslatedLettersPattern('ab'), r'[\x21-\x7e]+( [\x21-\x7e]+)*'),
-            ('++ ++', TranslatedDigitPattern('1'), r'[\x21-\x7e]+( [\x21-\x7e]+)*'),
-            ('** **', TranslatedDigitsPattern('42'), r'[\x21-\x7e]+( [\x21-\x7e]+)*'),
-            ('{{ {{', TranslatedAlphabetNumericPattern('4'), r'[\x21-\x7e]+( [\x21-\x7e]+)*'),
-            ('}} }}', TranslatedWordPattern('4'), r'[\x21-\x7e]+( [\x21-\x7e]+)*'),
-            ('== ==', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('-- --', TranslatedLetterPattern('a'), r'[\x21-\x7e]+( +[\x21-\x7e]+)*'),
+            ('.. ..', TranslatedLettersPattern('ab'), r'[\x21-\x7e]+( +[\x21-\x7e]+)*'),
+            ('++ ++', TranslatedDigitPattern('1'), r'[\x21-\x7e]+( +[\x21-\x7e]+)*'),
+            ('** **', TranslatedDigitsPattern('42'), r'[\x21-\x7e]+( +[\x21-\x7e]+)*'),
+            ('{{ {{', TranslatedAlphabetNumericPattern('4'), r'[\x21-\x7e]+( +[\x21-\x7e]+)*'),
+            ('}} }}', TranslatedWordPattern('4'), r'[\x21-\x7e]+( +[\x21-\x7e]+)*'),
+            ('== ==', TranslatedWordsPattern('4 5'), r'[\x21-\x7e]+( +[\x21-\x7e]+)+'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -606,7 +606,7 @@ class TestTranslatedGraphPattern:
             ('*', TranslatedDigitsPattern('42'), r'[\x21-\x7e]+'),
             ('a', TranslatedAlphabetNumericPattern('4'), r'[\x21-\x7e]'),
             ('}', TranslatedWordPattern('4'), r'[\x21-\x7e]+'),
-            ('=', TranslatedWordsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('=', TranslatedWordsPattern('4 5'), r'[\x21-\x7e]+( +[\x21-\x7e]+)+'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):

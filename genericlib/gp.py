@@ -519,9 +519,10 @@ class TranslatedSymbolsPattern(TranslatedPattern):
 
 
 class TranslatedSymbolsGroupPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.SYMBOLS_GROUP,
-                         defined_pattern=PATTERN.SYMBOLS_GROUP)
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.SYMBOLS_GROUP,
+                         defined_patterns=[PATTERN.SYMBOLS_OR_GROUP,
+                                           PATTERN.SYMBOLS_GROUP])
 
     def recommend(self, other):
 
@@ -628,9 +629,9 @@ class TranslatedWordPattern(TranslatedPattern):
 
 
 class TranslatedWordsPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.WORDS,
-                         defined_pattern=PATTERN.WORDS)
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.WORDS,
+                         defined_patterns=[PATTERN.WORD_OR_WORDS, PATTERN.WORDS])
 
     def recommend(self, other):
 
@@ -653,7 +654,7 @@ class TranslatedWordsPattern(TranslatedPattern):
             new_instance = self.copy()
             return new_instance
         elif is_new_pat:
-            new_instance = TranslatedMixedWordsPattern(other.data)
+            new_instance = TranslatedMixedWordsPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -688,7 +689,7 @@ class TranslatedMixedWordPattern(TranslatedPattern):
             new_instance = self.copy()
             return new_instance
         elif is_new_pat_case1:
-            new_instance = TranslatedMixedWordsPattern(other.data)
+            new_instance = TranslatedMixedWordsPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -698,9 +699,10 @@ class TranslatedMixedWordPattern(TranslatedPattern):
 
 
 class TranslatedMixedWordsPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.MIXED_WORDS,
-                         defined_pattern=PATTERN.MIXED_WORDS)
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.MIXED_WORDS,
+                         defined_patterns=[PATTERN.MIXED_WORD_OR_WORDS,
+                                           PATTERN.MIXED_WORDS])
 
     def recommend(self, other):
 
