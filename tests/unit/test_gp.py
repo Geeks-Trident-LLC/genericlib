@@ -26,7 +26,7 @@ from genericlib.gp import TranslatedWordsPattern
 from genericlib.gp import TranslatedMixedWordPattern
 from genericlib.gp import TranslatedMixedWordsPattern
 
-from genericlib.gp import TranslatedNonWhiteSpace
+from genericlib.gp import TranslatedNonWhitespacePattern
 # from genericlib.gp import TranslatedNonWhiteSpaces
 # from genericlib.gp import TranslatedNonWhiteSpaceGroup
 
@@ -372,12 +372,12 @@ class TestTranslatedWordsPattern:
     @pytest.mark.parametrize(
         "data,other,expected_pattern",
         [
-            ('a b', TranslatedLetterPattern('a'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
-            ('a b', TranslatedLettersPattern('ab'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
-            ('a b', TranslatedDigitPattern('1'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
-            ('a b', TranslatedDigitsPattern('4'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
-            ('a b', TranslatedAlphabetNumericPattern('4'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
-            ('a b', TranslatedWordPattern('4'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
+            ('a b', TranslatedLetterPattern('a'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*'),
+            ('a b', TranslatedLettersPattern('ab'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*'),
+            ('a b', TranslatedDigitPattern('1'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*'),
+            ('a b', TranslatedDigitsPattern('4'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*'),
+            ('a b', TranslatedAlphabetNumericPattern('4'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*'),
+            ('a b', TranslatedWordPattern('4'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*'),
             ('a b', TranslatedWordsPattern('ab xy'), '[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+'),
         ]
     )
@@ -449,12 +449,12 @@ class TestTranslatedMixedWordsPattern:
     @pytest.mark.parametrize(
         "data,other,expected_pattern",
         [
-            ('a b', TranslatedLetterPattern('a'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)+'),
-            ('a b', TranslatedLettersPattern('ab'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)+'),
-            ('a b', TranslatedDigitPattern('1'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)+'),
-            ('a b', TranslatedDigitsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)+'),
-            ('a b', TranslatedAlphabetNumericPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)+'),
-            ('a b', TranslatedWordPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)+'),
+            ('a b', TranslatedLetterPattern('a'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
+            ('a b', TranslatedLettersPattern('ab'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
+            ('a b', TranslatedDigitPattern('1'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
+            ('a b', TranslatedDigitsPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
+            ('a b', TranslatedAlphabetNumericPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
+            ('a b', TranslatedWordPattern('4'), '[\\x21-\\x7e]+( +[\\x21-\\x7e]+)*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -606,7 +606,7 @@ class TestTranslatedGraphPattern:
             ('*', TranslatedDigitsPattern('42'), r'[\x21-\x7e]+'),
             ('a', TranslatedAlphabetNumericPattern('4'), r'[\x21-\x7e]'),
             ('}', TranslatedWordPattern('4'), r'[\x21-\x7e]+'),
-            ('=', TranslatedWordsPattern('4 5'), r'[\x21-\x7e]+( +[\x21-\x7e]+)+'),
+            ('=', TranslatedWordsPattern('4 5'), r'[\x21-\x7e]+( +[\x21-\x7e]+)*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -631,7 +631,7 @@ class TestTranslatedNonWhitespacePattern:
         ]
     )
     def test_non_whitespace_pattern(self, data, expected_pattern):
-        node = TranslatedNonWhiteSpace(data)
+        node = TranslatedNonWhitespacePattern(data)
         pattern = node.pattern
         assert pattern == expected_pattern
 
@@ -639,17 +639,16 @@ class TestTranslatedNonWhitespacePattern:
         "data,other,expected_pattern",
         [
             ('-', TranslatedLetterPattern('a'), r'\S'),
-            ('.', TranslatedLettersPattern('ab'), r''),
+            ('.', TranslatedLettersPattern('ab'), r'\S+'),
             ('+', TranslatedDigitPattern('1'), r'\S'),
             ('*', TranslatedDigitsPattern('42'), r'\S+'),
             ('a', TranslatedAlphabetNumericPattern('4'), r'\S'),
             ('}', TranslatedWordPattern('4'), r'\S+'),
-            ('=', TranslatedWordsPattern('4 5'), r'\S+( +\S)*'),
+            ('=', TranslatedWordsPattern('4 5'), r'\S+( +\S+)*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
-        node = TranslatedNonWhiteSpace(data)
+        node = TranslatedNonWhitespacePattern(data)
         recommended_pat_obj = node.recommend(other)
         recommended_pat = recommended_pat_obj.pattern
-
         assert recommended_pat == expected_pattern

@@ -29,6 +29,10 @@ class TranslatedPattern:
         chk = self._pattern != STRING.EMPTY
         return chk
 
+    def __call__(self, *args, **kwargs):
+        new_instance = self.__class__(*args, **kwargs)
+        return new_instance
+
     @property
     def translated(self):
         chk = self._pattern != STRING.EMPTY
@@ -145,9 +149,9 @@ class TranslatedPattern:
 
             TranslatedMixedWordsPattern,
 
-            TranslatedNonWhiteSpace,
-            TranslatedNonWhiteSpaces,
-            TranslatedNonWhiteSpaceGroup,
+            TranslatedNonWhitespacePattern,
+            TranslatedNonWhitespacesPattern,
+            TranslatedNonWhitespaceGroupPattern,
         ]
         for class_ in classes:
             node = class_(data, *other)
@@ -173,8 +177,8 @@ class TranslatedPattern:
 
 class TranslatedDigitPattern(TranslatedPattern):
 
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.DIGIT,
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.DIGIT,
                          defined_pattern=PATTERN.DIGIT)
 
     def recommend(self, other):
@@ -190,19 +194,19 @@ class TranslatedDigitPattern(TranslatedPattern):
         is_subset_pat |= other.is_mixed_words()
         is_subset_pat |= other.is_non_whitespace()
         is_subset_pat |= other.is_non_whitespaces()
-        is_subset_pat |= other.is_non_whitespace_group()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_new_pat_case1 = other.is_letter()
         is_new_pat_case2 = other.is_letters()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_new_pat_case1:
-            new_instance = TranslatedAlphabetNumericPattern(other.data)
+            new_instance = TranslatedAlphabetNumericPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case2:
-            new_instance = TranslatedWordPattern(other.data)
+            new_instance = TranslatedWordPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -213,8 +217,8 @@ class TranslatedDigitPattern(TranslatedPattern):
 
 class TranslatedDigitsPattern(TranslatedPattern):
 
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.DIGITS,
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.DIGITS,
                          defined_pattern=PATTERN.DIGITS)
 
     def recommend(self, other):
@@ -226,19 +230,27 @@ class TranslatedDigitsPattern(TranslatedPattern):
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_words()
         is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_superset_pat = other.is_digit()
 
-        is_new_pat = other.is_letter() or other.is_letters() or other.is_alphabet_numeric()
+        is_new_pat_case1 = other.is_letter() or other.is_letters()
+        is_new_pat_case1 |= other.is_alphabet_numeric()
+
+        is_new_pat_case2 = other.is_non_whitespace()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_superset_pat:
-            new_instance = self.copy()
+            new_instance = self(self.data, other.data)
             return new_instance
-        elif is_new_pat:
-            new_instance = TranslatedWordPattern(other.data)
+        elif is_new_pat_case1:
+            new_instance = TranslatedWordPattern(self.data, other.data)
+            return new_instance
+        elif is_new_pat_case2:
+            new_instance = TranslatedNonWhitespacesPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -248,8 +260,8 @@ class TranslatedDigitsPattern(TranslatedPattern):
 
 
 class TranslatedNumberPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.NUMBER,
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.NUMBER,
                          defined_pattern=PATTERN.NUMBER)
 
     def recommend(self, other):
@@ -269,16 +281,16 @@ class TranslatedNumberPattern(TranslatedPattern):
         is_new_pat_case2 = other.is_words()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_superset_pat:
-            new_instance = self.copy()
+            new_instance = self(self.data, other.data)
             return new_instance
         elif is_new_pat_case1:
-            new_instance = TranslatedMixedWordPattern(other.data)
+            new_instance = TranslatedMixedWordPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case2:
-            new_instance = TranslatedMixedWordsPattern(other.data)
+            new_instance = TranslatedMixedWordsPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -288,8 +300,8 @@ class TranslatedNumberPattern(TranslatedPattern):
 
 
 class TranslatedMixedNumberPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.MIXED_NUMBER,
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.MIXED_NUMBER,
                          defined_pattern=PATTERN.MIXED_NUMBER)
 
     def recommend(self, other):
@@ -308,16 +320,16 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
         is_new_pat_case2 = other.is_words()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         if is_superset_pat:
-            new_instance = self.copy()
+            new_instance = self(self.data, other.data)
             return new_instance
         elif is_new_pat_case1:
-            new_instance = TranslatedMixedWordPattern(other.data)
+            new_instance = TranslatedMixedWordPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case2:
-            new_instance = TranslatedMixedWordsPattern(other.data)
+            new_instance = TranslatedMixedWordsPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -327,8 +339,8 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
 
 
 class TranslatedLetterPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.LETTER,
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.LETTER,
                          defined_pattern=PATTERN.LETTER)
 
     def recommend(self, other):
@@ -345,16 +357,16 @@ class TranslatedLetterPattern(TranslatedPattern):
         is_new_pat_case3 = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_new_pat_case1:
-            new_instance = TranslatedAlphabetNumericPattern(other.data)
+            new_instance = TranslatedAlphabetNumericPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case2:
-            new_instance = TranslatedWordPattern(other.data)
+            new_instance = TranslatedWordPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case3:
-            new_instance = TranslatedMixedWordPattern(other.data)
+            new_instance = TranslatedMixedWordPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -364,8 +376,8 @@ class TranslatedLetterPattern(TranslatedPattern):
 
 
 class TranslatedLettersPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.LETTERS,
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.LETTERS,
                          defined_pattern=PATTERN.LETTERS)
 
     def recommend(self, other):
@@ -382,16 +394,16 @@ class TranslatedLettersPattern(TranslatedPattern):
         is_new_pat_case2 = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_superset_pat:
-            new_instance = self.copy()
+            new_instance = self(self.data, other.data)
             return new_instance
         elif is_new_pat_case1:
-            new_instance = TranslatedWordPattern(other.data)
+            new_instance = TranslatedWordPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case2:
-            new_instance = TranslatedMixedWordPattern(other.data)
+            new_instance = TranslatedMixedWordPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -401,8 +413,8 @@ class TranslatedLettersPattern(TranslatedPattern):
 
 
 class TranslatedAlphabetNumericPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.ALPHABET_NUMERIC,
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.ALPHABET_NUMERIC,
                          defined_pattern=PATTERN.ALPHABET_NUMERIC)
 
     def recommend(self, other):
@@ -419,16 +431,16 @@ class TranslatedAlphabetNumericPattern(TranslatedPattern):
         is_new_pat_case2 = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_superset_pat:
-            new_instance = self.copy()
+            new_instance = self(self.data, other.data)
             return new_instance
         elif is_new_pat_case1:
-            new_instance = TranslatedWordPattern(other.data)
+            new_instance = TranslatedWordPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case2:
-            new_instance = TranslatedMixedWordPattern(other.data)
+            new_instance = TranslatedMixedWordPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -438,8 +450,8 @@ class TranslatedAlphabetNumericPattern(TranslatedPattern):
 
 
 class TranslatedSymbolPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.SYMBOL,
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.SYMBOL,
                          defined_pattern=PATTERN.SYMBOL)
 
     def recommend(self, other):
@@ -461,16 +473,16 @@ class TranslatedSymbolPattern(TranslatedPattern):
         is_new_pat_case3 = other.is_words()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_new_pat_case1:
-            new_instance = TranslatedGraphPattern(other.data)
+            new_instance = TranslatedGraphPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case2:
-            new_instance = TranslatedMixedWordPattern(other.data)
+            new_instance = TranslatedMixedWordPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case3:
-            new_instance = TranslatedMixedWordsPattern(other.data)
+            new_instance = TranslatedMixedWordsPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -480,8 +492,8 @@ class TranslatedSymbolPattern(TranslatedPattern):
 
 
 class TranslatedSymbolsPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.SYMBOLS,
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.SYMBOLS,
                          defined_pattern=PATTERN.SYMBOLS)
 
     def recommend(self, other):
@@ -502,17 +514,16 @@ class TranslatedSymbolsPattern(TranslatedPattern):
         is_new_pat_case2 = other.is_words()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_superset_pat:
-            new_instance = self.copy()
+            new_instance = self(self.data, other.data)
             return new_instance
         elif is_new_pat_case1:
-            new_instance = TranslatedMixedWordPattern(other.data)
-            return new_instance
+            new_instance = TranslatedMixedWordPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case2:
-            new_instance = TranslatedMixedWordsPattern(other.data)
+            new_instance = TranslatedMixedWordsPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -542,13 +553,13 @@ class TranslatedSymbolsGroupPattern(TranslatedPattern):
         is_new_pat_case1 |= other.is_word() or other.is_words()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_superset_pat:
-            new_instance = self.copy()
+            new_instance = self(self.data, other.data)
             return new_instance
         elif is_new_pat_case1:
-            new_instance = TranslatedMixedWordsPattern(other.data)
+            new_instance = TranslatedMixedWordsPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -558,8 +569,8 @@ class TranslatedSymbolsGroupPattern(TranslatedPattern):
 
 
 class TranslatedGraphPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.GRAPH,
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.GRAPH,
                          defined_pattern=PATTERN.GRAPH)
 
     def recommend(self, other):
@@ -577,16 +588,16 @@ class TranslatedGraphPattern(TranslatedPattern):
         is_new_pat_case2 = other.is_words()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_superset_pat:
-            new_instance = self.copy()
+            new_instance = self(self.data, other.data)
             return new_instance
         elif is_new_pat_case1:
-            new_instance = TranslatedMixedWordPattern(other.data)
+            new_instance = TranslatedMixedWordPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case2:
-            new_instance = TranslatedMixedWordsPattern(other.data)
+            new_instance = TranslatedMixedWordsPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -596,8 +607,8 @@ class TranslatedGraphPattern(TranslatedPattern):
 
 
 class TranslatedWordPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.WORD,
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.WORD,
                          defined_pattern=PATTERN.WORD)
 
     def recommend(self, other):
@@ -616,13 +627,13 @@ class TranslatedWordPattern(TranslatedPattern):
         is_new_pat = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_superset_pat:
-            new_instance = self.copy()
+            new_instance = self(self.data, other.data)
             return new_instance
         elif is_new_pat:
-            new_instance = TranslatedMixedWordPattern(other.data)
+            new_instance = TranslatedMixedWordPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -651,10 +662,10 @@ class TranslatedWordsPattern(TranslatedPattern):
         is_new_pat = other.is_number() or other.is_mixed_number()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_superset_pat:
-            new_instance = self.copy()
+            new_instance = self(self.data, other.data)
             return new_instance
         elif is_new_pat:
             new_instance = TranslatedMixedWordsPattern(self.data, other.data)
@@ -667,8 +678,8 @@ class TranslatedWordsPattern(TranslatedPattern):
 
 
 class TranslatedMixedWordPattern(TranslatedPattern):
-    def __init__(self, data):
-        super().__init__(data, name=TEXT.MIXED_WORD,
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.MIXED_WORD,
                          defined_pattern=PATTERN.MIXED_WORD)
 
     def recommend(self, other):
@@ -686,10 +697,10 @@ class TranslatedMixedWordPattern(TranslatedPattern):
         is_new_pat_case1 = other.is_words()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_superset_pat:
-            new_instance = self.copy()
+            new_instance = self(self.data, other.data)
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedMixedWordsPattern(self.data, other.data)
@@ -721,10 +732,10 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
         is_superset_pat |= other.is_mixed_word()
 
         if is_subset_pat:
-            new_instance = other.copy()
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_superset_pat:
-            new_instance = self.copy()
+            new_instance = self(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -733,7 +744,7 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
             raise Exception(err_msg)
 
 
-class TranslatedNonWhiteSpace(TranslatedPattern):
+class TranslatedNonWhitespacePattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.NON_WHITESPACE,
                          defined_pattern=PATTERN.NON_WHITESPACE)
@@ -762,16 +773,16 @@ class TranslatedNonWhiteSpace(TranslatedPattern):
         is_new_pat_case2 |= other.is_mixed_words()
 
         if is_subset_pat:
-            new_instance = other.__class__(self.data, other.data)
+            new_instance = other(self.data, other.data)
             return new_instance
         elif is_superset_pat:
-            new_instance = self.__class__(self.data, other.data)
+            new_instance = self(self.data, other.data)
             return new_instance
         elif is_new_pat_case1:
-            new_instance = TranslatedNonWhiteSpaces(other.data)
+            new_instance = TranslatedNonWhitespacesPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case2:
-            new_instance = TranslatedNonWhiteSpaceGroup(self.data, other.data)
+            new_instance = TranslatedNonWhitespaceGroupPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -780,7 +791,7 @@ class TranslatedNonWhiteSpace(TranslatedPattern):
             raise Exception(err_msg)
 
 
-class TranslatedNonWhiteSpaces(TranslatedPattern):
+class TranslatedNonWhitespacesPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.NON_WHITESPACES,
                          defined_pattern=PATTERN.NON_WHITESPACES)
@@ -789,21 +800,21 @@ class TranslatedNonWhiteSpaces(TranslatedPattern):
         is_subset_pat = other.is_non_whitespaces()
         is_subset_pat |= other.is_non_whitespaces_group()
         if is_subset_pat:
-            new_instance = other.__class__(self.data, other.data)
+            new_instance = other(self.data, other.data)
             return new_instance
         else:
-            new_instance = self.__class__(self.data, other.data)
+            new_instance = self(self.data, other.data)
             return new_instance
 
 
-class TranslatedNonWhiteSpaceGroup(TranslatedPattern):
+class TranslatedNonWhitespaceGroupPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.NON_WHITESPACES_GROUP,
                          defined_patterns=[PATTERN.NON_WHITESPACES_OR_GROUP,
                                            PATTERN.NON_WHITESPACES_GROUP])
 
     def recommend(self, other):
-        new_instance = self.__class__(self.data, other.data)
+        new_instance = self(self.data, other.data)
         return new_instance
 
 
