@@ -118,9 +118,6 @@ class TestText:
             (TEXT.DIGIT, 'digit'),
             (TEXT.DIGITS, 'digits'),
 
-            (TEXT.FLEX_NON_WHITESPACE_GROUP, 'flex_non_whitespace_group'),
-            (TEXT.FLEX_WORDS, 'flex_words'),
-
             (TEXT.GRAPH, 'graph'),
 
             (TEXT.LETTER, 'letter'),
@@ -128,18 +125,13 @@ class TestText:
 
             (TEXT.NUMBER, 'number'),
 
-            (TEXT.MIXED_FLEX_WORDS, 'mixed_flex_words'),
             (TEXT.MIXED_NUMBER, 'mixed_number'),
             (TEXT.MIXED_WORD, 'mixed_word'),
             (TEXT.MIXED_WORDS, 'mixed_words'),
 
             (TEXT.NON_WHITESPACE, 'non_whitespace'),
-            (TEXT.NON_WHITESPACE_GROUP, 'non_whitespace_group'),
+            (TEXT.NON_WHITESPACES_GROUP, 'non_whitespace_group'),
             (TEXT.NON_WHITESPACES, 'non_whitespaces'),
-
-            (TEXT.PUNCT, 'punct'),
-            (TEXT.PUNCTS, 'puncts'),
-            (TEXT.PUNCTS_GROUP, 'puncts_group'),
 
             (TEXT.WORD, 'word'),
             (TEXT.WORDS, 'words'),

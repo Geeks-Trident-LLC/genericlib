@@ -111,15 +111,15 @@ class TranslatedPattern:
     def is_non_whitespaces(self):
         return self.name == TEXT.NON_WHITESPACES
 
-    def is_non_whitespace_group(self):
-        return self.name == TEXT.NON_WHITESPACE_GROUP
+    def is_non_whitespaces_group(self):
+        return self.name == TEXT.NON_WHITESPACES_GROUP
 
     def copy(self):
         copied_instance = MiscObject.copy(self)
         return copied_instance
 
     @classmethod
-    def get_translated_pattern_object(cls, data):
+    def get_translated_pattern_object(cls, data, *other):
         classes = [
             TranslatedDigitPattern,
             TranslatedDigitsPattern,
@@ -150,10 +150,13 @@ class TranslatedPattern:
             TranslatedNonWhiteSpaceGroup,
         ]
         for class_ in classes:
-            node = class_(data)
+            node = class_(data, *other)
             if node:
                 return node
-        raise Exception('TODO: add exception here')
+
+        fmt = 'FactoryTranslatedPatternIssue - Need to implement this case (%r, %r)'
+        err_msg = fmt % (data, other)
+        raise Exception(err_msg)
 
     @classmethod
     def recommend_pattern(cls, translated_pat_obj1, translated_pat_obj2):
@@ -731,15 +734,77 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
 
 
 class TranslatedNonWhiteSpace(TranslatedPattern):
-    pass
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.NON_WHITESPACE,
+                         defined_pattern=PATTERN.NON_WHITESPACE)
+
+    def recommend(self, other):
+
+        is_subset_pat = other.is_non_whitespace()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespaces_group()
+
+        is_superset_pat = other.is_letter()
+        is_superset_pat |= other.is_digit()
+        is_superset_pat |= other.is_alphabet_numeric()
+        is_superset_pat |= other.is_symbol()
+        is_superset_pat |= other.is_graph()
+
+        is_new_pat_case1 = other.is_letters()
+        is_new_pat_case1 |= other.is_digits()
+        is_new_pat_case1 |= other.is_symbols()
+        is_new_pat_case1 |= other.is_number()
+        is_new_pat_case1 |= other.is_mixed_number()
+        is_new_pat_case1 |= other.is_word()
+        is_new_pat_case1 |= other.is_mixed_word()
+
+        is_new_pat_case2 = other.is_words()
+        is_new_pat_case2 |= other.is_mixed_words()
+
+        if is_subset_pat:
+            new_instance = other.__class__(self.data, other.data)
+            return new_instance
+        elif is_superset_pat:
+            new_instance = self.__class__(self.data, other.data)
+            return new_instance
+        elif is_new_pat_case1:
+            new_instance = TranslatedNonWhiteSpaces(other.data)
+            return new_instance
+        elif is_new_pat_case2:
+            new_instance = TranslatedNonWhiteSpaceGroup(self.data, other.data)
+            return new_instance
+        else:
+            cls_name = Misc.get_instance_class_name(self)
+            fmt = 'Need to implement this case (%r, %r) for %s'
+            err_msg = fmt % (self.data, other.data, cls_name)
+            raise Exception(err_msg)
 
 
 class TranslatedNonWhiteSpaces(TranslatedPattern):
-    pass
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.NON_WHITESPACES,
+                         defined_pattern=PATTERN.NON_WHITESPACES)
+
+    def recommend(self, other):
+        is_subset_pat = other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespaces_group()
+        if is_subset_pat:
+            new_instance = other.__class__(self.data, other.data)
+            return new_instance
+        else:
+            new_instance = self.__class__(self.data, other.data)
+            return new_instance
 
 
 class TranslatedNonWhiteSpaceGroup(TranslatedPattern):
-    pass
+    def __init__(self, data, *other):
+        super().__init__(data, *other, name=TEXT.NON_WHITESPACES_GROUP,
+                         defined_patterns=[PATTERN.NON_WHITESPACES_OR_GROUP,
+                                           PATTERN.NON_WHITESPACES_GROUP])
+
+    def recommend(self, other):
+        new_instance = self.__class__(self.data, other.data)
+        return new_instance
 
 
 class CommonPhrase:
