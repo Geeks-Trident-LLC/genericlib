@@ -270,6 +270,8 @@ class TranslatedNumberPattern(TranslatedPattern):
         is_subset_pat |= other.is_mixed_number()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_superset_pat = other.is_digit() or other.is_digits()
 
@@ -279,6 +281,8 @@ class TranslatedNumberPattern(TranslatedPattern):
         is_new_pat_case1 |= other.is_word()
 
         is_new_pat_case2 = other.is_words()
+
+        is_new_pat_case3 = other.is_non_whitespace()
 
         if is_subset_pat:
             new_instance = other(self.data, other.data)
@@ -291,6 +295,9 @@ class TranslatedNumberPattern(TranslatedPattern):
             return new_instance
         elif is_new_pat_case2:
             new_instance = TranslatedMixedWordsPattern(self.data, other.data)
+            return new_instance
+        elif is_new_pat_case3:
+            new_instance = TranslatedNonWhitespacesPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -309,6 +316,8 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
         is_subset_pat = other.is_mixed_number()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_superset_pat = other.is_digit() or other.is_digits() or other.is_number()
 
@@ -318,6 +327,8 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
         is_new_pat_case1 |= other.is_word()
 
         is_new_pat_case2 = other.is_words()
+
+        is_new_pat_case3 = other.is_non_whitespace()
 
         if is_subset_pat:
             new_instance = other(self.data, other.data)
@@ -330,6 +341,9 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
             return new_instance
         elif is_new_pat_case2:
             new_instance = TranslatedMixedWordsPattern(self.data, other.data)
+            return new_instance
+        elif is_new_pat_case3:
+            new_instance = TranslatedNonWhitespacesPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -351,6 +365,9 @@ class TranslatedLetterPattern(TranslatedPattern):
         is_subset_pat |= other.is_words()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_non_whitespace()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_new_pat_case1 = other.is_digit()
         is_new_pat_case2 = other.is_digits()
@@ -387,11 +404,16 @@ class TranslatedLettersPattern(TranslatedPattern):
         is_subset_pat |= other.is_words()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_superset_pat = other.is_letter()
 
         is_new_pat_case1 = other.is_digit() or other.is_digits()
+
         is_new_pat_case2 = other.is_number() or other.is_mixed_number()
+
+        is_new_pat_case3 = other.is_non_whitespace()
 
         if is_subset_pat:
             new_instance = other(self.data, other.data)
@@ -404,6 +426,9 @@ class TranslatedLettersPattern(TranslatedPattern):
             return new_instance
         elif is_new_pat_case2:
             new_instance = TranslatedMixedWordPattern(self.data, other.data)
+            return new_instance
+        elif is_new_pat_case3:
+            new_instance = TranslatedNonWhitespacesPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -424,6 +449,9 @@ class TranslatedAlphabetNumericPattern(TranslatedPattern):
         is_subset_pat |= other.is_words()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_non_whitespace()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_superset_pat = other.is_letter() or other.is_letters() or other.is_digit()
 
@@ -462,6 +490,9 @@ class TranslatedSymbolPattern(TranslatedPattern):
         is_subset_pat |= other.is_symbols_group()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_non_whitespace()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_new_pat_case1 = other.is_letter() or other.is_digit()
         is_new_pat_case1 |= other.is_alphabet_numeric()
@@ -502,6 +533,8 @@ class TranslatedSymbolsPattern(TranslatedPattern):
         is_subset_pat |= other.is_symbols_group()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_superset_pat = other.is_symbol()
 
@@ -512,6 +545,8 @@ class TranslatedSymbolsPattern(TranslatedPattern):
         is_new_pat_case1 |= other.is_word()
 
         is_new_pat_case2 = other.is_words()
+
+        is_new_pat_case3 = other.is_non_whitespace()
 
         if is_subset_pat:
             new_instance = other(self.data, other.data)
@@ -524,6 +559,9 @@ class TranslatedSymbolsPattern(TranslatedPattern):
             return new_instance
         elif is_new_pat_case2:
             new_instance = TranslatedMixedWordsPattern(self.data, other.data)
+            return new_instance
+        elif is_new_pat_case3:
+            new_instance = TranslatedNonWhitespacesPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -543,6 +581,7 @@ class TranslatedSymbolsGroupPattern(TranslatedPattern):
         is_subset_pat = other.is_symbols_group()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_superset_pat = other.is_symbol() or other.is_symbols()
 
@@ -552,6 +591,8 @@ class TranslatedSymbolsGroupPattern(TranslatedPattern):
         is_new_pat_case1 |= other.is_number() or other.is_mixed_number()
         is_new_pat_case1 |= other.is_word() or other.is_words()
 
+        is_new_pat_case2 = other.is_non_whitespace() or other.is_non_whitespaces()
+
         if is_subset_pat:
             new_instance = other(self.data, other.data)
             return new_instance
@@ -560,6 +601,9 @@ class TranslatedSymbolsGroupPattern(TranslatedPattern):
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedMixedWordsPattern(self.data, other.data)
+            return new_instance
+        elif is_new_pat_case2:
+            new_instance = TranslatedNonWhitespaceGroupPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -577,6 +621,9 @@ class TranslatedGraphPattern(TranslatedPattern):
 
         is_subset_pat = other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_non_whitespace()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_superset_pat = other.is_letter() or other.is_digit()
         is_superset_pat |= other.is_alphabet_numeric() or other.is_symbol()
@@ -617,6 +664,8 @@ class TranslatedWordPattern(TranslatedPattern):
         is_subset_pat |= other.is_words()
         is_subset_pat |= other.is_mixed_word()
         is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_superset_pat = other.is_letter()
         is_superset_pat |= other.is_letters()
@@ -624,7 +673,9 @@ class TranslatedWordPattern(TranslatedPattern):
         is_superset_pat |= other.is_digits()
         is_superset_pat |= other.is_alphabet_numeric()
 
-        is_new_pat = other.is_number() or other.is_mixed_number()
+        is_new_pat_case1 = other.is_number() or other.is_mixed_number()
+
+        is_new_pat_case2 = other.is_non_whitespace()
 
         if is_subset_pat:
             new_instance = other(self.data, other.data)
@@ -632,8 +683,11 @@ class TranslatedWordPattern(TranslatedPattern):
         elif is_superset_pat:
             new_instance = self(self.data, other.data)
             return new_instance
-        elif is_new_pat:
+        elif is_new_pat_case1:
             new_instance = TranslatedMixedWordPattern(self.data, other.data)
+            return new_instance
+        elif is_new_pat_case2:
+            new_instance = TranslatedNonWhitespacesPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -651,6 +705,7 @@ class TranslatedWordsPattern(TranslatedPattern):
 
         is_subset_pat = other.is_words()
         is_subset_pat |= other.is_mixed_words()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_superset_pat = other.is_letter()
         is_superset_pat |= other.is_letters()
@@ -659,7 +714,9 @@ class TranslatedWordsPattern(TranslatedPattern):
         is_superset_pat |= other.is_alphabet_numeric()
         is_superset_pat |= other.is_word()
 
-        is_new_pat = other.is_number() or other.is_mixed_number()
+        is_new_pat_case1 = other.is_number() or other.is_mixed_number()
+
+        is_new_pat_case2 = other.is_non_whitespace() or other.is_non_whitespaces()
 
         if is_subset_pat:
             new_instance = other(self.data, other.data)
@@ -667,8 +724,11 @@ class TranslatedWordsPattern(TranslatedPattern):
         elif is_superset_pat:
             new_instance = self(self.data, other.data)
             return new_instance
-        elif is_new_pat:
+        elif is_new_pat_case1:
             new_instance = TranslatedMixedWordsPattern(self.data, other.data)
+            return new_instance
+        elif is_new_pat_case2:
+            new_instance = TranslatedNonWhitespaceGroupPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -693,8 +753,12 @@ class TranslatedMixedWordPattern(TranslatedPattern):
         is_superset_pat |= other.is_digits()
         is_superset_pat |= other.is_alphabet_numeric()
         is_superset_pat |= other.is_word()
+        is_subset_pat |= other.is_non_whitespaces()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_new_pat_case1 = other.is_words()
+
+        is_new_pat_case2 = other.is_non_whitespace()
 
         if is_subset_pat:
             new_instance = other(self.data, other.data)
@@ -704,6 +768,9 @@ class TranslatedMixedWordPattern(TranslatedPattern):
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedMixedWordsPattern(self.data, other.data)
+            return new_instance
+        elif is_new_pat_case2:
+            new_instance = TranslatedNonWhitespacesPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -721,6 +788,7 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
     def recommend(self, other):
 
         is_subset_pat = other.is_mixed_words()
+        is_subset_pat |= other.is_non_whitespaces_group()
 
         is_superset_pat = other.is_letter()
         is_superset_pat |= other.is_letters()
@@ -731,11 +799,16 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
         is_superset_pat |= other.is_words()
         is_superset_pat |= other.is_mixed_word()
 
+        is_new_pat = other.is_non_whitespace() or other.is_non_whitespaces()
+
         if is_subset_pat:
             new_instance = other(self.data, other.data)
             return new_instance
         elif is_superset_pat:
             new_instance = self(self.data, other.data)
+            return new_instance
+        elif is_new_pat:
+            new_instance = TranslatedNonWhitespaceGroupPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
