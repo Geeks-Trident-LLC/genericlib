@@ -151,7 +151,7 @@ class TranslatedPattern:
 
             TranslatedNonWhitespacePattern,
             TranslatedNonWhitespacesPattern,
-            TranslatedNonWhitespaceGroupPattern,
+            TranslatedNonWhitespacesGroupPattern,
         ]
         for class_ in classes:
             node = class_(data, *other)
@@ -603,7 +603,7 @@ class TranslatedSymbolsGroupPattern(TranslatedPattern):
             new_instance = TranslatedMixedWordsPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case2:
-            new_instance = TranslatedNonWhitespaceGroupPattern(self.data, other.data)
+            new_instance = TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -728,7 +728,7 @@ class TranslatedWordsPattern(TranslatedPattern):
             new_instance = TranslatedMixedWordsPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case2:
-            new_instance = TranslatedNonWhitespaceGroupPattern(self.data, other.data)
+            new_instance = TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -808,7 +808,7 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
             new_instance = self(self.data, other.data)
             return new_instance
         elif is_new_pat:
-            new_instance = TranslatedNonWhitespaceGroupPattern(self.data, other.data)
+            new_instance = TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -855,7 +855,7 @@ class TranslatedNonWhitespacePattern(TranslatedPattern):
             new_instance = TranslatedNonWhitespacesPattern(self.data, other.data)
             return new_instance
         elif is_new_pat_case2:
-            new_instance = TranslatedNonWhitespaceGroupPattern(self.data, other.data)
+            new_instance = TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             return new_instance
         else:
             cls_name = Misc.get_instance_class_name(self)
@@ -872,15 +872,21 @@ class TranslatedNonWhitespacesPattern(TranslatedPattern):
     def recommend(self, other):
         is_subset_pat = other.is_non_whitespaces()
         is_subset_pat |= other.is_non_whitespaces_group()
+
+        is_new_pat = other.is_words() or other.is_mixed_words()
+
         if is_subset_pat:
             new_instance = other(self.data, other.data)
+            return new_instance
+        elif is_new_pat:
+            new_instance = TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             return new_instance
         else:
             new_instance = self(self.data, other.data)
             return new_instance
 
 
-class TranslatedNonWhitespaceGroupPattern(TranslatedPattern):
+class TranslatedNonWhitespacesGroupPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.NON_WHITESPACES_GROUP,
                          defined_patterns=[PATTERN.NON_WHITESPACES_OR_GROUP,

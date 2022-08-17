@@ -27,8 +27,8 @@ from genericlib.gp import TranslatedMixedWordPattern
 from genericlib.gp import TranslatedMixedWordsPattern
 
 from genericlib.gp import TranslatedNonWhitespacePattern
-# from genericlib.gp import TranslatedNonWhiteSpaces
-# from genericlib.gp import TranslatedNonWhiteSpaceGroup
+from genericlib.gp import TranslatedNonWhitespacesPattern
+from genericlib.gp import TranslatedNonWhitespacesGroupPattern
 
 
 class TestCommonPhrase:
@@ -618,7 +618,7 @@ class TestTranslatedGraphPattern:
 
 
 class TestTranslatedNonWhitespacePattern:
-    """Test class for TranslatedNonWhitespace."""
+    """Test class for TranslatedNonWhitespacePattern."""
 
     @pytest.mark.parametrize(
         "data,expected_pattern",
@@ -645,10 +645,51 @@ class TestTranslatedNonWhitespacePattern:
             ('a', TranslatedAlphabetNumericPattern('4'), r'\S'),
             ('}', TranslatedWordPattern('4'), r'\S+'),
             ('=', TranslatedWordsPattern('4 5'), r'\S+( +\S+)*'),
+            ('@', TranslatedNonWhitespacesPattern('4'), r'\S+'),
+            ('#', TranslatedNonWhitespacesGroupPattern('4'), r'\S+( +\S+)*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
         node = TranslatedNonWhitespacePattern(data)
+        recommended_pat_obj = node.recommend(other)
+        recommended_pat = recommended_pat_obj.pattern
+        assert recommended_pat == expected_pattern
+
+
+class TestTranslatedNonWhitespacesPattern:
+    """Test class for TranslatedNonWhitespacesPattern."""
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern",
+        [
+            ('', ''),
+            ('aa', r'\S+'),
+            ('1', r'\S+'),
+            ('+', r'\S+'),
+            ('a', r'\S+'),
+        ]
+    )
+    def test_non_whitespace_pattern(self, data, expected_pattern):
+        node = TranslatedNonWhitespacesPattern(data)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "data,other,expected_pattern",
+        [
+            ('-', TranslatedLetterPattern('a'), r'\S+'),
+            ('.', TranslatedLettersPattern('ab'), r'\S+'),
+            ('+', TranslatedDigitPattern('1'), r'\S+'),
+            ('*', TranslatedDigitsPattern('42'), r'\S+'),
+            ('a', TranslatedAlphabetNumericPattern('4'), r'\S+'),
+            ('}', TranslatedWordPattern('4'), r'\S+'),
+            ('=', TranslatedWordsPattern('4 5'), r'\S+( +\S+)*'),
+            ('@', TranslatedNonWhitespacesPattern('4'), r'\S+'),
+            ('#', TranslatedNonWhitespacesGroupPattern('4'), r'\S+( +\S+)*'),
+        ]
+    )
+    def test_recommend_pattern(self, data, other, expected_pattern):
+        node = TranslatedNonWhitespacesPattern(data)
         recommended_pat_obj = node.recommend(other)
         recommended_pat = recommended_pat_obj.pattern
         assert recommended_pat == expected_pattern
