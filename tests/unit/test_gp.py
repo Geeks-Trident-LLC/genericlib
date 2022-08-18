@@ -46,9 +46,9 @@ class TestCommonPhrase:
             ('abc   xyz', False, True, 'abc +xyz'),
             ('  abc   xyz', False, True, ' +abc +xyz'),
             ('  abc   xyz  ', False, True, ' +abc +xyz +'),
-            ('  (abc)   xyz  ', False, True, ' +\\(abc\\) +xyz +'),
-            ('  (abc+)   xyz  ', False, True, ' +\\(abc\\+\\) +xyz +'),
-            ('  (abc++)   x.yz  ', False, True, ' +\\(abc\\+\\+\\) +x\\.yz +'),
+            ('  (abc)   xyz  ', False, True, r' +\(abc\) +xyz +'),
+            ('  (abc+)   xyz  ', False, True, r' +\(abc\+\) +xyz +'),
+            ('  (abc++)   x.yz  ', False, True, r' +\(abc\+\+\) +x\.yz +'),
         ]
     )
     def test_common_phrase(self, data, is_generic, is_flex_space, expected_result):
@@ -63,17 +63,20 @@ class TestTranslatedPattern:
     @pytest.mark.parametrize(
         "data1,data2,expected_pattern",
         [
-            ('5', '4', '[0-9]'),
-            ('5', '44', '[0-9]+'),
+            ('1', '4', '[0-9]'),
+            ('2', '44', '[0-9]+'),
             ('555', '4', '[0-9]+'),
             ('1.1', '4', '[0-9]*[.]?[0-9]+'),
             ('12', '4.1', '[0-9]*[.]?[0-9]+'),
             ('12.3', '4.1', '[0-9]*[.]?[0-9]+'),
-            ('5', '+4.4', '[\\(+-]?[0-9]*[.]?[0-9]+[)]?'),
+            ('3', '+4.4', r'[\(+-]?[0-9]*[.]?[0-9]+[)]?'),
+            ('4', 'a', r'[a-zA-Z0-9]'),
+            ('5', '-', r'[\x21-\x7e]'),
+            ('5', '-+', r'[\x21-\x7e]+'),
+            ('6', '- -', r'[\x21-\x7e]+( +[\x21-\x7e]+)*'),
         ]
     )
     def test_recommend_pattern(self, data1, data2, expected_pattern):
-
         method = TranslatedPattern.recommend_pattern_using_data
         recommended_pat_obj = method(data1, data2)
         recommended_pat = recommended_pat_obj.pattern
