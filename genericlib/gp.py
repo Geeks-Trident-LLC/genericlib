@@ -946,7 +946,7 @@ class TranslatedNonWhitespacesGroupPattern(TranslatedPattern):
             self.raise_recommend_exception(other)
 
 
-class CommonText:
+class CommonTextPattern:
     def __init__(self, value, is_generic=False, is_flex_space=False):
         self._value = value
         self.is_generic = is_generic

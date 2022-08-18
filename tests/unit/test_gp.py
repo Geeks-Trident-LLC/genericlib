@@ -1,7 +1,7 @@
 # import re
 
 import pytest           # noqa
-from genericlib.gp import CommonText
+from genericlib.gp import CommonTextPattern
 
 from genericlib.gp import TranslatedPattern
 
@@ -52,7 +52,7 @@ class TestCommonPhrase:
         ]
     )
     def test_common_phrase(self, data, is_generic, is_flex_space, expected_result):
-        node = CommonText(data, is_generic=is_generic, is_flex_space=is_flex_space)
+        node = CommonTextPattern(data, is_generic=is_generic, is_flex_space=is_flex_space)
         pattern = node.pattern
         assert pattern == expected_result
 
