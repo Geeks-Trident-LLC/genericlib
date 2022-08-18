@@ -1010,9 +1010,10 @@ class CommonTextPattern:
         return pattern
 
 
-class DiffText:
+class DiffTextPattern:
     def __init__(self, value1, value2, *args):
         self._values = [value1, value2] + list(args)
+        self._pattern = STRING.EMPTY
 
 
 class LineWordDiff:
