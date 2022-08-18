@@ -118,6 +118,28 @@ class TranslatedPattern:
     def is_non_whitespaces_group(self):
         return self.name == TEXT.NON_WHITESPACES_GROUP
 
+    def is_subset_of(self, other):
+        fmt = 'Need to implement subset verification for (%s, %s)'
+        cls_name = Misc.get_instance_class_name(self)
+        other_cls_name = Misc.get_instance_class_name(other)
+        error = fmt % (cls_name, other_cls_name)
+        raise NotImplementedError(error)
+
+    def is_superset_of(self, other):
+        fmt = 'Need to implement superset verification for (%s, %s)'
+        cls_name = Misc.get_instance_class_name(self)
+        other_cls_name = Misc.get_instance_class_name(other)
+        error = fmt % (cls_name, other_cls_name)
+        raise NotImplementedError(error)
+
+    def get_new_subset(self, other):
+        new_instance = other(other.data, other.get_reference_data(self))
+        return new_instance
+
+    def get_new_superset(self, other):
+        new_instance = self(self.data, self.get_reference_data(other))
+        return new_instance
+
     def get_reference_data(self, other):
         if isinstance(other, TranslatedPattern):
             is_curr_multiple = ' ' in self.data.strip()
@@ -132,6 +154,13 @@ class TranslatedPattern:
                     return result
         else:
             return self.data
+
+    def raise_recommend_exception(self, other):
+        cls_name = Misc.get_instance_class_name(self)
+        fmt = ('NotImplementPatternRecommendation - Need to implement '
+               'this case (%r, %r) for %s')
+        err_msg = fmt % (self.data, other.data, cls_name)
+        raise Exception(err_msg)
 
     @classmethod
     def get_translated_pattern_object(cls, data, *other):
@@ -192,31 +221,32 @@ class TranslatedDigitPattern(TranslatedPattern):
         super().__init__(data, *other, name=TEXT.DIGIT,
                          defined_pattern=PATTERN.DIGIT)
 
-    def recommend(self, other):
+    def is_subset_of(self, other):
+        chk = other.is_digit() or other.is_digits()
+        chk = chk or other.is_number() or other.is_mixed_number()
+        chk = chk or other.is_alphabet_numeric() or other.is_graph()
+        chk = chk or other.is_word() or other.is_mixed_word()
+        chk = chk or other.is_words() or other.is_mixed_words()
+        chk = chk or other.is_non_whitespace() or other.is_non_whitespaces()
+        chk = chk or other.is_non_whitespaces_group()
+        return chk
 
-        is_subset_pat = other.is_digit()
-        is_subset_pat |= other.is_digits()
-        is_subset_pat |= other.is_number()
-        is_subset_pat |= other.is_mixed_number()
-        is_subset_pat |= other.is_alphabet_numeric()
-        is_subset_pat |= other.is_graph()
-        is_subset_pat |= other.is_word()
-        is_subset_pat |= other.is_mixed_word()
-        is_subset_pat |= other.is_words()
-        is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_non_whitespace()
-        is_subset_pat |= other.is_non_whitespaces()
-        is_subset_pat |= other.is_non_whitespaces_group()
+    def is_superset_of(self, other):    # noqa
+        return False
+
+    def recommend(self, other):
 
         is_new_pat_case1 = other.is_letter()
         is_new_pat_case2 = other.is_letters()
-
         is_new_pat_case3 = other.is_symbol()
         is_new_pat_case4 = other.is_symbols()
         is_new_pat_case5 = other.is_symbols_group()
 
-        if is_subset_pat:
-            new_instance = other(other.data, other.get_reference_data(self))
+        if self.is_subset_of(other):
+            new_instance = self.get_new_subset(other)
+            return new_instance
+        elif self.is_superset_of(other):
+            new_instance = self.get_new_superset(other)
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedAlphabetNumericPattern(self.data, other.data)
@@ -234,10 +264,7 @@ class TranslatedDigitPattern(TranslatedPattern):
             new_instance = TranslatedMixedWordsPattern(self.data, other.data)
             return new_instance
         else:
-            cls_name = Misc.get_instance_class_name(self)
-            fmt = 'Need to implement this case (%r, %r) for %s'
-            err_msg = fmt % (self.data, other.data, cls_name)
-            raise Exception(err_msg)
+            self.raise_recommend_exception(other)
 
 
 class TranslatedDigitsPattern(TranslatedPattern):
