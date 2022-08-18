@@ -139,24 +139,26 @@ class TranslatedPattern:
         new_instance = self(self.data, self.get_reference_data(other))
         return new_instance
 
+    def is_plural(self):
+        chk = STRING.SPACE_CHAR in self.data.strip()
+        return chk
+
     def get_reference_data(self, other):
         if isinstance(other, TranslatedPattern):
-            is_curr_multiple = ' ' in self.data.strip()
-            is_other_multiple = ' ' in other.data.strip()
-            if self.name in other.name or other.name in self.name:
+            if self.is_subset_of(other) or self.is_superset_of(other):
                 return other.data
             else:
-                if is_curr_multiple and is_other_multiple:
+                if self.is_plural() and other.is_plural():
                     return self.data
                 else:
-                    result = self.data.split(' ')[NUMBER.ZERO]
+                    result = self.data.split(STRING.SPACE_CHAR)[NUMBER.ZERO]
                     return result
         else:
             return self.data
 
     def raise_recommend_exception(self, other):
         cls_name = Misc.get_instance_class_name(self)
-        fmt = ('NotImplementPatternRecommendation - Need to implement '
+        fmt = ('NotImplementRecommendedPattern - Need to implement '
                'this case (%r, %r) for %s')
         err_msg = fmt % (self.data, other.data, cls_name)
         raise Exception(err_msg)
