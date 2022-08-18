@@ -879,21 +879,36 @@ class TranslatedNonWhitespacesPattern(TranslatedPattern):
         super().__init__(data, *other, name=TEXT.NON_WHITESPACES,
                          defined_pattern=PATTERN.NON_WHITESPACES)
 
+    def is_subset_of(self, other):
+        chk = other.is_non_whitespaces() or other.is_non_whitespaces_group()
+
+        return chk
+
+    def is_superset_of(self, other):
+        chk = other.is_digit() or other.is_digits()
+        chk = chk or other.is_number() or other.is_mixed_number()
+        chk = chk or other.is_letter() or other.is_letters()
+        chk = chk or other.is_alphabet_numeric() or other.is_graph()
+        chk = chk or other.is_symbol() or other.is_symbols()
+        chk = chk or other.is_word() or other.is_mixed_word()
+        chk = chk or other.is_non_whitespace()
+
+        return chk
+
     def recommend(self, other):
-        is_subset_pat = other.is_non_whitespaces()
-        is_subset_pat |= other.is_non_whitespaces_group()
 
-        is_new_pat = other.is_words() or other.is_mixed_words()
-
-        if is_subset_pat:
-            new_instance = other(other.data, other.get_reference_data(self))
-            return new_instance
-        elif is_new_pat:
-            new_instance = TranslatedNonWhitespacesGroupPattern(self.data, other.data)
-            return new_instance
+        if self.is_subset_of(other) or self.is_superset_of(other):
+            if self.is_subset_of(other):
+                return self.get_new_subset(other)
+            else:
+                return self.get_new_superset(other)
         else:
-            new_instance = self(self.data, other.data)
-            return new_instance
+            case1 = other.is_symbols_group() or other.is_words() or other.is_mixed_words()
+
+            if case1:
+                return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
+            else:
+                self.raise_recommend_exception(other)
 
 
 class TranslatedNonWhitespacesGroupPattern(TranslatedPattern):
