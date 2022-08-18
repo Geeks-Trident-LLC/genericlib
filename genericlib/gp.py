@@ -944,7 +944,7 @@ class TranslatedNonWhitespacesGroupPattern(TranslatedPattern):
         return new_instance
 
 
-class CommonPhrase:
+class CommonText:
     def __init__(self, value, is_generic=False, is_flex_space=False):
         self._value = value
         self.is_generic = is_generic
