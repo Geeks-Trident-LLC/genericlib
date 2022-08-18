@@ -230,7 +230,7 @@ class TranslatedDigitPattern(TranslatedPattern):
         chk = chk or other.is_non_whitespaces_group()
         return chk
 
-    def is_superset_of(self, other):    # noqa
+    def is_superset_of(self, other):
         return False
 
     def recommend(self, other):
@@ -917,9 +917,31 @@ class TranslatedNonWhitespacesGroupPattern(TranslatedPattern):
                          defined_patterns=[PATTERN.NON_WHITESPACES_OR_GROUP,
                                            PATTERN.NON_WHITESPACES_GROUP])
 
+    def is_subset_of(self, other):
+        chk = other.is_non_whitespaces_group()
+
+        return chk
+
+    def is_superset_of(self, other):
+        chk = other.is_digit() or other.is_digits()
+        chk = chk or other.is_number() or other.is_mixed_number()
+        chk = chk or other.is_letter() or other.is_letters()
+        chk = chk or other.is_alphabet_numeric() or other.is_graph()
+        chk = chk or other.is_symbol() or other.is_symbols() or other.is_symbols_group()
+        chk = chk or other.is_word() or other.is_mixed_word()
+        chk = chk or other.is_words() or other.is_mixed_words()
+        chk = chk or other.is_non_whitespace() or other.is_non_whitespaces()
+
+        return chk
+
     def recommend(self, other):
-        new_instance = self(self.data, other.data)
-        return new_instance
+        if self.is_subset_of(other) or self.is_superset_of(other):
+            if self.is_subset_of(other):
+                return self.get_new_subset(other)
+            else:
+                return self.get_new_superset(other)
+        else:
+            self.raise_recommend_exception(other)
 
 
 class CommonText:
