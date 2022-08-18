@@ -693,42 +693,37 @@ class TranslatedWordPattern(TranslatedPattern):
         super().__init__(data, *other, name=TEXT.WORD,
                          defined_pattern=PATTERN.WORD)
 
+    def is_subset_of(self, other):
+        chk = other.is_word() or other.is_words()
+        chk = chk or other.is_mixed_word() or other.is_mixed_words()
+        chk = chk or other.is_non_whitespaces() or other.is_non_whitespaces_group()
+
+        return chk
+
+    def is_superset_of(self, other):
+        chk = other.is_letter() or other.is_letters()
+        chk = chk or other.is_digit() or other.is_digits()
+        chk = chk or other.is_alphabet_numeric()
+
+        return chk
+
     def recommend(self, other):
 
-        is_subset_pat = other.is_word()
-        is_subset_pat |= other.is_words()
-        is_subset_pat |= other.is_mixed_word()
-        is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_non_whitespaces()
-        is_subset_pat |= other.is_non_whitespaces_group()
-
-        is_superset_pat = other.is_letter()
-        is_superset_pat |= other.is_letters()
-        is_superset_pat |= other.is_digit()
-        is_superset_pat |= other.is_digits()
-        is_superset_pat |= other.is_alphabet_numeric()
-
-        is_new_pat_case1 = other.is_number() or other.is_mixed_number()
-
-        is_new_pat_case2 = other.is_non_whitespace()
-
-        if is_subset_pat:
-            new_instance = other(other.data, other.get_reference_data(self))
-            return new_instance
-        elif is_superset_pat:
-            new_instance = self(self.data, self.get_reference_data(other))
-            return new_instance
-        elif is_new_pat_case1:
-            new_instance = TranslatedMixedWordPattern(self.data, other.data)
-            return new_instance
-        elif is_new_pat_case2:
-            new_instance = TranslatedNonWhitespacesPattern(self.data, other.data)
-            return new_instance
+        if self.is_subset_of(other) or self.is_superset_of(other):
+            if self.is_subset_of(other):
+                return self.get_new_subset(other)
+            else:
+                return self.get_new_superset(other)
         else:
-            cls_name = Misc.get_instance_class_name(self)
-            fmt = 'Need to implement this case (%r, %r) for %s'
-            err_msg = fmt % (self.data, other.data, cls_name)
-            raise Exception(err_msg)
+            case1 = other.is_number() or other.is_mixed_number()
+            case2 = other.is_non_whitespace()
+
+            if case1:
+                return TranslatedMixedWordPattern(self.data, other.data)
+            elif case2:
+                return TranslatedNonWhitespacesPattern(self.data, other.data)
+            else:
+                self.raise_recommend_exception(other)
 
 
 class TranslatedWordsPattern(TranslatedPattern):
