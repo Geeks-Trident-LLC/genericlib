@@ -805,36 +805,33 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
                          defined_patterns=[PATTERN.MIXED_WORD_OR_WORDS,
                                            PATTERN.MIXED_WORDS])
 
+    def is_subset_of(self, other):
+        chk = other.is_mixed_words() or other.is_non_whitespaces_group()
+
+        return chk
+
+    def is_superset_of(self, other):
+        chk = other.is_letter() or other.is_letters()
+        chk = chk or other.is_digit() or other.is_digits()
+        chk = chk or other.is_alphabet_numeric()
+        chk = chk or other.is_word() or other.is_words() or other.is_mixed_word()
+
+        return chk
+
     def recommend(self, other):
 
-        is_subset_pat = other.is_mixed_words()
-        is_subset_pat |= other.is_non_whitespaces_group()
-
-        is_superset_pat = other.is_letter()
-        is_superset_pat |= other.is_letters()
-        is_superset_pat |= other.is_digit()
-        is_superset_pat |= other.is_digits()
-        is_superset_pat |= other.is_alphabet_numeric()
-        is_superset_pat |= other.is_word()
-        is_superset_pat |= other.is_words()
-        is_superset_pat |= other.is_mixed_word()
-
-        is_new_pat = other.is_non_whitespace() or other.is_non_whitespaces()
-
-        if is_subset_pat:
-            new_instance = other(self.data, other.data)
-            return new_instance
-        elif is_superset_pat:
-            new_instance = self(self.data, other.data)
-            return new_instance
-        elif is_new_pat:
-            new_instance = TranslatedNonWhitespacesGroupPattern(self.data, other.data)
-            return new_instance
+        if self.is_subset_of(other) or self.is_superset_of(other):
+            if self.is_subset_of(other):
+                return self.get_new_subset(other)
+            else:
+                return self.get_new_superset(other)
         else:
-            cls_name = Misc.get_instance_class_name(self)
-            fmt = 'Need to implement this case (%r, %r) for %s'
-            err_msg = fmt % (self.data, other.data, cls_name)
-            raise Exception(err_msg)
+            case1 = other.is_non_whitespace() or other.is_non_whitespaces()
+
+            if case1:
+                return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
+            else:
+                self.raise_recommend_exception(other)
 
 
 class TranslatedNonWhitespacePattern(TranslatedPattern):
