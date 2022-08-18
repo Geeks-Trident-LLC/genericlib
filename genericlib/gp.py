@@ -365,15 +365,18 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
         super().__init__(data, *other, name=TEXT.MIXED_NUMBER,
                          defined_pattern=PATTERN.MIXED_NUMBER)
 
+    def is_subset_of(self, other):
+        chk = other.is_mixed_number() or other.is_mixed_word() or other.is_mixed_words()
+        chk = chk or other.is_non_whitespaces() or other.is_non_whitespaces_group()
+
+        return chk
+
+    def is_superset_of(self, other):
+        chk = other.is_digit() or other.is_digits() or other.is_number()
+
+        return chk
+
     def recommend(self, other):
-
-        is_subset_pat = other.is_mixed_number()
-        is_subset_pat |= other.is_mixed_word()
-        is_subset_pat |= other.is_mixed_words()
-        is_subset_pat |= other.is_non_whitespaces()
-        is_subset_pat |= other.is_non_whitespaces_group()
-
-        is_superset_pat = other.is_digit() or other.is_digits() or other.is_number()
 
         is_new_pat_case1 = other.is_letter() or other.is_letters()
         is_new_pat_case1 |= other.is_alphabet_numeric() or other.is_graph()
@@ -384,11 +387,11 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
 
         is_new_pat_case3 = other.is_non_whitespace()
 
-        if is_subset_pat:
-            new_instance = other(other.data, other.get_reference_data(self))
+        if self.is_subset_of(other):
+            new_instance = self.get_new_subset(other)
             return new_instance
-        if is_superset_pat:
-            new_instance = self(self.data, self.get_reference_data(other))
+        if self.is_superset_of(other):
+            new_instance = self.get_new_superset(other)
             return new_instance
         elif is_new_pat_case1:
             new_instance = TranslatedMixedWordPattern(self.data, other.data)
@@ -400,10 +403,7 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
             new_instance = TranslatedNonWhitespacesPattern(self.data, other.data)
             return new_instance
         else:
-            cls_name = Misc.get_instance_class_name(self)
-            fmt = 'Need to implement this case (%r, %r) for %s'
-            err_msg = fmt % (self.data, other.data, cls_name)
-            raise Exception(err_msg)
+            self.raise_recommend_exception(other)
 
 
 class TranslatedLetterPattern(TranslatedPattern):
