@@ -118,10 +118,6 @@ class TranslatedPattern:
     def is_non_whitespaces_group(self):
         return self.name == TEXT.NON_WHITESPACES_GROUP
 
-    def copy(self):
-        copied_instance = MiscObject.copy(self)
-        return copied_instance
-
     def get_reference_data(self, other):
         if isinstance(other, TranslatedPattern):
             is_curr_multiple = ' ' in self.data.strip()
