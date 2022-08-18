@@ -1016,5 +1016,5 @@ class DiffTextPattern:
         self._pattern = STRING.EMPTY
 
 
-class LineWordDiff:
+class DiffLinePattern:
     pass
