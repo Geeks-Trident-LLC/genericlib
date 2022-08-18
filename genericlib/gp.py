@@ -1008,7 +1008,7 @@ class CommonText:
         return pattern
 
 
-class DiffPhrase:
+class DiffText:
     def __init__(self, value1, value2, *args):
         self._values = [value1, value2] + list(args)
 
