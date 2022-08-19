@@ -1,5 +1,5 @@
 import re
-# from difflib import SequenceMatcher
+from difflib import SequenceMatcher
 
 from genericlib import NUMBER
 from genericlib import STRING
@@ -1017,4 +1017,33 @@ class DiffTextPattern:
 
 
 class DiffLinePattern:
-    pass
+    def __init__(self, line1, line2, *other_lines):
+
+        self.lines = []
+        self._pattern = ''
+        self.prepare(line1, line2, *other_lines)
+
+    def reset(self):
+        self.lines.clear()
+        self._pattern = ''
+
+    def prepare(self, line1, line2, *other_lines):
+
+        lines = []
+        line1.strip() and lines.append(line1)
+        line2.strip() and line2 not in lines and lines.append(line2)
+
+        for line in other_lines:
+            line.strip() and line not in lines and lines.append(line)
+
+        if len(lines) < NUMBER.TWO:
+            fmt = ('DiffLinePatternError - CANT form pattern because provided '
+                   'lines are less than two\n%s')
+            lst = ['Line 1: %r' % line1, 'Line 2: %r' % line2]
+            if other_lines:
+                lst.append('Other Lines: %r' % other_lines)
+            error = fmt % '\n'.join(lst)
+            raise Exception(error)
+        else:
+            self.reset()
+            self.lines.extend(lines)

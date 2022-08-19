@@ -3,6 +3,8 @@
 import pytest           # noqa
 from genericlib.gp import CommonTextPattern
 
+from genericlib.gp import DiffLinePattern
+
 from genericlib.gp import TranslatedPattern
 
 from genericlib.gp import TranslatedDigitPattern
@@ -31,8 +33,42 @@ from genericlib.gp import TranslatedNonWhitespacesPattern
 from genericlib.gp import TranslatedNonWhitespacesGroupPattern
 
 
-class TestCommonPhrase:
-    """Test class for CommonPhrase."""
+class TestDiffLinePattern:
+    """Test class for DiffLinePattern"""
+    @pytest.mark.parametrize(
+        "lines,expected_total_lines_count",
+        [
+            (['line 1', 'line 2'], 2),
+            (['line 1', 'line 2', 'line 3'], 3),
+            (['line 1', '', 'line 3', 'line4'], 3),
+            (['line 1', '', '      ', 'line4'], 2),
+        ]
+    )
+    def test_prepare(self, lines, expected_total_lines_count):
+        node = DiffLinePattern('a', 'b')
+        node.reset()
+        node.prepare(*lines)
+        total_lines_count = len(node.lines)
+        assert total_lines_count == expected_total_lines_count
+
+    @pytest.mark.parametrize(
+        "lines",
+        [
+            ('line 1', ''),
+            (' ', 'line2'),
+            (' ', '    '),
+            ('', ''),
+        ]
+    )
+    def test_prepare_catch_exception(self, lines):
+        node = DiffLinePattern('a', 'b')
+
+        with pytest.raises(Exception):
+            node.prepare(*lines)
+
+
+class TestCommonTextPattern:
+    """Test class for CommonTextPattern."""
 
     @pytest.mark.parametrize(
         "data,is_generic,is_flex_space,expected_result",
