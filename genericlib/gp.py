@@ -1047,3 +1047,50 @@ class DiffLinePattern:
         else:
             self.reset()
             self.lines.extend(lines)
+
+    def get_pattern_btw_two_lines(self, line_a, line_b):
+
+        translate_pat_method = TranslatedPattern.recommend_pattern_using_data
+        lst_a = re.split(PATTERN.WHITESPACES, line_a)
+        lst_b = re.split(PATTERN.WHITESPACES, line_b)
+
+        intersect_items = set(lst_a).intersection(lst_b)
+        similar_grp = [do_soft_regex_escape(i) for i in intersect_items]
+
+        if not similar_grp:
+            translated_pat_obj = translate_pat_method(line_a, line_b)
+            pattern = translated_pat_obj.pattern
+            return pattern
+
+        pat = r'(\s+)?(?P<data>%s)(\s+)?' % '|'.join(similar_grp)
+
+        m_lst_a = re.finditer(pat, line_a)
+        m_lst_b = re.finditer(pat, line_b)
+        m_lst = zip(m_lst_a, m_lst_b)
+        pos_a = 0
+        pos_b = 0
+
+        lst = []
+        m_a, m_b = None, None
+
+        for m_a, m_b in m_lst:
+            pre_a = m_a.string[pos_a:m_a.start()]
+            pre_b = m_b.string[pos_b:m_b.start()]
+
+            if pre_a.strip() or pre_b.strip():
+                translated_pat_obj = translate_pat_method(pre_a, pre_b)
+                translated_pat_obj.pattern and lst.append(translated_pat_obj.pattern)
+            matched_data = do_soft_regex_escape(m_a.group().strip())
+            lst.append(matched_data)
+            pos_a = m_a.end()
+            pos_b = m_b.end()
+
+        if m_a and m_b:
+            post_a = m_a.string[m_a.end():]
+            post_b = m_b.string[m_b.end():]
+            if post_a.strip() or post_b.strip():
+                translated_pat_obj = translate_pat_method(post_a, post_b)
+                translated_pat_obj.pattern and lst.append(translated_pat_obj.pattern)
+
+        pattern = PATTERN.SPACES.join(lst)
+        return pattern

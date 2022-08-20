@@ -66,6 +66,26 @@ class TestDiffLinePattern:
         with pytest.raises(Exception):
             node.prepare(*lines)
 
+    @pytest.mark.parametrize(
+        "line_a,line_b,expected_pattern",
+        [
+            # ('a', '@', r'[\x21-\x7e]'),
+            # ('a b', '@', r''),
+            # ('a b', 'x', r'[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*'),
+            (
+                'line a is a first line',
+                'line b is a second line',
+                ''
+            )
+        ]
+    )
+    def test_get_pattern_btw_two_lines(self, line_a, line_b, expected_pattern):
+        node = DiffLinePattern('a', 'b')
+        node.reset()
+        import pdb; pdb.set_trace()
+        pattern = node.get_pattern_btw_two_lines(line_a, line_b)
+        assert pattern == expected_pattern
+
 
 class TestCommonTextPattern:
     """Test class for CommonTextPattern."""
