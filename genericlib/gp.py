@@ -1119,6 +1119,16 @@ class NDiffCommonText(NDiffBaseText):
         name_ = 'ndiff_common_text' if self else STRING.EMPTY
         return name_
 
+    def get_pattern(self, var=''):
+        txt = '  '.join(self.lst)
+        if txt:
+            pattern = TranslatedPattern.get_translated_pattern_object(txt)
+        else:
+            pattern = STRING.EMPTY
+
+        pattern = '(?P<%s>%s)' % (var, pattern) if var else pattern
+        return pattern
+
 
 class NDiffLinePattern:
     def __init__(self, line_a, line_b):
