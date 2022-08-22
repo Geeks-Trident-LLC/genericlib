@@ -1,7 +1,6 @@
 # import re
 
 import pytest           # noqa
-from genericlib.gp import CommonTextPattern
 
 from genericlib.gp import DiffLinePattern
 
@@ -174,32 +173,6 @@ class TestDiffLinePattern:
         node = DiffLinePattern(*lines)
         pattern = node.pattern
         assert pattern == expected_pattern
-
-
-class TestCommonTextPattern:
-    """Test class for CommonTextPattern."""
-
-    @pytest.mark.parametrize(
-        "data,is_generic,is_flex_space,expected_result",
-        [
-            ('', False, False, ''),
-            (' ', False, False, ' '),
-            ('   ', False, False, '   '),
-            ('   ', False, True, ' +'),
-            ('abc xyz', False, False, 'abc xyz'),
-            ('abc   xyz', False, False, 'abc   xyz'),
-            ('abc   xyz', False, True, 'abc +xyz'),
-            ('  abc   xyz', False, True, ' +abc +xyz'),
-            ('  abc   xyz  ', False, True, ' +abc +xyz +'),
-            ('  (abc)   xyz  ', False, True, r' +\(abc\) +xyz +'),
-            ('  (abc+)   xyz  ', False, True, r' +\(abc\+\) +xyz +'),
-            ('  (abc++)   x.yz  ', False, True, r' +\(abc\+\+\) +x\.yz +'),
-        ]
-    )
-    def test_common_phrase(self, data, is_generic, is_flex_space, expected_result):
-        node = CommonTextPattern(data, is_generic=is_generic, is_flex_space=is_flex_space)
-        pattern = node.pattern
-        assert pattern == expected_result
 
 
 class TestTranslatedPattern:
