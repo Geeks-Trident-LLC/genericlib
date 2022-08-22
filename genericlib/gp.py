@@ -1014,12 +1014,6 @@ class CommonTextPattern:
         return pattern
 
 
-class DiffTextPattern:
-    def __init__(self, value1, value2, *args):
-        self._values = [value1, value2] + list(args)
-        self._pattern = STRING.EMPTY
-
-
 class NDiffBaseText:
     def __init__(self, txt):
         self._lst = []
