@@ -69,20 +69,39 @@ class TestDiffLinePattern:
     @pytest.mark.parametrize(
         "line_a,line_b,expected_pattern",
         [
-            # ('a', '@', r'[\x21-\x7e]'),
-            # ('a b', '@', r''),
-            # ('a b', 'x', r'[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*'),
+            ('a', '@', r'(?P<v0>[\x21-\x7e])'),
+            ('a b', '@', r'(?P<v0>[\x21-\x7e]+( +[\x21-\x7e]+)*)'),
+            ('a b', 'x', r'(?P<v0>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*)'),
             (
-                'line a is a first line',
-                'line b is a second line',
-                ''
-            )
+                'line one is a first line',
+                'line ore is a second line',
+                'line +(?P<v0>[a-zA-Z]+) +is +a +(?P<v1>[a-zA-Z]+) +line'
+            ),
+            (
+                '  line one is a first line',
+                'line ore is a second line',
+                ' *line +(?P<v0>[a-zA-Z]+) +is +a +(?P<v1>[a-zA-Z]+) +line'
+            ),
+            (
+                '  line one is a first line',
+                '    line ore is a second line',
+                ' +line +(?P<v0>[a-zA-Z]+) +is +a +(?P<v1>[a-zA-Z]+) +line'
+            ),
+            (
+                '  line one is a first line  ',
+                '    line ore is a second line',
+                ' +line +(?P<v0>[a-zA-Z]+) +is +a +(?P<v1>[a-zA-Z]+) +line *'
+            ),
+            (
+                'this line one is a first line',
+                'line ore is a second bad line',
+                '(?P<v0>[a-zA-Z]+)?( +)?line +(?P<v1>[a-zA-Z]+) +is +a +(?P<v2>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*) +line'
+            ),
         ]
     )
     def test_get_pattern_btw_two_lines(self, line_a, line_b, expected_pattern):
         node = DiffLinePattern('a', 'b')
         node.reset()
-        import pdb; pdb.set_trace()
         pattern = node.get_pattern_btw_two_lines(line_a, line_b)
         assert pattern == expected_pattern
 

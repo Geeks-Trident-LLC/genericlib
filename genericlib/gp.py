@@ -1,6 +1,5 @@
 import re
 from difflib import ndiff
-from difflib import restore
 
 from genericlib import NUMBER
 from genericlib import STRING
@@ -166,7 +165,7 @@ class TranslatedPattern:
         raise Exception(err_msg)
 
     @classmethod
-    def get_translated_pattern_object(cls, data, *other):
+    def do_factory_create(cls, data, *other):
         classes = [
             TranslatedDigitPattern,
             TranslatedDigitsPattern,
@@ -177,6 +176,7 @@ class TranslatedPattern:
             TranslatedLettersPattern,
 
             TranslatedAlphabetNumericPattern,
+            TranslatedWordPattern,
 
             TranslatedSymbolPattern,
             TranslatedSymbolsPattern,
@@ -184,11 +184,10 @@ class TranslatedPattern:
 
             TranslatedGraphPattern,
 
-            TranslatedWordPattern,
-            TranslatedWordsPattern,
-
             TranslatedMixedNumberPattern,
             TranslatedMixedWordPattern,
+
+            TranslatedWordsPattern,
 
             TranslatedMixedWordsPattern,
 
@@ -212,8 +211,8 @@ class TranslatedPattern:
 
     @classmethod
     def recommend_pattern_using_data(cls, data1, data2):
-        translated_pat_obj1 = cls.get_translated_pattern_object(data1)
-        translated_pat_obj2 = cls.get_translated_pattern_object(data2)
+        translated_pat_obj1 = cls.do_factory_create(data1)
+        translated_pat_obj2 = cls.do_factory_create(data2)
         generalized_pat = translated_pat_obj1.recommend(translated_pat_obj2)
         return generalized_pat
 
@@ -1030,12 +1029,12 @@ class NDiffBaseText:
             self._is_common = True
 
         if txt.startswith('- ') or txt.startswith('+ '):
-            self._lst.append(txt.lstrip('- '))
-            self._lst_other.append(txt.lstrip('+ '))
+            txt.startswith('- ') and self._lst.append(txt.lstrip('- '))
+            txt.startswith('+ ') and self._lst_other.append(txt.lstrip('+ '))
             self._is_changed = True
 
     def __len__(self):
-        chk = len(self._lst) or len(self._lst_other)
+        chk = bool(len(self._lst) or len(self._lst_other))
         return chk
 
     @property
@@ -1109,7 +1108,8 @@ class NDiffChangedText(NDiffBaseText):
         txt2 = '  '.join(self.lst_other)
         if txt1 or txt2:
             args = [txt1, txt2] if txt1 and txt2 else [txt1] if txt1 else [txt2]
-            pattern = TranslatedPattern.get_translated_pattern_object(*args)
+            translated_obj = TranslatedPattern.do_factory_create(*args)
+            pattern = translated_obj.pattern
         else:
             pattern = STRING.EMPTY
 
@@ -1131,11 +1131,7 @@ class NDiffCommonText(NDiffBaseText):
 
     def get_pattern(self, var=''):
         txt = '  '.join(self.lst)
-        if txt:
-            pattern = TranslatedPattern.get_translated_pattern_object(txt)
-        else:
-            pattern = STRING.EMPTY
-
+        pattern = TextPattern(txt) if txt else STRING.EMPTY
         pattern = '(?P<%s>%s)' % (var, pattern) if var else pattern
         return pattern
 
@@ -1215,16 +1211,44 @@ class NDiffLinePattern:
                 result.append(node)
         return result
 
-    def build_pattern_from_diff_list(self, lst):
+    def build_pattern_from_diff_list(self, lst):    # noqa
         total = len(lst)
         if total == NUMBER.ONE:
-            pass
-        elif total == NUMBER.TWO:
-            pass
+            item = lst[NUMBER.ZERO]
+            if item.is_changed:
+                pattern = item.get_pattern(var='v0')
+            else:
+                pattern = item.get_pattern()
+            return pattern
         else:
-            pass
-
-        return ''
+            result = []
+            count = 0
+            spacer = PATTERN.SPACES
+            for index, item in enumerate(lst):
+                if index <= total - NUMBER.TWO:
+                    if item.is_changed:
+                        pat = item.get_pattern(var='v%s' % count)
+                        count += 1
+                        if item.is_containing_empty_changed:
+                            result.extend([pat, '(%s)?' % spacer])
+                        else:
+                            result.extend([pat, spacer])
+                    else:
+                        pat = item.get_pattern()
+                        result.extend([pat, spacer])
+                else:
+                    if item.is_changed:
+                        pat = item.get_pattern(var='v%s' % count)
+                        if item.is_containing_empty_changed:
+                            result.pop()
+                            result.extend(['(%s)?' % spacer, pat])
+                        else:
+                            result.append(pat)
+                    else:
+                        pat = item.get_pattern()
+                        result.append(pat)
+            pattern = STRING.EMPTY.join(result)
+            return pattern
 
     def analyze_and_parse_diff_case(self):
 
@@ -1275,61 +1299,32 @@ class DiffLinePattern:
             self.reset()
             self.lines.extend(lines)
 
-    def get_pattern_btw_two_lines(self, line_a, line_b):
+    def get_pattern_btw_two_lines(self, line_a, line_b):    # noqa
 
-        is_prefix = line_a.startswith(STRING.SPACE_CHAR)
-        is_prefix = is_prefix or line_b.startswith(STRING.SPACE_CHAR)
+        is_leading_a = line_a.startswith(STRING.SPACE_CHAR)
+        is_leading_b = line_b.startswith(STRING.SPACE_CHAR)
 
-        is_postfix = line_a.endswith(STRING.SPACE_CHAR)
-        is_postfix = is_postfix or line_b.endswith(STRING.SPACE_CHAR)
+        is_both_leading = is_leading_a and is_leading_b
+        is_leading = is_leading_a or is_leading_b
 
-        pattern = NDiffLinePattern(line_a, line_b)
-        print(pattern)
+        is_trailing_a = line_a.endswith(STRING.SPACE_CHAR)
+        is_trailing_b = line_b.endswith(STRING.SPACE_CHAR)
+
+        is_both_trailing = is_trailing_a and is_trailing_b
+        is_trailing = is_trailing_a or is_trailing_b
+
+        diff_line_obj = NDiffLinePattern(line_a, line_b)
+        pattern = diff_line_obj.pattern
+
+        fmt = '%s%s'
+        if is_both_leading:
+            pattern = fmt % (PATTERN.SPACES, pattern)
+        elif is_leading:
+            pattern = fmt % (PATTERN.SPACES_BUT, pattern)
+
+        if is_both_trailing:
+            pattern = fmt % (pattern, PATTERN.SPACES)
+        elif is_trailing:
+            pattern = fmt % (pattern, PATTERN.SPACES_BUT)
+
         return pattern
-
-    # def get_pattern_btw_two_lines(self, line_a, line_b):
-    #
-    #     translate_pat_method = TranslatedPattern.recommend_pattern_using_data
-    #     lst_a = re.split(PATTERN.WHITESPACES, line_a)
-    #     lst_b = re.split(PATTERN.WHITESPACES, line_b)
-    #
-    #     intersect_items = set(lst_a).intersection(lst_b)
-    #     similar_grp = [do_soft_regex_escape(i) for i in intersect_items]
-    #
-    #     if not similar_grp:
-    #         translated_pat_obj = translate_pat_method(line_a, line_b)
-    #         pattern = translated_pat_obj.pattern
-    #         return pattern
-    #
-    #     pat = r'(\s+)?(?P<data>%s)(\s+)?' % '|'.join(similar_grp)
-    #
-    #     m_lst_a = re.finditer(pat, line_a)
-    #     m_lst_b = re.finditer(pat, line_b)
-    #     m_lst = zip(m_lst_a, m_lst_b)
-    #     pos_a = 0
-    #     pos_b = 0
-    #
-    #     lst = []
-    #     m_a, m_b = None, None
-    #
-    #     for m_a, m_b in m_lst:
-    #         pre_a = m_a.string[pos_a:m_a.start()]
-    #         pre_b = m_b.string[pos_b:m_b.start()]
-    #
-    #         if pre_a.strip() or pre_b.strip():
-    #             translated_pat_obj = translate_pat_method(pre_a, pre_b)
-    #             translated_pat_obj.pattern and lst.append(translated_pat_obj.pattern)
-    #         matched_data = do_soft_regex_escape(m_a.group().strip())
-    #         lst.append(matched_data)
-    #         pos_a = m_a.end()
-    #         pos_b = m_b.end()
-    #
-    #     if m_a and m_b:
-    #         post_a = m_a.string[m_a.end():]
-    #         post_b = m_b.string[m_b.end():]
-    #         if post_a.strip() or post_b.strip():
-    #             translated_pat_obj = translate_pat_method(post_a, post_b)
-    #             translated_pat_obj.pattern and lst.append(translated_pat_obj.pattern)
-    #
-    #     pattern = PATTERN.SPACES.join(lst)
-    #     return pattern
