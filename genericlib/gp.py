@@ -1074,6 +1074,11 @@ class NDiffBaseText:
             self._lst.clear()
             self._lst.extend(txt for txt in lst_of_txt if txt)
 
+    def readjust_lst_other(self, *lst_of_other_txt):
+        if lst_of_other_txt:
+            self._lst_other.clear()
+            self._lst_other.extend(txt for txt in lst_of_other_txt if txt)
+
     @classmethod
     def do_factory_create(cls, txt):
         if txt.startswith('  '):
