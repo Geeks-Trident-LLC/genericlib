@@ -1272,7 +1272,7 @@ class NDiffLinePattern:
 
 class DiffLinePattern:
     def __init__(self, line1, line2, *other_lines):
-
+        self.raw_lines = []
         self.lines = []
         self._pattern = ''
         self.prepare(line1, line2, *other_lines)
@@ -1292,12 +1292,16 @@ class DiffLinePattern:
 
     def prepare(self, line1, line2, *other_lines):
 
-        lines = []
-        line1.strip() and lines.append(line1)
-        line2.strip() and line2 not in lines and lines.append(line2)
+        lst = [line1, line2] + list(other_lines)
 
-        for line in other_lines:
-            line.strip() and line not in lines and lines.append(line)
+        raw_lines = []
+        lines = []
+
+        for line in lst:
+            trim_line = line.strip()
+            if trim_line:
+                line not in raw_lines and raw_lines.append(line)
+                trim_line not in lines and lines.append(trim_line)
 
         if len(lines) < NUMBER.TWO:
             fmt = ('DiffLinePatternError - CANT form pattern because provided '
@@ -1310,6 +1314,7 @@ class DiffLinePattern:
         else:
             self.reset()
             self.lines.extend(lines)
+            self.raw_lines.extend(raw_lines)
 
     def get_pattern_btw_two_lines(self, line_a, line_b):    # noqa
 
