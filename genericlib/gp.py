@@ -1410,3 +1410,37 @@ class DiffLinePattern:
         fmt = 'DiffLinePatternError - built pattern(s) did not match text\n  %s'
         error = fmt % '\n  '.join(repr(item) for item in lst)
         raise Exception(error)
+
+
+class IterativeLinePattern:
+    def __init__(self, line):
+        self.raw_line = line
+        self.line = line.strip()
+        self._pattern = ''
+
+    def __len__(self):
+        chk = bool(len(self._pattern))
+        return int(chk)
+
+    @property
+    def pattern(self):
+        pattern = self._pattern
+
+        fmt = '%s%s'
+        if self.is_leading:
+            pattern = fmt % (PATTERN.SPACES_BUT, pattern)
+
+        if self.is_trailing:
+            pattern = fmt % (pattern, PATTERN.SPACES_BUT)
+
+        return pattern
+
+    @property
+    def is_leading(self):
+        chk = self.raw_line.startswith(STRING.SPACE_CHAR)
+        return chk
+
+    @property
+    def is_trailing(self):
+        chk = self.raw_line.endswith(STRING.SPACE_CHAR)
+        return chk
