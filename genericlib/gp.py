@@ -1,5 +1,6 @@
 import re
-from difflib import SequenceMatcher
+from difflib import ndiff
+from difflib import restore
 
 from genericlib import NUMBER
 from genericlib import STRING
@@ -9,6 +10,7 @@ from genericlib import TEXT
 from genericlib import Misc
 
 from regexpro.collection import do_soft_regex_escape
+from regexpro import TextPattern
 
 
 class TranslatedPattern:
@@ -1016,6 +1018,187 @@ class DiffTextPattern:
         self._pattern = STRING.EMPTY
 
 
+class NDiffBaseText:
+    def __init__(self, txt):
+        self._lst = []
+        self._lst_other = []
+        self._is_common = False
+        self._is_changed = False
+
+        if txt.startswith('  '):
+            self._lst.append(txt.lstrip(STRING.SPACE_CHAR))
+            self._is_common = True
+
+        if txt.startswith('- ') or txt.startswith('+ '):
+            self._lst.append(txt.lstrip('- '))
+            self._lst_other.append(txt.lstrip('+ '))
+            self._is_changed = True
+
+    def __len__(self):
+        chk = len(self._lst) or len(self._lst_other)
+        return chk
+
+    @property
+    def is_common(self):
+        return self._is_common
+
+    @property
+    def is_changed(self):
+        return self._is_changed
+
+    @property
+    def name(self):
+        return STRING.EMPTY
+
+    @property
+    def lst(self):
+        return self._lst
+
+    @property
+    def lst_other(self):
+        return self._lst_other
+
+    def is_same_type(self, other):
+        if self.name:
+            chk = self.name == other.name
+            return chk
+        else:
+            return False
+
+    def extend(self, other):
+        self._lst.extend(other.lst)
+        self._lst_other.extend(other.lst_other)
+
+    @classmethod
+    def do_factory_create(cls, txt):
+        if txt.startswith('  '):
+            return NDiffCommonText(txt)
+        else:
+            changed_node = NDiffChangedText(txt)
+            node = changed_node if changed_node else None
+        return node
+
+
+class NDiffChangedText(NDiffBaseText):
+    @property
+    def name(self):
+        name_ = 'ndiff_changed_text' if self else STRING.EMPTY
+        return name_
+
+    def get_pattern(self, var=''):
+        pass
+
+
+class NDiffCommonText(NDiffBaseText):
+    @property
+    def name(self):
+        name_ = 'ndiff_common_text' if self else STRING.EMPTY
+        return name_
+
+
+class NDiffLinePattern:
+    def __init__(self, line_a, line_b):
+        self.is_leading = line_a.startswith(STRING.SPACE_CHAR)
+        self.is_leading |= line_b.startswith(STRING.SPACE_CHAR)
+        self.is_trailing = line_a.startswith(STRING.SPACE_CHAR)
+        self.is_trailing |= line_b.startswith(STRING.SPACE_CHAR)
+        self.line_a = line_a
+        self.line_b = line_b
+
+        self._line_a = self.line_a.strip()
+        self._line_b = self.line_b.strip()
+
+        self._pattern = ''
+        self.process()
+
+    def __len__(self):
+        return self._pattern != STRING.EMPTY
+
+    def __call__(self, *args, **kwargs):
+        new_instance = self.__class__(*args, **kwargs)
+        return new_instance
+
+    @property
+    def pattern(self):
+        return self._pattern
+
+    def analyze_and_parse_empty_case(self):
+        is_equal = self._line_a == self._line_b
+        is_empty = self._line_a == STRING.EMPTY
+
+        if is_empty and is_equal:
+            if self.is_leading or self.is_trailing:
+                self._pattern = PATTERN.SPACES
+            return True
+        return False
+
+    def analyze_and_parse_identical_case(self):
+        if self._line_a == self._line_b:
+            self._pattern = TextPattern(self._line_a)
+            if self.is_leading:
+                self._pattern = '%s%s' % (PATTERN.SPACES_BUT, self._pattern)
+            if self.is_trailing:
+                self._pattern = '%s%s' % (self._pattern, PATTERN.SPACES_BUT)
+        else:
+            lst_a = re.split(PATTERN.SPACES, self._line_a)
+            lst_b = re.split(PATTERN.SPACES, self._line_b)
+            if lst_a == lst_b:
+                self._pattern = TextPattern('  '.join(lst_a))
+                if self.is_leading:
+                    self._pattern = '%s%s' % (PATTERN.SPACES_BUT, self._pattern)
+                if self.is_trailing:
+                    self._pattern = '%s%s' % (self._pattern, PATTERN.SPACES_BUT)
+                return True
+        return False
+
+    def build_list_of_diff(self):
+        lst_a = re.split(PATTERN.SPACES, self._line_a)
+        lst_b = re.split(PATTERN.SPACES, self._line_b)
+
+        diff = ndiff(lst_a, lst_b)
+        lst = list(diff)
+
+        result = []
+        for item in lst:
+            node = NDiffBaseText.do_factory_create(item)
+            if result:
+                prev_node = result[-NUMBER.ONE]
+                if prev_node.is_same_type(node):
+                    prev_node.extend(node)
+                else:
+                    result.append(node)
+            else:
+                result.append(node)
+        return result
+
+    def build_pattern_from_diff_list(self, lst):
+        total = len(lst)
+        if total == NUMBER.ONE:
+            pass
+        elif total == NUMBER.TWO:
+            pass
+        else:
+            pass
+
+        return ''
+
+    def analyze_and_parse_diff_case(self):
+
+        if self.analyze_and_parse_empty_case():
+            return False
+        elif self.analyze_and_parse_identical_case():
+            return False
+        else:
+            lst = self.build_list_of_diff()
+            self._pattern = self.build_pattern_from_diff_list(lst)
+            return True
+
+    def process(self):
+        is_empty = self.analyze_and_parse_empty_case()
+        is_similar = not is_empty and self.analyze_and_parse_identical_case()
+        not is_similar and self.analyze_and_parse_diff_case()
+
+
 class DiffLinePattern:
     def __init__(self, line1, line2, *other_lines):
 
@@ -1050,47 +1233,59 @@ class DiffLinePattern:
 
     def get_pattern_btw_two_lines(self, line_a, line_b):
 
-        translate_pat_method = TranslatedPattern.recommend_pattern_using_data
-        lst_a = re.split(PATTERN.WHITESPACES, line_a)
-        lst_b = re.split(PATTERN.WHITESPACES, line_b)
+        is_prefix = line_a.startswith(STRING.SPACE_CHAR)
+        is_prefix = is_prefix or line_b.startswith(STRING.SPACE_CHAR)
 
-        intersect_items = set(lst_a).intersection(lst_b)
-        similar_grp = [do_soft_regex_escape(i) for i in intersect_items]
+        is_postfix = line_a.endswith(STRING.SPACE_CHAR)
+        is_postfix = is_postfix or line_b.endswith(STRING.SPACE_CHAR)
 
-        if not similar_grp:
-            translated_pat_obj = translate_pat_method(line_a, line_b)
-            pattern = translated_pat_obj.pattern
-            return pattern
-
-        pat = r'(\s+)?(?P<data>%s)(\s+)?' % '|'.join(similar_grp)
-
-        m_lst_a = re.finditer(pat, line_a)
-        m_lst_b = re.finditer(pat, line_b)
-        m_lst = zip(m_lst_a, m_lst_b)
-        pos_a = 0
-        pos_b = 0
-
-        lst = []
-        m_a, m_b = None, None
-
-        for m_a, m_b in m_lst:
-            pre_a = m_a.string[pos_a:m_a.start()]
-            pre_b = m_b.string[pos_b:m_b.start()]
-
-            if pre_a.strip() or pre_b.strip():
-                translated_pat_obj = translate_pat_method(pre_a, pre_b)
-                translated_pat_obj.pattern and lst.append(translated_pat_obj.pattern)
-            matched_data = do_soft_regex_escape(m_a.group().strip())
-            lst.append(matched_data)
-            pos_a = m_a.end()
-            pos_b = m_b.end()
-
-        if m_a and m_b:
-            post_a = m_a.string[m_a.end():]
-            post_b = m_b.string[m_b.end():]
-            if post_a.strip() or post_b.strip():
-                translated_pat_obj = translate_pat_method(post_a, post_b)
-                translated_pat_obj.pattern and lst.append(translated_pat_obj.pattern)
-
-        pattern = PATTERN.SPACES.join(lst)
+        pattern = NDiffLinePattern(line_a, line_b)
+        print(pattern)
         return pattern
+
+    # def get_pattern_btw_two_lines(self, line_a, line_b):
+    #
+    #     translate_pat_method = TranslatedPattern.recommend_pattern_using_data
+    #     lst_a = re.split(PATTERN.WHITESPACES, line_a)
+    #     lst_b = re.split(PATTERN.WHITESPACES, line_b)
+    #
+    #     intersect_items = set(lst_a).intersection(lst_b)
+    #     similar_grp = [do_soft_regex_escape(i) for i in intersect_items]
+    #
+    #     if not similar_grp:
+    #         translated_pat_obj = translate_pat_method(line_a, line_b)
+    #         pattern = translated_pat_obj.pattern
+    #         return pattern
+    #
+    #     pat = r'(\s+)?(?P<data>%s)(\s+)?' % '|'.join(similar_grp)
+    #
+    #     m_lst_a = re.finditer(pat, line_a)
+    #     m_lst_b = re.finditer(pat, line_b)
+    #     m_lst = zip(m_lst_a, m_lst_b)
+    #     pos_a = 0
+    #     pos_b = 0
+    #
+    #     lst = []
+    #     m_a, m_b = None, None
+    #
+    #     for m_a, m_b in m_lst:
+    #         pre_a = m_a.string[pos_a:m_a.start()]
+    #         pre_b = m_b.string[pos_b:m_b.start()]
+    #
+    #         if pre_a.strip() or pre_b.strip():
+    #             translated_pat_obj = translate_pat_method(pre_a, pre_b)
+    #             translated_pat_obj.pattern and lst.append(translated_pat_obj.pattern)
+    #         matched_data = do_soft_regex_escape(m_a.group().strip())
+    #         lst.append(matched_data)
+    #         pos_a = m_a.end()
+    #         pos_b = m_b.end()
+    #
+    #     if m_a and m_b:
+    #         post_a = m_a.string[m_a.end():]
+    #         post_b = m_b.string[m_b.end():]
+    #         if post_a.strip() or post_b.strip():
+    #             translated_pat_obj = translate_pat_method(post_a, post_b)
+    #             translated_pat_obj.pattern and lst.append(translated_pat_obj.pattern)
+    #
+    #     pattern = PATTERN.SPACES.join(lst)
+    #     return pattern
