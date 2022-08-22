@@ -1085,8 +1085,32 @@ class NDiffChangedText(NDiffBaseText):
         name_ = 'ndiff_changed_text' if self else STRING.EMPTY
         return name_
 
+    @property
+    def is_containing_empty_changed(self):
+        if self.lst and self.lst_other:
+            return False
+        elif self.lst or self.lst_other:
+            return True
+        else:
+            return False
+
     def get_pattern(self, var=''):
-        pass
+        txt1 = '  '.join(self.lst)
+        txt2 = '  '.join(self.lst_other)
+        if txt1 or txt2:
+            args = [txt1, txt2] if txt1 and txt2 else [txt1] if txt1 else [txt2]
+            pattern = TranslatedPattern.get_translated_pattern_object(*args)
+        else:
+            pattern = STRING.EMPTY
+
+        empty_flag = '?' if self.is_containing_empty_changed else STRING.EMPTY
+
+        if var:
+            pattern = '(?P<%s>%s)%s' % (var, pattern, empty_flag)
+        else:
+            if pattern:
+                pattern = '(%s)?' % pattern
+        return pattern
 
 
 class NDiffCommonText(NDiffBaseText):
