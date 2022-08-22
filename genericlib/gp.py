@@ -1296,6 +1296,11 @@ class DiffLinePattern:
         chk = all(line.endswith(STRING.SPACE_CHAR) for line in self.raw_lines)
         return chk
 
+    @property
+    def is_leading(self):
+        chk = any(line.startswith(STRING.SPACE_CHAR) for line in self.raw_lines)
+        return chk
+
     def reset(self):
         self.lines.clear()
         self._pattern = ''
