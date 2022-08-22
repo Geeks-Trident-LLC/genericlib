@@ -1284,7 +1284,22 @@ class DiffLinePattern:
 
     @property
     def pattern(self):
-        return self._pattern
+        pattern = self._pattern
+
+        fmt = '%s%s'
+        if self.is_leading:
+            if self.are_all_leading:
+                pattern = fmt % (PATTERN.SPACES, pattern)
+            else:
+                pattern = fmt % (PATTERN.SPACES_BUT, pattern)
+
+        if self.is_trailing:
+            if self.are_all_trailing:
+                pattern = fmt % (pattern, PATTERN.SPACES)
+            else:
+                pattern = fmt % (pattern, PATTERN.SPACES_BUT)
+
+        return pattern
 
     @property
     def are_all_leading(self):

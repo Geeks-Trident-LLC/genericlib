@@ -132,6 +132,42 @@ class TestDiffLinePattern:
                 ),
                 '(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+)'
             ),
+            (
+                (
+                    'this is a pen',
+                    '  this is the yellow pen',
+                    'this is the good yellow pen',
+                    'that is a pencil'
+                ),
+                ' *(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+)'
+            ),
+            (
+                (
+                    'this is a pen',
+                    'this is the yellow pen',
+                    'this is the good yellow pen  ',
+                    ' that is a pencil'
+                ),
+                ' *(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+) *'
+            ),
+            (
+                (
+                    '  this is a pen',
+                    '    this is the yellow pen',
+                    '  this is the good yellow pen ',
+                    '    that is a pencil'
+                ),
+                ' +(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+) *'
+            ),
+            (
+                (
+                    '  this is a pen               ',
+                    '    this is the yellow pen    ',
+                    '  this is the good yellow pen ',
+                    '    that is a pencil          '
+                ),
+                ' +(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+) +'
+            ),
         ]
     )
     def test_generated_pattern(self, lines, expected_pattern):
