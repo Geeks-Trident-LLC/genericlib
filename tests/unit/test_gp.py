@@ -105,6 +105,40 @@ class TestDiffLinePattern:
         pattern = node.get_pattern_btw_two_lines(line_a, line_b)
         assert pattern == expected_pattern
 
+    @pytest.mark.parametrize(
+        "lines,expected_pattern",
+        [
+            (
+                (
+                    'this is a pen',
+                    'this is the yellow pen',
+                 ),
+                'this +is +(?P<v0>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*) +pen'
+            ),
+            (
+                (
+                    'this is a pen',
+                    'this is the yellow pen',
+                    'this is the good yellow pen',
+                ),
+                'this +is +(?P<v0>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*) +pen'
+            ),
+            (
+                (
+                    'this is a pen',
+                    'this is the yellow pen',
+                    'this is the good yellow pen',
+                    'that is a pencil'
+                ),
+                '(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+)'
+            ),
+        ]
+    )
+    def test_generated_pattern(self, lines, expected_pattern):
+        node = DiffLinePattern(*lines)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
 
 class TestCommonTextPattern:
     """Test class for CommonTextPattern."""

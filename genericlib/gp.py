@@ -1,4 +1,7 @@
 import re
+
+from itertools import combinations
+
 from difflib import ndiff
 
 from genericlib import NUMBER
@@ -1273,6 +1276,15 @@ class DiffLinePattern:
         self.lines = []
         self._pattern = ''
         self.prepare(line1, line2, *other_lines)
+        self.process()
+
+    def __len__(self):
+        chk = bool(len(self._pattern))
+        return int(chk)
+
+    @property
+    def pattern(self):
+        return self._pattern
 
     def reset(self):
         self.lines.clear()
@@ -1328,3 +1340,33 @@ class DiffLinePattern:
             pattern = fmt % (pattern, PATTERN.SPACES_BUT)
 
         return pattern
+
+    def is_matched_all(self, pattern):
+        for line in self.lines:
+            match = re.match(pattern, line)
+            if not match:
+                return False
+            else:
+                if match.group() != line:
+                    return False
+        return True
+
+    def process(self):
+        lines_count = len(self.lines)
+
+        pairs = list(combinations(range(lines_count), NUMBER.TWO))
+
+        lst = []
+
+        for i, j in pairs:
+            line_a = self.lines[i]
+            line_b = self.lines[j]
+            pattern = self.get_pattern_btw_two_lines(line_a, line_b)
+            lst.append(pattern)
+            if self.is_matched_all(pattern):
+                self._pattern = pattern
+                return
+
+        fmt = 'DiffLinePatternError - built pattern(s) did not match text\n  %s'
+        error = fmt % '\n  '.join(repr(item) for item in lst)
+        raise Exception(error)
