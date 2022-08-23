@@ -3,6 +3,7 @@
 import pytest           # noqa
 
 from genericlib.gp import DiffLinePattern
+from genericlib.gp import IterativeLinePattern
 
 from genericlib.gp import TranslatedPattern
 
@@ -175,6 +176,31 @@ class TestDiffLinePattern:
         assert pattern == expected_pattern
 
 
+class TestIterativeLinePattern:
+    """Test class for TestIterativeLinePattern"""
+    @pytest.mark.parametrize(
+        "line,label,expected_snippet",
+        [
+            (
+                'total oranges : 123', '',
+                'capture() regex(): letters(var=v0, value=total) letters(var=v1, value=oranges) symbol(var=v2, value=:) digits(var=v3, value=123)'     # noqa
+            ),
+            (
+                'total oranges : 123', '0',
+                'capture() regex(): letters(var=v00, value=total) letters(var=v01, value=oranges) symbol(var=v02, value=:) digits(var=v03, value=123)'  # noqa
+            ),
+            (
+                'utun0: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1380', '',
+                'capture() regex(): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST>) letters(var=v2, value=mtu) digits(var=v3, value=1380)'  # noqa
+            ),
+        ]
+    )
+    def test_get_editable_snippet(self, line, label, expected_snippet):
+        node = IterativeLinePattern(line)
+        snippet = node.get_editable_snippet(label=label)
+        assert snippet == expected_snippet
+
+
 class TestTranslatedPattern:
     """Test class for TranslatedPattern."""
 
@@ -210,8 +236,8 @@ class TestTranslatedPattern:
             ('1.1', 'v1', 'number(var=v1, value=1.1)'),
             ('-1.1', 'v1', 'mixed_number(var=v1, value=-1.1)'),
             ('-', 'v1', 'symbol(var=v1, value=-)'),
-            ('(),', 'v1', 'symbols(var=v1, value=_SYMBOL_LEFT_PARENTHESIS__SYMBOL_RIGHT_PARENTHESIS__SYMBOL_COMMA_)'),  # noqa
-            ('( ) ,', 'v1', 'symbols_group(var=v1, value=_SYMBOL_LEFT_PARENTHESIS_ _SYMBOL_RIGHT_PARENTHESIS_ _SYMBOL_COMMA_)'),    # noqa
+            ('(),', 'v1', 'symbols(var=v1, value=_SYMBOL_LEFT_PARENTHESIS__SYMBOL_RIGHT_PARENTHESIS_,)'),  # noqa
+            ('( ) ,', 'v1', 'symbols_group(var=v1, value=_SYMBOL_LEFT_PARENTHESIS_ _SYMBOL_RIGHT_PARENTHESIS_ ,)'),    # noqa
             ('--  ---- ++++++', 'v1', 'symbols_group(var=v1, value=--  ---- ++++++)'),
             ('a', 'v1', 'letter(var=v1, value=a)'),
             ('ab', 'v1', 'letters(var=v1, value=ab)'),

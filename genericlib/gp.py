@@ -174,7 +174,6 @@ class TranslatedPattern:
         value = self.data
         value = value.replace('(', '_SYMBOL_LEFT_PARENTHESIS_')
         value = value.replace(')', '_SYMBOL_RIGHT_PARENTHESIS_')
-        value = value.replace(',', '_SYMBOL_COMMA_')
 
         if var:
             snippet = '%s(var=%s, value=%s)' % (self.name, var, value)
@@ -1389,3 +1388,21 @@ class IterativeLinePattern:
     def is_trailing(self):
         chk = self.raw_line.endswith(STRING.SPACE_CHAR)
         return chk
+
+    def get_editable_snippet(self, label=''):
+        pat = r'[\x20-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+'
+        label = re.sub(pat, '_', str(label))
+        spaces = re.findall(PATTERN.SPACES, self.line)
+        lst = []
+        for index, item in enumerate(re.split(PATTERN.SPACES, self.line)):
+            node = TranslatedPattern.do_factory_create(item)
+            var_ = 'v%s%s' % (label, index)
+
+            item_snippet = node.get_readable_snippet(var=var_)
+            lst.append(item_snippet)
+            if index < len(spaces):
+                lst.append(spaces[index])
+
+        snippet = STRING.EMPTY.join(lst)
+        editing_snippet = 'capture() regex(): %s' % snippet
+        return editing_snippet
