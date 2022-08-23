@@ -166,6 +166,22 @@ class TranslatedPattern:
         err_msg = fmt % (self.data, other.data, cls_name)
         raise Exception(err_msg)
 
+    def get_readable_snippet(self, var=''):
+        if not self.name:
+            error = 'TranslatedPatternSnippetError - CANT create snippet without name'
+            raise Exception(error)
+
+        value = self.data
+        value = value.replace('(', '_SYMBOL_LEFT_PARENTHESIS_')
+        value = value.replace(')', '_SYMBOL_RIGHT_PARENTHESIS_')
+        value = value.replace(',', '_SYMBOL_COMMA_')
+
+        if var:
+            snippet = '%s(var=%s, value=%s)' % (self.name, var, value)
+        else:
+            snippet = '%s(value=%s)' % (self.name, value)
+        return snippet
+
     @classmethod
     def do_factory_create(cls, data, *other):
         classes = [

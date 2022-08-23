@@ -201,6 +201,31 @@ class TestTranslatedPattern:
 
         assert recommended_pat == expected_pattern
 
+    @pytest.mark.parametrize(
+        "data,var,expected_snippet",
+        [
+            ('1', '', 'digit(value=1)'),
+            ('1', 'v1', 'digit(var=v1, value=1)'),
+            ('123', 'v1', 'digits(var=v1, value=123)'),
+            ('1.1', 'v1', 'number(var=v1, value=1.1)'),
+            ('-1.1', 'v1', 'mixed_number(var=v1, value=-1.1)'),
+            ('-', 'v1', 'symbol(var=v1, value=-)'),
+            ('(),', 'v1', 'symbols(var=v1, value=_SYMBOL_LEFT_PARENTHESIS__SYMBOL_RIGHT_PARENTHESIS__SYMBOL_COMMA_)'),  # noqa
+            ('( ) ,', 'v1', 'symbols_group(var=v1, value=_SYMBOL_LEFT_PARENTHESIS_ _SYMBOL_RIGHT_PARENTHESIS_ _SYMBOL_COMMA_)'),    # noqa
+            ('--  ---- ++++++', 'v1', 'symbols_group(var=v1, value=--  ---- ++++++)'),
+            ('a', 'v1', 'letter(var=v1, value=a)'),
+            ('ab', 'v1', 'letters(var=v1, value=ab)'),
+            ('a1', 'v1', 'word(var=v1, value=a1)'),
+            ('a1 b2', 'v1', 'words(var=v1, value=a1 b2)'),
+            ('1.1.1.1', 'v1', 'mixed_word(var=v1, value=1.1.1.1)'),
+            ('1.1.1.1 2::2', 'v1', 'mixed_words(var=v1, value=1.1.1.1 2::2)'),
+        ]
+    )
+    def test_get_readable_snippet(self, data, var, expected_snippet):
+        node = TranslatedPattern.do_factory_create(data)
+        snippet = node.get_readable_snippet(var=var)
+        assert snippet == expected_snippet
+
 
 class TestTranslatedDigitPattern:
     """Test class for TranslatedDigitPattern."""
