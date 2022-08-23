@@ -1406,3 +1406,25 @@ class IterativeLinePattern:
         snippet = STRING.EMPTY.join(lst)
         editing_snippet = 'capture() regex(): %s' % snippet
         return editing_snippet
+
+    def modify_snippet(self, editing_snippet):
+        pat = (r'capture[(](?P<capture>[^\)]*)[)] '
+               r'regex[(](?P<other>[^\)]*)[)]: '
+               r'(?P<snippet>.+)')
+
+        match = re.match(pat, editing_snippet)
+        if not match:
+            fmt = 'IterativeLinePatternError: Invalid modified editing snippet\n%s'
+            error = fmt % editing_snippet
+            raise Exception(error)
+
+        capture = match.group('capture')
+        other = match.group('other')
+        snippet = match.group('snippet')
+
+        if capture == other and capture == STRING.EMPTY:
+            return editing_snippet
+
+        pat1 = r'\w+[(][^\)]+[)]'
+        spaces = [i for i in re.split(pat1, snippet) if i]
+        lst = re.findall(pat1, snippet)
