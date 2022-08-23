@@ -183,15 +183,15 @@ class TestIterativeLinePattern:
         [
             (
                 'total oranges : 123', '',
-                'capture() regex(): letters(var=v0, value=total) letters(var=v1, value=oranges) symbol(var=v2, value=:) digits(var=v3, value=123)'     # noqa
+                'capture() keep() action(): letters(var=v0, value=total) letters(var=v1, value=oranges) symbol(var=v2, value=:) digits(var=v3, value=123)'     # noqa
             ),
             (
                 'total oranges : 123', '0',
-                'capture() regex(): letters(var=v00, value=total) letters(var=v01, value=oranges) symbol(var=v02, value=:) digits(var=v03, value=123)'  # noqa
+                'capture() keep() action(): letters(var=v00, value=total) letters(var=v01, value=oranges) symbol(var=v02, value=:) digits(var=v03, value=123)'  # noqa
             ),
             (
                 'utun0: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1380', '',
-                'capture() regex(): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST>) letters(var=v2, value=mtu) digits(var=v3, value=1380)'  # noqa
+                'capture() keep() action(): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST>) letters(var=v2, value=mtu) digits(var=v3, value=1380)'  # noqa
             ),
         ]
     )

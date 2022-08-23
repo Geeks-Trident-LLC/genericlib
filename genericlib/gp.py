@@ -1411,7 +1411,7 @@ class IterativeLinePattern:
                 lst.append(spaces[index])
 
         snippet = STRING.EMPTY.join(lst)
-        editing_snippet = 'capture() regex(): %s' % snippet
+        editing_snippet = 'capture() keep() action(): %s' % snippet
         return editing_snippet
 
     def modify_snippet(self, editing_snippet):
