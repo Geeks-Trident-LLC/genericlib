@@ -1356,6 +1356,13 @@ class DiffLinePattern:
         raise Exception(error)
 
 
+class SnippetElement:
+    def __init__(self, snippet, capture='', keep=''):
+        self.snippet = snippet
+        self.capture = capture
+        self.keep = keep
+
+
 class IterativeLinePattern:
     def __init__(self, line):
         self.raw_line = line
