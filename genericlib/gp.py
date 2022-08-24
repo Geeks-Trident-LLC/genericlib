@@ -1448,6 +1448,41 @@ class SnippetElement:
         new_instance = self(element_txt, trailing=trailing)
         return new_instance
 
+    def to_regex(self):
+
+        if not self.is_kept and not self.is_captured:
+            txt = '%s%s' % (self.value, self.trailing)
+            txt_pat = TextPattern(txt)
+            return txt_pat
+        else:
+            tbl = {
+                TEXT.DIGIT: PATTERN.DIGIT,
+                TEXT.DIGITS: PATTERN.DIGITS,
+                TEXT.NUMBER: PATTERN.NUMBER,
+                TEXT.MIXED_NUMBER: PATTERN.MIXED_NUMBER,
+                TEXT.LETTER: PATTERN.LETTER,
+                TEXT.LETTERS: PATTERN.LETTERS,
+                TEXT.ALPHABET_NUMERIC: PATTERN.ALPHABET_NUMERIC,
+                TEXT.SYMBOL: PATTERN.SYMBOL,
+                TEXT.SYMBOLS: PATTERN.SYMBOLS,
+                TEXT.SYMBOLS_GROUP: PATTERN.SYMBOLS_OR_GROUP,
+                TEXT.GRAPH: PATTERN.GRAPH,
+                TEXT.WORD: PATTERN.WORD,
+                TEXT.WORDS: PATTERN.WORD_OR_WORDS,
+                TEXT.MIXED_WORD: PATTERN.MIXED_WORD,
+                TEXT.MIXED_WORDS: PATTERN.MIXED_WORD_OR_WORDS,
+                TEXT.NON_WHITESPACE: PATTERN.NON_WHITESPACE,
+                TEXT.NON_WHITESPACES: PATTERN.NON_WHITESPACES,
+                TEXT.NON_WHITESPACES_GROUP: PATTERN.NON_WHITESPACES_OR_GROUP
+            }
+            pat = tbl.get(self.name, PATTERN.MIXED_WORD_OR_WORDS)
+
+            if self.is_captured:
+                pat = '(?P<%s>%s)' % (self.var_name, pat)
+
+            pat = pat + TextPattern(self.trailing)
+            return pat
+
 
 class EditingSnippet:
     def __init__(self, editing_snippet):
