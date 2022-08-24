@@ -1433,6 +1433,21 @@ class SnippetElement:
 
         return result
 
+    def join(self, *args):
+        if args:
+            txt = '%s%s' % (self.value, self.trailing)
+            for arg in args:
+                txt = '%s%s%s' % (txt, arg.value, arg.trailing)
+            txt = txt.strip()
+            new_pat_obj = TranslatedPattern(txt)
+            element_txt = new_pat_obj.get_readable_snippet(var=self.var_name)
+            trailing = arg.trailing
+        else:
+            element_txt = self.element_txt
+            trailing = self.trailing
+        new_instance = self(element_txt, trailing=trailing)
+        return new_instance
+
 
 class EditingSnippet:
     def __init__(self, editing_snippet):
