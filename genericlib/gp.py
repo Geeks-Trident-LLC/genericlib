@@ -1375,7 +1375,7 @@ class SnippetElement:
 
     def parse(self):
         pat = ('(?P<name>[a-zA-Z]+(_[a-zA-Z]+)?)[(] *'
-               '(?P<check>[ck]?var)=(?P<var_name>.+) +'
+               '(?P<check>[ck]?var)=(?P<var_name>.+), +'
                'value=(?P<value>.+) *[)]')
         match = re.match(pat, self.element_txt)
         if not match:
@@ -1395,8 +1395,10 @@ class SnippetElement:
 
     def set_captured(self):
         self.is_captured = True
+        self.is_kept = False
 
     def set_kept(self):
+        self.is_captured = False
         self.is_kept = True
 
     def split(self, splitter='', ref_index=0):
@@ -1424,7 +1426,7 @@ class SnippetElement:
             else:
                 new_var_name = '%s%s' % (self.var_name, index)
 
-            pat_obj = TranslatedPattern(item)
+            pat_obj = TranslatedPattern.do_factory_create(item)
             sub_editable_snippet = pat_obj.get_readable_snippet(var=new_var_name)
 
             trailing = self.trailing if index == len(lst) - NUMBER.ONE else STRING.EMPTY
@@ -1439,7 +1441,7 @@ class SnippetElement:
             for arg in args:
                 txt = '%s%s%s' % (txt, arg.value, arg.trailing)
             txt = txt.strip()
-            new_pat_obj = TranslatedPattern(txt)
+            new_pat_obj = TranslatedPattern.do_factory_create(txt)
             element_txt = new_pat_obj.get_readable_snippet(var=self.var_name)
             trailing = arg.trailing
         else:

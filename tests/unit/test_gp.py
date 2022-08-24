@@ -5,6 +5,8 @@ import pytest           # noqa
 from genericlib.gp import DiffLinePattern
 from genericlib.gp import IterativeLinePattern
 
+from genericlib.gp import SnippetElement
+
 from genericlib.gp import TranslatedPattern
 
 from genericlib.gp import TranslatedDigitPattern
@@ -199,6 +201,147 @@ class TestIterativeLinePattern:
         node = IterativeLinePattern(line)
         snippet = node.get_editable_snippet(label=label)
         assert snippet == expected_snippet
+
+
+class TestSnippetElement:
+    """Test class for SnippetElement"""
+    @pytest.mark.parametrize(
+        "snippet,trailing,expected_result",
+        [
+            ('mixed_word(var=v0, value=utun0:)', '', ['mixed_word', 'v0', 'utun0:', '']),
+            ('mixed_word(var=v0, value=utun0:)', '  ', ['mixed_word', 'v0', 'utun0:', '  ']),
+        ]
+    )
+    def test_creation(self, snippet, trailing, expected_result):
+        node = SnippetElement(snippet, trailing=trailing)
+        lst_of_attrs = [node.name, node.var_name, node.value, node.trailing]
+        assert lst_of_attrs == expected_result
+
+    @pytest.mark.parametrize(
+        "snippet,expected_result",
+        [
+            ('mixed_word(var=v0, value=utun0:)', 'mixed_word(kvar=v0, value=utun0:)'),
+            ('mixed_word(kvar=v0, value=utun1:)', 'mixed_word(kvar=v0, value=utun1:)'),
+            ('mixed_word(cvar=v0, value=utun2:)', 'mixed_word(kvar=v0, value=utun2:)'),
+        ]
+    )
+    def test_set_kept(self, snippet, expected_result):
+        node = SnippetElement(snippet)
+        node.set_kept()
+        new_snippet = node.to_snippet()
+        assert new_snippet == expected_result
+
+    @pytest.mark.parametrize(
+        "snippet,expected_result",
+        [
+            ('mixed_word(var=v0, value=utun0:)', 'mixed_word(cvar=v0, value=utun0:)'),
+            ('mixed_word(kvar=v0, value=utun1:)', 'mixed_word(cvar=v0, value=utun1:)'),
+            ('mixed_word(cvar=v0, value=utun2:)', 'mixed_word(cvar=v0, value=utun2:)'),
+        ]
+    )
+    def test_set_captured(self, snippet, expected_result):
+        node = SnippetElement(snippet)
+        node.set_captured()
+        new_snippet = node.to_snippet()
+        assert new_snippet == expected_result
+
+    @pytest.mark.parametrize(
+        "snippet,expected_result",
+        [
+            ('mixed_word(var=v0, value=utun0:)', 'mixed_word(var=v0, value=utun0:)'),
+            ('mixed_word(kvar=v0, value=utun1:)', 'mixed_word(kvar=v0, value=utun1:)'),
+            ('mixed_word(cvar=v0, value=utun2:)', 'mixed_word(cvar=v0, value=utun2:)'),
+        ]
+    )
+    def test_to_snippet(self, snippet, expected_result):
+        node = SnippetElement(snippet)
+        new_snippet = node.to_snippet()
+        assert new_snippet == expected_result
+
+    @pytest.mark.parametrize(
+        "snippet,expected_pattern",
+        [
+            ('mixed_word(var=v0, value=utun0:)', 'utun0:'),
+            ('mixed_word(var=v0, value=utun0++**:)', r'utun0\+\+\*\*:'),
+            ('mixed_word(kvar=v0, value=utun1:)', r'[\x21-\x7e]+'),
+            ('mixed_word(cvar=v0, value=utun2:)', r'(?P<v0>[\x21-\x7e]+)'),
+        ]
+    )
+    def test_to_regex(self, snippet, expected_pattern):
+        node = SnippetElement(snippet)
+        pattern = node.to_regex()
+        assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "snippet,expected_template_snippet",
+        [
+            ('mixed_word(var=v0, value=utun0:)', 'utun0:'),
+            ('mixed_word(var=v0, value=utun0++**:)', r'utun0\+\+\*\*:'),
+            ('mixed_word(kvar=v0, value=utun1:)', 'mixed_word()'),
+            ('mixed_word(cvar=v0, value=utun2:)', 'mixed_word(var_v0)'),
+        ]
+    )
+    def test_to_template_snippet(self, snippet, expected_template_snippet):
+        node = SnippetElement(snippet)
+        pattern = node.to_template_snippet()
+        assert pattern == expected_template_snippet
+
+    @pytest.mark.parametrize(
+        "snippet,splitter,ref_index,expected_snippet",
+        [
+            (
+                'mixed_word(var=v0, value=flags=8049<UP,LOOPBACK,RUNNING>)',
+                '',
+                5,
+                ('letters(var=v6, value=flags)symbol(var=v7, value==)'
+                 'digits(var=v8, value=8049)symbol(var=v9, value=<)'
+                 'letters(var=v10, value=UP)symbol(var=v11, value=,)'
+                 'letters(var=v12, value=LOOPBACK)symbol(var=v13, value=,)'
+                 'letters(var=v14, value=RUNNING)symbol(var=v15, value=>)')
+            ),
+            (
+                'mixed_word(var=v0, value=flags=8049<UP,LOOPBACK,RUNNING>)',
+                '=<>',
+                5,
+                ('letters(var=v6, value=flags)symbol(var=v7, value==)'
+                 'digits(var=v8, value=8049)symbol(var=v9, value=<)'
+                 'mixed_word(var=v10, value=UP,LOOPBACK,RUNNING)symbol(var=v11, value=>)')
+            ),
+
+        ]
+    )
+    def test_split(self, snippet, splitter, ref_index, expected_snippet):
+        node = SnippetElement(snippet)
+        lst = node.split(splitter, ref_index=ref_index)
+        lst_of_split_snippet = [item.to_snippet() for item in lst]
+        new_snippet = ''.join(lst_of_split_snippet)
+        assert new_snippet == expected_snippet
+
+    @pytest.mark.parametrize(
+        "lst_of_snippets,expected_snippet",
+        [
+            (
+                [
+                    'letters(var=v6, value=flags)',
+                    'symbol(var=v7, value==)',
+                    'digits(var=v8, value=8049)'
+                ],
+                'mixed_word(var=v6, value=flags=8049)'
+            ),
+
+        ]
+    )
+    def test_join(self, lst_of_snippets, expected_snippet):
+        lst = []
+        for snippet in lst_of_snippets:
+            node = SnippetElement(snippet)
+            lst.append(node)
+
+        first_node = lst[0]
+        remaining = lst[1:]
+        new_node = first_node.join(*remaining)
+        new_snippet = new_node.to_snippet()
+        assert new_snippet == expected_snippet
 
 
 class TestTranslatedPattern:
