@@ -1483,6 +1483,19 @@ class SnippetElement:
             pat = pat + TextPattern(self.trailing)
             return pat
 
+    def to_template_snippet(self):
+
+        if not self.is_kept and not self.is_captured:
+            txt = '%s%s' % (self.value, self.trailing)
+            txt_pat = TextPattern(txt)
+            return txt_pat
+        else:
+            if self.is_captured:
+                tmpl_snippet = '%s(var_%s)' % (self.name, self.var_name)
+            else:
+                tmpl_snippet = '%s()' % self.name
+            return tmpl_snippet
+
 
 class EditingSnippet:
     def __init__(self, editing_snippet):
