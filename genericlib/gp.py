@@ -1496,6 +1496,13 @@ class SnippetElement:
                 tmpl_snippet = '%s()' % self.name
             return tmpl_snippet
 
+    def to_snippet(self):
+        v = 'cvar' if self.is_captured else 'kvar' if self.is_kept else 'var'
+        fmt = '%s(%s=%s, value=%s)'
+        snippet = fmt % (self.name, v, self.var_name, self.value)
+        snippet = snippet + self.trailing
+        return snippet
+
 
 class EditingSnippet:
     def __init__(self, editing_snippet):
