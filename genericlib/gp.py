@@ -1357,10 +1357,112 @@ class DiffLinePattern:
 
 
 class SnippetElement:
-    def __init__(self, snippet, capture='', keep=''):
-        self.snippet = snippet
-        self.capture = capture
-        self.keep = keep
+    def __init__(self, element_txt, trailing=''):
+        self.element_txt = element_txt
+        self.trailing = trailing
+        self.name = STRING.EMPTY
+        self.var_name = STRING.EMPTY
+        self.value = STRING.EMPTY
+
+        self.is_captured = False
+        self.is_kept = False
+
+        self.parse()
+
+    def __call__(self, *args, **kwargs):
+        new_instance = self.__class__(*args, **kwargs)
+        return new_instance
+
+    def parse(self):
+        pat = ('(?P<name>[a-zA-Z]+(_[a-zA-Z]+)?)[(] *'
+               '(?P<check>[ck]?var)=(?P<var_name>.+) +'
+               'value=(?P<value>.+) *[)]')
+        match = re.match(pat, self.element_txt)
+        if not match:
+            fmt = 'SnippetElementError - Invalid element text\n%s'
+            error = fmt % self.element_txt
+            raise Exception(error)
+
+        check = match.group('check')
+        if check == 'cvar':
+            self.is_captured = True
+        elif check == 'kvar':
+            self.is_kept = True
+
+        self.name = match.group('name')
+        self.var_name = match.group('var_name')
+        self.value = match.group('value')
+
+    def set_captured(self):
+        self.is_captured = True
+
+    def set_kept(self):
+        self.is_kept = True
+
+    def split(self, splitter='', ref_index=0):
+
+        if splitter:
+            pat = '[%s]+' % re.escape(splitter)
+        else:
+            pat = PATTERN.SYMBOLS
+
+        separators = re.findall(pat, self.value)
+        items = re.split(pat, self.value)
+
+        lst = []
+        for index, item in enumerate(items):
+            if index < len(items) - NUMBER.ONE:
+                item and lst.append(item)
+                lst.append(separators[index])
+            else:
+                item and lst.append(item)
+
+        result = []
+        for index, item in enumerate(lst):
+            if ref_index:
+                new_var_name = 'v%s' % (ref_index + index + 1)
+            else:
+                new_var_name = '%s%s' % (self.var_name, index)
+
+            pat_obj = TranslatedPattern(item)
+            sub_editable_snippet = pat_obj.get_readable_snippet(var=new_var_name)
+
+            trailing = self.trailing if index == len(lst) - NUMBER.ONE else STRING.EMPTY
+            node = self(sub_editable_snippet, trailing=trailing)
+            result.append(node)
+
+        return result
+
+
+class EditingSnippet:
+    def __init__(self, editing_snippet):
+        self.editing_snippet = editing_snippet
+        self.capture = ''
+        self.keep = ''
+        self.action = ''
+        self.snippet = ''
+        self.snippet_elements = []
+
+        self.largest_index = 0
+
+        self.prepare()
+
+    def prepare(self):
+        pat = (r'capture[(](?P<capture>[^\)]*)[)] '
+               r'keep[(](?P<keep>[^\)]*)[)] '
+               r'action[(](?P<action>[^\)]*)[)]: '
+               r'(?P<snippet>.+)')
+
+        match = re.match(pat, self.editing_snippet)
+        if not match:
+            fmt = 'EditingSnippetError - Invalid argument\n%s'
+            error = fmt % self.editing_snippet
+            raise Exception(error)
+
+        self.capture = match.group('capture')
+        self.keep = match.group('keep')
+        self.action = match.group('action')
+        self.snippet = match.group('snippet')
 
 
 class IterativeLinePattern:
@@ -1421,7 +1523,7 @@ class IterativeLinePattern:
 
         match = re.match(pat, editing_snippet)
         if not match:
-            fmt = 'IterativeLinePatternError: Invalid modified editing snippet\n%s'
+            fmt = 'IterativeLinePatternError - Invalid modified editing snippet\n%s'
             error = fmt % editing_snippet
             raise Exception(error)
 
