@@ -8,6 +8,7 @@ from genericlib import NUMBER
 from genericlib import STRING
 from genericlib import PATTERN
 from genericlib import TEXT
+from genericlib import SYMBOL
 
 from genericlib import Misc
 
@@ -172,8 +173,8 @@ class TranslatedPattern:
             raise Exception(error)
 
         value = self.data
-        value = value.replace('(', '_SYMBOL_LEFT_PARENTHESIS_')
-        value = value.replace(')', '_SYMBOL_RIGHT_PARENTHESIS_')
+        value = value.replace(SYMBOL.LEFT_PARENTHESIS, '_SYMBOL_LEFT_PARENTHESIS_')
+        value = value.replace(SYMBOL.RIGHT_PARENTHESIS, '_SYMBOL_RIGHT_PARENTHESIS_')
 
         if var:
             snippet = '%s(var=%s, value=%s)' % (self.name, var, value)
@@ -1658,8 +1659,8 @@ class EditingSnippet:
             return False
 
         var_name, sep = re.split('[_-]split[-_]?', action_op, maxsplit=1, flags=re.I)
-        sep = re.sub('_left_parenthesis_', '(', sep, flags=re.I)
-        sep = re.sub('_right_parenthesis_', ')', sep, flags=re.I)
+        sep = re.sub('_left_parenthesis_', SYMBOL.LEFT_PARENTHESIS, sep, flags=re.I)
+        sep = re.sub('_right_parenthesis_', SYMBOL.RIGHT_PARENTHESIS, sep, flags=re.I)
         var_name = 'v%s' % var_name if var_name.isdigit() else var_name
 
         index, node = self.find_element(var_name)
@@ -1690,7 +1691,7 @@ class EditingSnippet:
             not is_applied and self.apply_action_or_empty(action_op)
 
     def apply_keep(self):
-        if not self.keep and self.action:
+        if not self.keep:
             return
 
         items = re.split(PATTERN.SPACES, self.keep)
@@ -1721,14 +1722,43 @@ class EditingSnippet:
                     raise Exception(error)
 
     def apply_capture(self):
-        if not self.capture and self.action:
+        if not self.capture:
             return
+
+        items = re.split(PATTERN.SPACES, self.capture)
+        for item in items:
+            item = item.strip(',')
+            is_empty = bool(re.search('[_-]?or([_-]empty)?', item, re.I))
+            item = re.sub('[_-]?or([_-]empty)?', STRING.EMPTY, item, re.I)
+
+            if re.match(r'\d+:\d+$', item):
+                first, last = item.split(':', NUMBER.ONE)
+                var_names = ['v%s' % i for i in range(int(first), int(last) + 1)]
+                if not var_names:
+                    fmt = 'EditingSnippetActionCaptureError - Invalid range (%s)'
+                    error = fmt % self.capture
+                    raise Exception(error)
+            elif re.match(r'\w+(,\w+)*', item):
+                var_names = ['v%s' % i if i.isdigit() else i for i in item.split(',')]
+
+            for var_name in var_names:
+                index, node = self.find_element(var_name)
+                if index >= NUMBER.ZERO:
+                    node.set_captured()
+                    is_empty and node.set_empty()
+                    self.is_capture_applied = True
+                else:
+                    fmt = 'EditingSnippetActionCaptureError - Not found index (%s)'
+                    error = fmt % var_name
+                    raise Exception(error)
 
     def process(self):
         self.prepare()
-        self.apply_action()
-        self.apply_capture()
-        self.apply_keep()
+        if self.action:
+            self.apply_action()
+        else:
+            self.apply_capture()
+            self.apply_keep()
 
     def to_snippet(self):
         new_snippet = str.join(
