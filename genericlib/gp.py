@@ -1373,6 +1373,22 @@ class SnippetElement:
         new_instance = self.__class__(*args, **kwargs)
         return new_instance
 
+    @property
+    def var_index(self):
+        pat = '[0-9]+(_[0-9]+)?$'
+        match = re.search(pat, self.var_name)
+        if match:
+            matched_txt = match.group()
+            if matched_txt.isdigit():
+                result = int(matched_txt)
+            else:
+                first, last = matched_txt.split('_', 1)
+                result = int(first) * NUMBER.TEN + int(last)
+
+            return result
+        else:
+            return NUMBER.ZERO
+
     def parse(self):
         pat = ('(?P<name>[a-zA-Z]+(_[a-zA-Z]+)?)[(] *'
                '(?P<check>[ck]?var)=(?P<var_name>.+), +'
@@ -1443,7 +1459,7 @@ class SnippetElement:
             txt = txt.strip()
             new_pat_obj = TranslatedPattern.do_factory_create(txt)
             element_txt = new_pat_obj.get_readable_snippet(var=self.var_name)
-            trailing = arg.trailing
+            trailing = arg.trailing     # noqa
         else:
             element_txt = self.element_txt
             trailing = self.trailing
@@ -1512,12 +1528,37 @@ class EditingSnippet:
         self.capture = ''
         self.keep = ''
         self.action = ''
+        self.raw_snippet = ''
         self.snippet = ''
         self.snippet_elements = []
 
         self.largest_index = 0
 
+        self.is_action_applied = False
+        self.is_keep_applied = False
+        self.is_capture_applied = False
+
         self.prepare()
+
+    @property
+    def leading(self):
+        match = re.match(PATTERN.SPACES, self.raw_snippet)
+        return match.group() if match else STRING.EMPTY
+
+    @property
+    def trailing(self):
+        match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_snippet)
+        return match.group() if match else STRING.EMPTY
+
+    @property
+    def is_leading(self):
+        chk = self.leading != STRING.EMPTY
+        return chk
+
+    @property
+    def is_trailing(self):
+        chk = self.trailing != STRING.EMPTY
+        return chk
 
     def prepare(self):
         pat = (r'capture[(](?P<capture>[^\)]*)[)] '
@@ -1531,10 +1572,131 @@ class EditingSnippet:
             error = fmt % self.editing_snippet
             raise Exception(error)
 
-        self.capture = match.group('capture')
-        self.keep = match.group('keep')
-        self.action = match.group('action')
-        self.snippet = match.group('snippet')
+        self.capture = match.group('capture').strip()
+        self.keep = match.group('keep').strip()
+        self.action = match.group('action').strip()
+        self.raw_snippet = match.group('snippet')
+        self.snippet = self.raw_snippet.strip()
+
+        pat = r'\w+\(var=[^\)]+, value=[^\)]+\)'
+        items = re.split(pat, self.snippet)
+        spacers = re.findall(pat, self.snippet)
+        total = len(items)
+
+        for i, snippet_txt in enumerate(items):
+            trailing = spacers[i] if i < total - NUMBER.ONE else STRING.EMPTY
+            node = SnippetElement(snippet_txt, trailing=trailing)
+            self.largest_index = max(self.largest_index, node.var_index)
+            self.snippet_elements.append(node)
+
+    def find_element(self, var_name):
+        for index, node in enumerate(self.snippet_elements):
+            if node.var_name == var_name:
+                return index, node
+        return -1, None
+
+    def apply_action_join(self, action_op):
+        grp = re.split('-join', action_op)[NUMBER.ZERO]
+
+        if re.match(r'\d+:\d+$', grp):
+            first, last = grp.split(':', NUMBER.ONE)
+            var_names = ['v%s' % i for i in range(int(first), int(last) + 1)]
+            if not var_names:
+                fmt = 'EditingSnippetActionJoinError - Invalid range (%s)'
+                error = fmt % action_op
+                raise Exception(error)
+        else:
+            var_names = grp.split(',')
+
+        first_index, first_node = self.find_element(var_names[NUMBER.ZERO])
+        if first_index >= 0:
+            remain_modes = []
+
+            for var_name in var_names[NUMBER.ONE:]:
+                index, node = self.find_element(var_name)
+                if index >= 0:
+                    remain_modes.append(node)
+            joint_node = node.join(*remain_modes)
+            self.snippet_elements[first_index] = joint_node
+
+            for removed_node in remain_modes:
+                removed_index = self.snippet_elements.index(removed_node)
+                self.snippet_elements.pop(removed_index)
+        else:
+            fmt = 'EditingSnippetActionJoinError - Not found index (%s)'
+            error = fmt % action_op
+            raise Exception(error)
+
+    def apply_action_split(self, action_op):
+        pass
+
+    def apply_action_or_empty(self, action_op):
+        pass
+
+    def apply_action(self):
+        if not self.action:
+            return
+
+        action_ops = re.split(', +', self.action)
+        for action_op in action_ops:
+            if not re.search('join|split|or_empty', action_op):
+                continue
+            'join' in action_op and self.apply_action_join(action_op)
+            'split' in action_op and self.apply_action_split(action_op)
+            'or_empty' in action_op and self.apply_action_or_empty(action_op)
+
+    def apply_keep(self):
+        if self.action:
+            return
+
+    def apply_capture(self):
+        if self.action:
+            return
+
+    def process(self):
+        self.prepare()
+        self.apply_action()
+        self.apply_capture()
+        self.apply_keep()
+
+    def to_snippet(self):
+        new_snippet = str.join(
+            STRING.EMPTY, [elmt.to_snippet() for elmt in self.snippet_elements]
+        )
+        new_snippet = '%s%s%s' % (self.leading, new_snippet, self.trailing)
+
+        cval = STRING.EMPTY if self.is_capture_applied else self.capture
+        kval = STRING.EMPTY if self.is_keep_applied else self.keep
+        aval = STRING.EMPTY if self.is_action_applied else self.action
+
+        fmt = 'capture(%s) keep(%s) action(%s): %s'
+        new_snippet = fmt % (cval, kval, aval, new_snippet)
+
+        return new_snippet
+
+    def to_regex(self):
+        pattern = str.join(
+            STRING.EMPTY, [elmt.to_regex() for elmt in self.snippet_elements]
+        )
+        if self.is_leading:
+            pattern = '%s%s' % (PATTERN.SPACES_BUT, pattern)
+
+        if self.is_trailing:
+            pattern = '%s%s' % (pattern, PATTERN.SPACES_BUT)
+
+        return pattern
+
+    def to_template_snippet(self):
+        tmpl_snippet = str.join(
+            STRING.EMPTY, [elmt.to_template_snippet() for elmt in self.snippet_elements]
+        )
+        if self.is_leading:
+            tmpl_snippet = '%s%s' % (PATTERN.SPACES_BUT, tmpl_snippet)
+
+        if self.is_trailing:
+            tmpl_snippet = '%s%s' % (tmpl_snippet, PATTERN.SPACES_BUT)
+
+        return tmpl_snippet
 
 
 class IterativeLinePattern:
