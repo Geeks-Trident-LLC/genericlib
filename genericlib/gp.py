@@ -1675,20 +1675,16 @@ class EditingSnippet:
             error = fmt % var_name
             raise Exception(error)
 
-    def apply_action_or_empty(self, action_op):
-        pass
-
     def apply_action(self):
         if not self.action:
             return
 
         action_ops = re.split(', +', self.action)
         for action_op in action_ops:
-            if not re.search('join|split|or([_-]empty)?', action_op, re.I):
+            if not re.search('join|split', action_op, re.I):
                 continue
             is_applied = self.apply_action_join(action_op)
-            is_applied = not is_applied and self.apply_action_split(action_op)
-            not is_applied and self.apply_action_or_empty(action_op)
+            not is_applied and self.apply_action_split(action_op)
 
     def apply_keep(self):
         if not self.keep:
