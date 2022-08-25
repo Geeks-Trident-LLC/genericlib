@@ -1596,7 +1596,10 @@ class EditingSnippet:
         return -1, None
 
     def apply_action_join(self, action_op):
-        grp = re.split('-join', action_op)[NUMBER.ZERO]
+        if not re.search('[_-]join', action_op, re.I):
+            return False
+
+        grp = re.split('[_-]join', action_op, re.I)[NUMBER.ZERO]
 
         if re.match(r'\d+:\d+$', grp):
             first, last = grp.split(':', NUMBER.ONE)
@@ -1605,6 +1608,8 @@ class EditingSnippet:
                 fmt = 'EditingSnippetActionJoinError - Invalid range (%s)'
                 error = fmt % action_op
                 raise Exception(error)
+        elif re.match(r'\d+(,\d+)+', grp):
+            var_names = ['v%s' % i for i in grp.split(',')]
         else:
             var_names = grp.split(',')
 
@@ -1618,10 +1623,12 @@ class EditingSnippet:
                     remain_modes.append(node)
             joint_node = node.join(*remain_modes)
             self.snippet_elements[first_index] = joint_node
+            self.is_action_applied = True
 
             for removed_node in remain_modes:
                 removed_index = self.snippet_elements.index(removed_node)
                 self.snippet_elements.pop(removed_index)
+            return True
         else:
             fmt = 'EditingSnippetActionJoinError - Not found index (%s)'
             error = fmt % action_op
@@ -1639,11 +1646,11 @@ class EditingSnippet:
 
         action_ops = re.split(', +', self.action)
         for action_op in action_ops:
-            if not re.search('join|split|or_empty', action_op):
+            if not re.search('join|split|or([_-]empty)?', action_op, re.I):
                 continue
-            'join' in action_op and self.apply_action_join(action_op)
-            'split' in action_op and self.apply_action_split(action_op)
-            'or_empty' in action_op and self.apply_action_or_empty(action_op)
+            is_applied = self.apply_action_join(action_op)
+            is_applied = not is_applied and self.apply_action_split(action_op)
+            not is_applied and self.apply_action_or_empty(action_op)
 
     def apply_keep(self):
         if self.action:
