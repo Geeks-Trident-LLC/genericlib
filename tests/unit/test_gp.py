@@ -276,7 +276,7 @@ class TestSnippetElement:
         "snippet,expected_template_snippet",
         [
             ('mixed_word(var=v0, value=utun0:)', 'utun0:'),
-            ('mixed_word(var=v0, value=utun0++**:)', r'utun0\+\+\*\*:'),
+            ('mixed_word(var=v0, value=utun0++**:)', r'utun0++**:'),
             ('mixed_word(kvar=v0, value=utun1:)', 'mixed_word()'),
             ('mixed_word(cvar=v0, value=utun2:)', 'mixed_word(var_v0)'),
         ]

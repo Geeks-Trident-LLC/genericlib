@@ -1366,6 +1366,7 @@ class SnippetElement:
 
         self.is_captured = False
         self.is_kept = False
+        self.is_empty = False
 
         self.parse()
 
@@ -1391,7 +1392,7 @@ class SnippetElement:
 
     def parse(self):
         pat = ('(?P<name>[a-zA-Z]+(_[a-zA-Z]+)?)[(] *'
-               '(?P<check>[ck]?var)=(?P<var_name>.+), +'
+               '(?P<check>[cCkK]?var)=(?P<var_name>.+), +'
                'value=(?P<value>.+) *[)]')
         match = re.match(pat, self.element_txt)
         if not match:
@@ -1400,10 +1401,12 @@ class SnippetElement:
             raise Exception(error)
 
         check = match.group('check')
-        if check == 'cvar':
+        if check.lower() == 'cvar':
             self.is_captured = True
-        elif check == 'kvar':
+            self.is_empty = check == 'Cvar'
+        elif check.lower() == 'kvar':
             self.is_kept = True
+            self.is_empty = check == 'Kvar'
 
         self.name = match.group('name')
         self.var_name = match.group('var_name')
@@ -1416,6 +1419,9 @@ class SnippetElement:
     def set_kept(self):
         self.is_captured = False
         self.is_kept = True
+
+    def set_empty(self):
+        self.is_empty = True
 
     def split(self, splitter='', ref_index=0):
 
@@ -1498,24 +1504,39 @@ class SnippetElement:
             if self.is_captured:
                 pat = '(?P<%s>%s)' % (self.var_name, pat)
 
-            pat = pat + TextPattern(self.trailing)
+            if self.is_empty:
+                if self.trailing:
+                    if re.match(PATTERN.SPACES_AT_END_OF_STR, self.trailing):
+                        pat = '(%s)?(%s)?' % (pat, TextPattern(self.trailing))
+                    else:
+                        pat = '(%s)?%s' % (pat, TextPattern(self.trailing))
+                else:
+                    pat = '(%s)?' % pat
+            else:
+                pat = pat + TextPattern(self.trailing)
             return pat
 
     def to_template_snippet(self):
 
         if not self.is_kept and not self.is_captured:
             txt = '%s%s' % (self.value, self.trailing)
-            txt_pat = TextPattern(txt)
-            return txt_pat
+            return txt
         else:
             if self.is_captured:
                 tmpl_snippet = '%s(var_%s)' % (self.name, self.var_name)
             else:
                 tmpl_snippet = '%s()' % self.name
+
+            if self.is_empty:
+                tmpl_snippet = '%s%s' % (tmpl_snippet, 'empty()')
+
             return tmpl_snippet
 
     def to_snippet(self):
-        v = 'cvar' if self.is_captured else 'kvar' if self.is_kept else 'var'
+        v = 'var'
+        if self.is_captured or self.is_kept:
+            v = 'cvar' if self.is_captured else 'kvar'
+            v = v.title() if self.is_empty else v
         fmt = '%s(%s=%s, value=%s)'
         snippet = fmt % (self.name, v, self.var_name, self.value)
         snippet = snippet + self.trailing
@@ -1621,7 +1642,7 @@ class EditingSnippet:
                 index, node = self.find_element(var_name)
                 if index >= 0:
                     remain_modes.append(node)
-            joint_node = node.join(*remain_modes)
+            joint_node = first_node.join(*remain_modes)
             self.snippet_elements[first_index] = joint_node
             self.is_action_applied = True
 
