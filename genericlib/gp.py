@@ -1629,10 +1629,8 @@ class EditingSnippet:
                 fmt = 'EditingSnippetActionJoinError - Invalid range (%s)'
                 error = fmt % action_op
                 raise Exception(error)
-        elif re.match(r'\d+(,\d+)+', grp):
-            var_names = ['v%s' % i for i in grp.split(',')]
-        else:
-            var_names = grp.split(',')
+        elif re.match(r'\w+(,\w+)*', grp):
+            var_names = ['v%s' % i if i.isdigit() else i for i in grp.split(',')]
 
         first_index, first_node = self.find_element(var_names[NUMBER.ZERO])
         if first_index >= NUMBER.ZERO:
@@ -1672,8 +1670,8 @@ class EditingSnippet:
             self.snippet_elements = left_sub_lst + sub_lst + right_sub_lst
             self.is_action_applied = True
         else:
-            fmt = 'EditingSnippetActionJoinError - Not found index (%s)'
-            error = fmt % action_op
+            fmt = 'EditingSnippetActionSplitError - Not found index (%s)'
+            error = fmt % var_name
             raise Exception(error)
 
     def apply_action_or_empty(self, action_op):
@@ -1692,11 +1690,38 @@ class EditingSnippet:
             not is_applied and self.apply_action_or_empty(action_op)
 
     def apply_keep(self):
-        if self.action:
+        if not self.keep and self.action:
             return
 
+        items = re.split(PATTERN.SPACES, self.keep)
+        for item in items:
+            item = item.strip(',')
+            is_empty = bool(re.search('[_-]?or([_-]empty)?', item, re.I))
+            item = re.sub('[_-]?or([_-]empty)?', STRING.EMPTY, item, re.I)
+
+            if re.match(r'\d+:\d+$', item):
+                first, last = item.split(':', NUMBER.ONE)
+                var_names = ['v%s' % i for i in range(int(first), int(last) + 1)]
+                if not var_names:
+                    fmt = 'EditingSnippetActionKeepError - Invalid range (%s)'
+                    error = fmt % self.keep
+                    raise Exception(error)
+            elif re.match(r'\w+(,\w+)*', item):
+                var_names = ['v%s' % i if i.isdigit() else i for i in item.split(',')]
+
+            for var_name in var_names:
+                index, node = self.find_element(var_name)
+                if index >= NUMBER.ZERO:
+                    node.set_kept()
+                    is_empty and node.set_empty()
+                    self.is_keep_applied = True
+                else:
+                    fmt = 'EditingSnippetActionKeepError - Not found index (%s)'
+                    error = fmt % var_name
+                    raise Exception(error)
+
     def apply_capture(self):
-        if self.action:
+        if not self.capture and self.action:
             return
 
     def process(self):

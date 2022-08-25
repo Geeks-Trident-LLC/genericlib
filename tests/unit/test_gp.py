@@ -351,6 +351,7 @@ class TestEditingSnippet:
     @pytest.mark.parametrize(
         "snippet,expected_snippet",
         [
+            # test apply action join
             (
                 'capture() keep() action(0:1-join): letters(var=v0, value=total) letters(var=v1, value=oranges) symbol(var=v2, value=:) digits(var=v3, value=123)',     # noqa
                 'capture() keep() action(): words(var=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)'   # noqa
@@ -371,6 +372,7 @@ class TestEditingSnippet:
                 'capture() keep() action(v0,v1_join, 2,3-join): letters(var=v0, value=total) letters(var=v1, value=oranges) symbol(var=v2, value=:) digits(var=v3, value=123)', # noqa
                 'capture() keep() action(): words(var=v0, value=total oranges) mixed_words(var=v2, value=: 123)'  # noqa
             ),
+            # test apply action split
             (
                 'capture() keep() action(1-split): mixed_word(var=v1, value=flags=8051<UP,RUNNING>)',   # noqa
                 'capture() keep() action(): letters(var=v2, value=flags)symbol(var=v3, value==)digits(var=v4, value=8051)symbol(var=v5, value=<)letters(var=v6, value=UP)symbol(var=v7, value=,)letters(var=v8, value=RUNNING)symbol(var=v9, value=>)'   # noqa
@@ -382,7 +384,40 @@ class TestEditingSnippet:
             (
                 'capture() keep() action(v1-split-=<>): mixed_word(var=v1, value=flags=8051<UP,RUNNING>)',    # noqa
                 'capture() keep() action(): letters(var=v2, value=flags)symbol(var=v3, value==)digits(var=v4, value=8051)symbol(var=v5, value=<)mixed_word(var=v6, value=UP,RUNNING)symbol(var=v7, value=>)'  # noqa
-            )
+            ),
+            # test apply keep
+            (
+                'capture() keep(0) action(): words(var=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)',   # noqa
+                'capture() keep() action(): words(kvar=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)'  # noqa
+            ),
+            (
+                'capture() keep(0_or) action(): words(var=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)',  # noqa
+                'capture() keep() action(): words(Kvar=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)'      # noqa
+            ),
+            (
+                'capture() keep(0_or_empty) action(): words(var=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)',    # noqa
+                'capture() keep() action(): words(Kvar=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)'      # noqa
+            ),
+            (
+                'capture() keep(0,  3) action(): words(var=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)',  # noqa
+                'capture() keep() action(): words(kvar=v0, value=total oranges) symbol(var=v2, value=:) digits(kvar=v3, value=123)'  # noqa
+            ),
+            (
+                'capture() keep(v0,3) action(): words(var=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)',   # noqa
+                'capture() keep() action(): words(kvar=v0, value=total oranges) symbol(var=v2, value=:) digits(kvar=v3, value=123)'     # noqa
+            ),
+            (
+                'capture() keep(v3,v0) action(): words(var=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)',     # noqa
+                'capture() keep() action(): words(kvar=v0, value=total oranges) symbol(var=v2, value=:) digits(kvar=v3, value=123)'     # noqa
+            ),
+            (
+                'capture() keep(v0, 2:3) action(): words(var=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)',# noqa
+                'capture() keep() action(): words(kvar=v0, value=total oranges) symbol(kvar=v2, value=:) digits(kvar=v3, value=123)' # noqa
+            ),
+            (
+                'capture() keep(v0, 2:3-or-empty) action(): words(var=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)',  # noqa
+                'capture() keep() action(): words(kvar=v0, value=total oranges) symbol(Kvar=v2, value=:) digits(Kvar=v3, value=123)'    # noqa
+            ),
 
         ]
     )
