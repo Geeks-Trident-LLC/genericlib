@@ -1559,7 +1559,7 @@ class EditingSnippet:
         self.is_keep_applied = False
         self.is_capture_applied = False
 
-        self.prepare()
+        self.process()
 
     @property
     def leading(self):
@@ -1599,9 +1599,9 @@ class EditingSnippet:
         self.raw_snippet = match.group('snippet')
         self.snippet = self.raw_snippet.strip()
 
-        pat = r'\w+\(var=[^\)]+, value=[^\)]+\)'
-        items = re.split(pat, self.snippet)
-        spacers = re.findall(pat, self.snippet)
+        pat = r'\w+\([cCkK]?var=[^\)]+, value=[^\)]+\)'
+        spacers = re.split(pat, self.snippet)[NUMBER.ONE:-NUMBER.ONE]
+        items = re.findall(pat, self.snippet)
         total = len(items)
 
         for i, snippet_txt in enumerate(items):
@@ -1614,7 +1614,7 @@ class EditingSnippet:
         for index, node in enumerate(self.snippet_elements):
             if node.var_name == var_name:
                 return index, node
-        return -1, None
+        return -NUMBER.ZERO, None
 
     def apply_action_join(self, action_op):
         if not re.search('[_-]join', action_op, re.I):
@@ -1635,12 +1635,12 @@ class EditingSnippet:
             var_names = grp.split(',')
 
         first_index, first_node = self.find_element(var_names[NUMBER.ZERO])
-        if first_index >= 0:
+        if first_index >= NUMBER.ZERO:
             remain_modes = []
 
             for var_name in var_names[NUMBER.ONE:]:
                 index, node = self.find_element(var_name)
-                if index >= 0:
+                if index >= NUMBER.ZERO:
                     remain_modes.append(node)
             joint_node = first_node.join(*remain_modes)
             self.snippet_elements[first_index] = joint_node
@@ -1656,7 +1656,25 @@ class EditingSnippet:
             raise Exception(error)
 
     def apply_action_split(self, action_op):
-        pass
+        if not re.search('[_-]split', action_op, re.I):
+            return False
+
+        var_name, sep = re.split('[_-]split[-_]?', action_op, maxsplit=1, flags=re.I)
+        sep = re.sub('_left_parenthesis_', '(', sep, flags=re.I)
+        sep = re.sub('_right_parenthesis_', ')', sep, flags=re.I)
+        var_name = 'v%s' % var_name if var_name.isdigit() else var_name
+
+        index, node = self.find_element(var_name)
+        if index >= NUMBER.ZERO:
+            sub_lst = node.split(splitter=sep, ref_index=self.largest_index)
+            left_sub_lst = self.snippet_elements[:index]
+            right_sub_lst = self.snippet_elements[index + NUMBER.ONE:]
+            self.snippet_elements = left_sub_lst + sub_lst + right_sub_lst
+            self.is_action_applied = True
+        else:
+            fmt = 'EditingSnippetActionJoinError - Not found index (%s)'
+            error = fmt % action_op
+            raise Exception(error)
 
     def apply_action_or_empty(self, action_op):
         pass

@@ -6,6 +6,7 @@ from genericlib.gp import DiffLinePattern
 from genericlib.gp import IterativeLinePattern
 
 from genericlib.gp import SnippetElement
+from genericlib.gp import EditingSnippet
 
 from genericlib.gp import TranslatedPattern
 
@@ -342,6 +343,53 @@ class TestSnippetElement:
         new_node = first_node.join(*remaining)
         new_snippet = new_node.to_snippet()
         assert new_snippet == expected_snippet
+
+
+class TestEditingSnippet:
+    """Test class for EditingSnippet."""
+
+    @pytest.mark.parametrize(
+        "snippet,expected_snippet",
+        [
+            (
+                'capture() keep() action(0:1-join): letters(var=v0, value=total) letters(var=v1, value=oranges) symbol(var=v2, value=:) digits(var=v3, value=123)',     # noqa
+                'capture() keep() action(): words(var=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)'   # noqa
+            ),
+            (
+                'capture() keep() action(0,1-join): letters(var=v0, value=total) letters(var=v1, value=oranges) symbol(var=v2, value=:) digits(var=v3, value=123)',     # noqa
+                'capture() keep() action(): words(var=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)'   # noqa
+            ),
+            (
+                'capture() keep() action(v0,v1-join): letters(var=v0, value=total) letters(var=v1, value=oranges) symbol(var=v2, value=:) digits(var=v3, value=123)', # noqa
+                'capture() keep() action(): words(var=v0, value=total oranges) symbol(var=v2, value=:) digits(var=v3, value=123)'   # noqa
+            ),
+            (
+                'capture() keep() action(v0,v1-join, 2,3-join): letters(var=v0, value=total) letters(var=v1, value=oranges) symbol(var=v2, value=:) digits(var=v3, value=123)', # noqa
+                'capture() keep() action(): words(var=v0, value=total oranges) mixed_words(var=v2, value=: 123)'   # noqa
+            ),
+            (
+                'capture() keep() action(v0,v1_join, 2,3-join): letters(var=v0, value=total) letters(var=v1, value=oranges) symbol(var=v2, value=:) digits(var=v3, value=123)', # noqa
+                'capture() keep() action(): words(var=v0, value=total oranges) mixed_words(var=v2, value=: 123)'  # noqa
+            ),
+            (
+                'capture() keep() action(1-split): mixed_word(var=v1, value=flags=8051<UP,RUNNING>)',   # noqa
+                'capture() keep() action(): letters(var=v2, value=flags)symbol(var=v3, value==)digits(var=v4, value=8051)symbol(var=v5, value=<)letters(var=v6, value=UP)symbol(var=v7, value=,)letters(var=v8, value=RUNNING)symbol(var=v9, value=>)'   # noqa
+            ),
+            (
+                'capture() keep() action(1-split-=<>): mixed_word(var=v1, value=flags=8051<UP,RUNNING>)',   # noqa
+                'capture() keep() action(): letters(var=v2, value=flags)symbol(var=v3, value==)digits(var=v4, value=8051)symbol(var=v5, value=<)mixed_word(var=v6, value=UP,RUNNING)symbol(var=v7, value=>)'  # noqa
+            ),
+            (
+                'capture() keep() action(v1-split-=<>): mixed_word(var=v1, value=flags=8051<UP,RUNNING>)',    # noqa
+                'capture() keep() action(): letters(var=v2, value=flags)symbol(var=v3, value==)digits(var=v4, value=8051)symbol(var=v5, value=<)mixed_word(var=v6, value=UP,RUNNING)symbol(var=v7, value=>)'  # noqa
+            )
+
+        ]
+    )
+    def test_editing_snippet(self, snippet, expected_snippet):
+        node = EditingSnippet(snippet)
+        edited_snippet = node.to_snippet()
+        assert edited_snippet == expected_snippet
 
 
 class TestTranslatedPattern:
