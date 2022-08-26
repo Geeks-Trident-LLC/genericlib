@@ -478,6 +478,19 @@ class Misc:
         chk = re.search(r'\S+', str(line))
         return chk
 
+    @classmethod
+    def get_list_of_lines(cls, *lines):
+        result = []
+
+        for line in lines:
+            line = STRING.EMPTY if line is None else str(line)
+            result.extend(re.split(r'\s', line))
+
+        if result == [STRING.EMPTY]:
+            result = []
+
+        return result
+
 
 class MiscOutput:
     @classmethod
