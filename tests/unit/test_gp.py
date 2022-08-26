@@ -225,6 +225,33 @@ class TestIterativeLinePattern:
         snippet = node.to_snippet()
         assert snippet == expected_snippet
 
+    @pytest.mark.parametrize(
+        "lines_or_snippets,expected_snippets,expected_regex_pattern",
+        [
+            (
+                (
+                    'utun0: flags=8051<UP,RUNNING> mtu 1380',
+                    'capture() keep() action(0-split, 1-split-=<>): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,RUNNING>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',   # noqa
+                    'capture(4,8,10,3) keep() action(): word(var=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(var=v8, value=8051)symbol(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
+                ),
+                (
+                    'capture() keep() action(): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,RUNNING>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',   # noqa
+                    'capture() keep() action(): word(var=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(var=v8, value=8051)symbol(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
+                    'capture() keep() action(): word(cvar=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(cvar=v8, value=8051)symbol(var=v9, value=<)mixed_word(cvar=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(cvar=v3, value=1380)'   # noqa
+                ),
+                r'(?P<v4>[a-zA-Z0-9]+): flags=(?P<v8>[0-9]+)<(?P<v10>[\x21-\x7e]+)> mtu (?P<v3>[0-9]+)'
+            )
+        ]
+    )
+    def test_to_regex(self, lines_or_snippets, expected_snippets, expected_regex_pattern):
+        node = None
+        for index, line_or_snippet in enumerate(lines_or_snippets):
+            node = IterativeLinePattern(line_or_snippet)
+            snippet = node.to_snippet()
+            assert snippet == expected_snippets[index]
+        regex_pattern = node.to_regex()
+        assert regex_pattern == expected_regex_pattern
+
 
 class TestSnippetElement:
     """Test class for SnippetElement"""
