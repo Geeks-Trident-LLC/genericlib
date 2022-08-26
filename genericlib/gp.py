@@ -1797,10 +1797,14 @@ class EditingSnippet:
 
 
 class IterativeLinePattern:
-    def __init__(self, line):
+    def __init__(self, line, label=''):
+        pat = r'[\x20-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+'
+        self.label = re.sub(pat, '_', str(label))
         self.raw_line = line
         self.line = line.strip()
-        self._pattern = ''
+        self._snippet = STRING.EMPTY
+        self._leading = STRING.EMPTY
+        self._trailing = STRING.EMPTY
 
     def __len__(self):
         chk = bool(len(self._pattern))
@@ -1826,14 +1830,12 @@ class IterativeLinePattern:
         chk = self.trailing != STRING.EMPTY
         return chk
 
-    def get_editable_snippet(self, label=''):
-        pat = r'[\x20-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+'
-        label = re.sub(pat, '_', str(label))
+    def get_editable_snippet(self):
         spaces = re.findall(PATTERN.SPACES, self.line)
         lst = []
         for index, item in enumerate(re.split(PATTERN.SPACES, self.line)):
             node = TranslatedPattern.do_factory_create(item)
-            var_ = 'v%s%s' % (label, index)
+            var_ = 'v%s%s' % (self.label, index)
 
             item_snippet = node.get_readable_snippet(var=var_)
             lst.append(item_snippet)
@@ -1841,27 +1843,41 @@ class IterativeLinePattern:
                 lst.append(spaces[index])
 
         snippet = STRING.EMPTY.join(lst)
-        editing_snippet = 'capture() keep() action(): %s' % snippet
+        fmt = 'capture() keep() action(): %s%s%s'
+        editing_snippet = fmt % (self.leading, snippet, self.trailing)
         return editing_snippet
 
-    def modify_snippet(self, editing_snippet):
-        pat = (r'capture[(](?P<capture>[^\)]*)[)] '
-               r'regex[(](?P<other>[^\)]*)[)]: '
-               r'(?P<snippet>.+)')
+    def is_line_editable_snippet(self):
+        pat = r'capture[(][^\)]*[)] keep[(][^\)]*[)] action[(][^\)]*[)]:.+'
+        match = re.match(pat, self.line)
+        chk = bool(match)
+        return chk
 
-        match = re.match(pat, editing_snippet)
-        if not match:
-            fmt = 'IterativeLinePatternError - Invalid modified editing snippet\n%s'
-            error = fmt % editing_snippet
-            raise Exception(error)
+    def process(self):
+        if self.is_line_editable_snippet():
+            node = EditingSnippet(self.line)
+            self._leading = node.leading
+            self._trailing = node.trailing
+        else:
+            match = re.match(PATTERN.SPACES, self.raw_line)
+            self._leading = match.group() if match else STRING.EMPTY
 
-        capture = match.group('capture')
-        other = match.group('other')
-        snippet = match.group('snippet')
+            match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_line)
+            self._trailing = match.group() if match else STRING.EMPTY
 
-        if capture == other and capture == STRING.EMPTY:
-            return editing_snippet
+            self._snippet = self.get_editable_snippet(self.line)
 
-        pat1 = r'\w+[(][^\)]+[)]'
-        spaces = [i for i in re.split(pat1, snippet) if i]
-        lst = re.findall(pat1, snippet)
+    def to_snippet(self):
+        node = EditingSnippet(self._snippet)
+        snippet = node.to_snippet()
+        return snippet
+
+    def to_regex(self):
+        node = EditingSnippet(self._snippet)
+        pattern = node.to_regex()
+        return pattern
+
+    def to_template_regex(self):
+        node = EditingSnippet(self._snippet)
+        tmpl_snippet = node.to_template_snippet()
+        return tmpl_snippet

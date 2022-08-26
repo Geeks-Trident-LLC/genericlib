@@ -199,8 +199,8 @@ class TestIterativeLinePattern:
         ]
     )
     def test_get_editable_snippet(self, line, label, expected_snippet):
-        node = IterativeLinePattern(line)
-        snippet = node.get_editable_snippet(label=label)
+        node = IterativeLinePattern(line, label=label)
+        snippet = node.get_editable_snippet()
         assert snippet == expected_snippet
 
 
