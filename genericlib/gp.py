@@ -1611,6 +1611,10 @@ class EditingSnippet:
             self.largest_index = max(self.largest_index, node.var_index)
             self.snippet_elements.append(node)
 
+    def refresh_largest_index(self):
+        for node in self.snippet_elements:
+            self.largest_index = max(self.largest_index, node.var_index)
+
     def find_element(self, var_name):
         for index, node in enumerate(self.snippet_elements):
             if node.var_name == var_name:
@@ -1648,6 +1652,7 @@ class EditingSnippet:
             for removed_node in remain_modes:
                 removed_index = self.snippet_elements.index(removed_node)
                 self.snippet_elements.pop(removed_index)
+            self.refresh_largest_index()
             return True
         else:
             fmt = 'EditingSnippetActionJoinError - Not found index (%s)'
@@ -1665,11 +1670,13 @@ class EditingSnippet:
 
         index, node = self.find_element(var_name)
         if index >= NUMBER.ZERO:
+            self.refresh_largest_index()
             sub_lst = node.split(splitter=sep, ref_index=self.largest_index)
             left_sub_lst = self.snippet_elements[:index]
             right_sub_lst = self.snippet_elements[index + NUMBER.ONE:]
             self.snippet_elements = left_sub_lst + sub_lst + right_sub_lst
             self.is_action_applied = True
+            self.refresh_largest_index()
         else:
             fmt = 'EditingSnippetActionSplitError - Not found index (%s)'
             error = fmt % var_name
@@ -1679,7 +1686,7 @@ class EditingSnippet:
         if not self.action:
             return
 
-        action_ops = re.split(', +', self.action)
+        action_ops = re.split(',? +', self.action)
         for action_op in action_ops:
             if not re.search('join|split', action_op, re.I):
                 continue
@@ -1805,6 +1812,7 @@ class IterativeLinePattern:
         self._snippet = STRING.EMPTY
         self._leading = STRING.EMPTY
         self._trailing = STRING.EMPTY
+        self.process()
 
     def __len__(self):
         chk = bool(len(self._pattern))
@@ -1856,6 +1864,7 @@ class IterativeLinePattern:
     def process(self):
         if self.is_line_editable_snippet():
             node = EditingSnippet(self.line)
+            self._snippet = node.to_snippet()
             self._leading = node.leading
             self._trailing = node.trailing
         else:
@@ -1865,7 +1874,7 @@ class IterativeLinePattern:
             match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_line)
             self._trailing = match.group() if match else STRING.EMPTY
 
-            self._snippet = self.get_editable_snippet(self.line)
+            self._snippet = self.get_editable_snippet()
 
     def to_snippet(self):
         node = EditingSnippet(self._snippet)

@@ -193,14 +193,36 @@ class TestIterativeLinePattern:
                 'capture() keep() action(): letters(var=v00, value=total) letters(var=v01, value=oranges) symbol(var=v02, value=:) digits(var=v03, value=123)'  # noqa
             ),
             (
-                'utun0: flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST> mtu 1380', '',
-                'capture() keep() action(): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,POINTOPOINT,RUNNING,MULTICAST>) letters(var=v2, value=mtu) digits(var=v3, value=1380)'  # noqa
+                'utun0: flags=8051<UP,RUNNING> mtu 1380', '',
+                'capture() keep() action(): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,RUNNING>) letters(var=v2, value=mtu) digits(var=v3, value=1380)'  # noqa
             ),
         ]
     )
     def test_get_editable_snippet(self, line, label, expected_snippet):
         node = IterativeLinePattern(line, label=label)
         snippet = node.get_editable_snippet()
+        assert snippet == expected_snippet
+
+    @pytest.mark.parametrize(
+        "line,expected_snippet",
+        [
+            (
+                'utun0: flags=8051<UP,RUNNING> mtu 1380',
+                'capture() keep() action(): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,RUNNING>) letters(var=v2, value=mtu) digits(var=v3, value=1380)'  # noqa
+            ),
+            (
+                'capture() keep() action(0-split, 1-split-=<>): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,RUNNING>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',   # noqa
+                'capture() keep() action(): word(var=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(var=v8, value=8051)symbol(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)'   # noqa
+            ),
+            (
+                'capture(4,8,10,3) keep() action(): word(var=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(var=v8, value=8051)symbol(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
+                'capture() keep() action(): word(cvar=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(cvar=v8, value=8051)symbol(var=v9, value=<)mixed_word(cvar=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(cvar=v3, value=1380)'   # noqa
+            ),
+        ]
+    )
+    def test_to_snippet(self, line, expected_snippet):
+        node = IterativeLinePattern(line)
+        snippet = node.to_snippet()
         assert snippet == expected_snippet
 
 
