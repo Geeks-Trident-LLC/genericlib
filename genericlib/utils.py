@@ -491,6 +491,11 @@ class Misc:
 
         return result
 
+    @classmethod
+    def get_list_of_readonly_lines(cls, *lines):
+        result = cls.get_list_of_lines(*lines)
+        return tuple(result)
+
 
 class MiscOutput:
     @classmethod
