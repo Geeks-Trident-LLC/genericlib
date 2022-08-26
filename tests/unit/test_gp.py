@@ -200,7 +200,7 @@ class TestIterativeLinePattern:
     )
     def test_get_editable_snippet(self, line, label, expected_snippet):
         node = IterativeLinePattern(line, label=label)
-        snippet = node.get_editable_snippet()
+        snippet = node.symbolize()
         assert snippet == expected_snippet
 
     @pytest.mark.parametrize(

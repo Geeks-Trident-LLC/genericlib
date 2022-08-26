@@ -1838,7 +1838,7 @@ class IterativeLinePattern:
         chk = self.trailing != STRING.EMPTY
         return chk
 
-    def get_editable_snippet(self):
+    def symbolize(self):
         spaces = re.findall(PATTERN.SPACES, self.line)
         lst = []
         for index, item in enumerate(re.split(PATTERN.SPACES, self.line)):
@@ -1874,7 +1874,7 @@ class IterativeLinePattern:
             match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_line)
             self._trailing = match.group() if match else STRING.EMPTY
 
-            self._snippet = self.get_editable_snippet()
+            self._snippet = self.symbolize()
 
     def to_snippet(self):
         node = EditingSnippet(self._snippet)
