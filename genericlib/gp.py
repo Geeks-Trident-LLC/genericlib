@@ -1812,13 +1812,18 @@ class IterativeLinePattern:
         return match.group() if match else STRING.EMPTY
 
     @property
+    def trailing(self):
+        match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_line)
+        return match.group() if match else STRING.EMPTY
+
+    @property
     def is_leading(self):
         chk = self.leading != STRING.EMPTY
         return chk
 
     @property
     def is_trailing(self):
-        chk = self.raw_line.endswith(STRING.SPACE_CHAR)
+        chk = self.trailing != STRING.EMPTY
         return chk
 
     def get_editable_snippet(self, label=''):
