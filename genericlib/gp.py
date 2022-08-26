@@ -1807,19 +1807,6 @@ class IterativeLinePattern:
         return int(chk)
 
     @property
-    def pattern(self):
-        pattern = self._pattern
-
-        fmt = '%s%s'
-        if self.is_leading:
-            pattern = fmt % (PATTERN.SPACES_BUT, pattern)
-
-        if self.is_trailing:
-            pattern = fmt % (pattern, PATTERN.SPACES_BUT)
-
-        return pattern
-
-    @property
     def is_leading(self):
         chk = self.raw_line.startswith(STRING.SPACE_CHAR)
         return chk
