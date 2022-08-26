@@ -1807,8 +1807,13 @@ class IterativeLinePattern:
         return int(chk)
 
     @property
+    def leading(self):
+        match = re.match(PATTERN.SPACES, self.raw_line)
+        return match.group() if match else STRING.EMPTY
+
+    @property
     def is_leading(self):
-        chk = self.raw_line.startswith(STRING.SPACE_CHAR)
+        chk = self.leading != STRING.EMPTY
         return chk
 
     @property
