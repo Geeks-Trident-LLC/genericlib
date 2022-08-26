@@ -473,6 +473,11 @@ class Misc:
         cls_name = cls_obj.__class__.__name__
         return cls_name
 
+    @classmethod
+    def is_data_line(cls, line):
+        chk = re.search(r'\S+', str(line))
+        return chk
+
 
 class MiscOutput:
     @classmethod
