@@ -484,7 +484,7 @@ class Misc:
 
         for line in lines:
             line = STRING.EMPTY if line is None else str(line)
-            result.extend(re.split(r'\s', line))
+            result.extend(re.split(r'\r?\n|\r', line))
 
         if result == [STRING.EMPTY]:
             result = []

@@ -1815,7 +1815,7 @@ class IterativeLinePattern:
         self.process()
 
     def __len__(self):
-        chk = bool(len(self._pattern))
+        chk = bool(len(self._snippet))
         return int(chk)
 
     @property
@@ -1886,7 +1886,71 @@ class IterativeLinePattern:
         pattern = node.to_regex()
         return pattern
 
-    def to_template_regex(self):
+    def to_template_snippet(self):
         node = EditingSnippet(self._snippet)
         tmpl_snippet = node.to_template_snippet()
         return tmpl_snippet
+
+    def is_captured_in_regex(self):
+        data = self.to_regex()
+        pat = r'[(][?]P<\w+>'
+        chk = bool(re.search(pat, data))
+        return chk
+
+    def is_captured_in_template_snippet(self):
+        data = self.to_template_snippet()
+        pat = r'\b\w+[(][^\)]* *var_\w+'
+        chk = bool(re.search(pat, data))
+        return chk
+
+
+class IterativeLinesPattern:
+    def __init__(self, *lines_or_snippets):
+        self.lines_or_snippets = Misc.get_list_of_readonly_lines(*lines_or_snippets)
+
+    def to_snippet(self):
+        lst = []
+        for index, line_or_snippet in enumerate(self.lines_or_snippets):
+            if Misc.is_data_line(line_or_snippet):
+                label = str(index) if index > 0 else STRING.EMPTY
+                node = IterativeLinePattern(line_or_snippet, label=label)
+                snippet = node.to_snippet()
+                lst.append(snippet)
+            else:
+                lst.append(line_or_snippet)
+        snippets = str.join('\n', lst)
+        return snippets
+
+    def to_regex(self):
+        lst = []
+        for snippet in self.lines_or_snippets:
+            if Misc.is_data_line(snippet):
+                node = IterativeLinePattern(snippet)
+                pattern = node.to_regex()
+                lst.append(pattern)
+            else:
+                lst.append(r'[ \t\v]*')
+
+        if lst:
+            pattern = str.join(r'(\r?\n|\r)', lst)
+            return pattern
+        else:
+            return STRING.EMPTY
+
+    def to_template_snippet(self):
+        lst = []
+        is_captured = False
+        for snippet in self.lines_or_snippets:
+            if Misc.is_data_line(snippet):
+                node = IterativeLinePattern(snippet)
+                tmpl_snippet = node.to_template_snippet()
+                is_captured |= node.is_captured_in_template_snippet()
+                lst.append(tmpl_snippet)
+
+        if not is_captured:
+            error = ('IterativeLinesPatternError - CANT form template snippet '
+                     'because no captured variable is created')
+            raise Exception(error)
+
+        template_snippet = str.join('\n', lst)
+        return template_snippet
