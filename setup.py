@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='genericlib',
-    version='0.3.1',
+    version='0.3.2',
     license='Geeks Trident License',
     license_files=['LICENSE'],
     description='Describe-Get-System',
