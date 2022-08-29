@@ -7,6 +7,7 @@ from textwrap import dedent
 from genericlib.gp import DiffLinePattern
 from genericlib.gp import IterativeLinePattern
 from genericlib.gp import IterativeLinesPattern
+from genericlib.gp import CategoryLinePattern
 
 from genericlib.gp import SnippetElement
 from genericlib.gp import EditingSnippet
@@ -440,6 +441,25 @@ class TestIterativeLinesPattern:
             assert is_verified
         except Exception as ex:     # noqa
             pass
+
+
+class TestCategoryLinePattern:
+    """Test class for CategoryLinePattern"""
+    @pytest.mark.parametrize(
+        "line,expected_pattern,expected_result",
+        [
+            (
+                'fruits: orange, peach',
+                '',
+                ''
+            ),
+        ]
+    )
+    def test_to_regex(self, line, expected_pattern, expected_result, ):
+        import pdb; pdb.set_trace()
+        node = CategoryLinePattern(line)
+        pattern = node.to_regex()
+        assert pattern == expected_pattern
 
 
 class TestSnippetElement:

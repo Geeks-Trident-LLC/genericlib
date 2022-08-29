@@ -8,6 +8,8 @@ class PATTERN:
 
     SPACE = ' '
     SPACES = ' +'
+    MORE_THAN_ONE_SPACES = '  +'
+    AT_LEAST_ONE_SPACES = '  +'
     SPACE_BUT = ' ?'
     SPACES_BUT = ' *'
     SPACE_AT_END_OF_STR = ' $'

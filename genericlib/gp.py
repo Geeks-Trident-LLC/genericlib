@@ -1,5 +1,7 @@
 import re
 
+from collections import OrderedDict
+
 from itertools import combinations
 
 from difflib import ndiff
@@ -31,7 +33,7 @@ class LData:
 
     @property
     def trailing(self):
-        match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_data)
+        match = re.search(PATTERN.SPACES_AT_END_OF_STR, self.raw_data)
         return match.group() if match else STRING.EMPTY
 
     @property
@@ -1819,8 +1821,6 @@ class IterativeLinePattern(LData):
         pat = r'[\x20-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+'
         self.label = re.sub(pat, '_', str(label))
         self._snippet = STRING.EMPTY
-        self._leading = STRING.EMPTY
-        self._trailing = STRING.EMPTY
         self.process()
 
     def __len__(self):
@@ -1854,15 +1854,7 @@ class IterativeLinePattern(LData):
         if self.is_line_editable_snippet():
             node = EditingSnippet(self.data)
             self._snippet = node.to_snippet()
-            self._leading = node.leading
-            self._trailing = node.trailing
         else:
-            match = re.match(PATTERN.SPACES, self.raw_data)
-            self._leading = match.group() if match else STRING.EMPTY
-
-            match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_data)
-            self._trailing = match.group() if match else STRING.EMPTY
-
             self._snippet = self.symbolize()
 
     def to_snippet(self):
@@ -1943,3 +1935,183 @@ class IterativeLinesPattern:
 
         template_snippet = str.join('\n', lst)
         return template_snippet
+
+
+class BaseCategoryPattern:
+    pass
+
+
+class CategorySepPattern(BaseCategoryPattern):
+    def __init__(self, sep):
+        self.separator = sep
+
+    def to_regex(self):
+        node = IterativeLinePattern(self.separator)
+        pattern = node.to_regex()
+        return pattern
+
+    def to_template_snippet(self):
+        tmpl_snippet = 'spaces_but()%sspaces_but()' % TextPattern(self.separator.strip())
+        return tmpl_snippet
+
+
+class CategoryValuePattern(BaseCategoryPattern):
+
+    def __init__(self, value, var_txt):
+        self.value = value.strip()
+        symbol_n_space_pat = '[ %s' % PATTERN.SYMBOLS[NUMBER.ONE:]
+        self.var_name = re.sub(symbol_n_space_pat, '_', var_txt)
+
+    def to_regex(self):
+        if self.value:
+            pat_obj = TranslatedPattern.do_factory_create(self.value)
+            editable_snippet = pat_obj.get_readable_snippet(var=self.var_name)
+            node = SnippetElement(editable_snippet)
+            pattern = node.to_regex()
+        else:
+            pattern = '(?P<%s>.*)' % self.var_name
+
+        return pattern
+
+    def to_template_snippet(self):
+        if self.value:
+            pat_obj = TranslatedPattern.do_factory_create(self.value)
+            editable_snippet = pat_obj.get_readable_snippet(var=self.var_name)
+            node = SnippetElement(editable_snippet)
+            tmpl_snippet = node.to_template_snippet()
+        else:
+            tmpl_snippet = 'anything_but(var_%s)' % self.var_name
+
+        return tmpl_snippet
+
+    @classmethod
+    def try_to_get_value(cls, data, count=0):
+        data = data.strip()
+        if not count:
+            return data, STRING.EMPTY
+        else:
+            try:
+                val, remaining = re.split(PATTERN.AT_LEAST_ONE_SPACES, data, maxsplit=1)
+                return val, remaining
+            except Exception as ex:     # noqa
+                try:
+                    val, remaining = re.split(PATTERN.SPACES, data, maxsplit=1)
+                    return val, remaining
+                except Exception as other_ex:   # noqa
+                    return data, STRING.EMPTY
+
+
+class CategoryLinePattern(LData, BaseCategoryPattern):
+    def __init__(self, line, count=1, separator=':'):
+        super().__init__(line)
+        self.count = count
+        self.separator = separator
+        self._lst = []
+        self.process()
+
+    def __len__(self):
+        chk = len(self._lst)
+        return chk
+
+    @property
+    def parsed(self):
+        chk = bool(self)
+        return chk
+
+    def to_regex(self):
+        result = []
+        for item in self._lst:
+            is_category_pat_obj = isinstance(item, BaseCategoryPattern)
+            pat = item.to_regex() if is_category_pat_obj else str(item)
+            result.append(pat)
+
+        self.is_leading and self._lst.insert(NUMBER.ZERO, PATTERN.SPACES_BUT)
+        self.is_trailing and self._lst.append(PATTERN.SPACES_BUT)
+
+        pattern = str.join(STRING.EMPTY, result)
+        return pattern
+
+    def to_template_snippet(self):
+        result = [self.leading]
+        for item in self._lst:
+            is_category_pat_obj = isinstance(item, BaseCategoryPattern)
+            _snippet = item.to_template_snippet() if is_category_pat_obj else str(item)
+            result.append(_snippet)
+
+        self._lst.append(self.trailing)
+
+        pattern = str.join(STRING.EMPTY, result)
+        return pattern
+
+    def get_remaining_chars_by_pos(self, char_pos, direction='right'):
+
+        if self.data[char_pos] == STRING.SPACE_CHAR:
+            return char_pos
+
+        total, i, j = len(self.data), char_pos, char_pos
+        while NUMBER.ZERO <= i < total:
+            if self.data[i] == STRING.SPACE_CHAR:
+                return j
+            j = i
+            i = i + NUMBER.ONE if direction == 'right' else i - NUMBER.ONE
+
+    def get_word_by_pos(self, char_pos):
+        most_right_pos = self.get_remaining_chars_by_pos(char_pos, direction='right')
+        most_left_pos = self.get_remaining_chars_by_pos(char_pos, direction='left')
+
+        word = self.data[most_left_pos:most_right_pos]
+        return word
+
+    def get_pair_of_separator(self):
+        if self.separator not in self.data:
+            first, last = self.data, STRING.EMPTY
+        else:
+            index = self.data.index(self.separator)
+            first = self.data[:index]
+            last = self.data[index + len(self.separator):].strip()
+        return first, last
+
+    def process(self):
+        if not self.count:
+            return
+
+        if self.separator not in self.data:
+            error = 'CategoryLinePatternError - data DOESNT have separator'
+            raise Exception(error)
+
+        index = self.data.index(self.separator)
+        if index == NUMBER.ZERO:
+            error = 'CategoryLinePatternError - data DOESNT have var text'
+            raise Exception(error)
+
+        chk_word = self.get_word_by_pos(index)
+
+        mac_pat = r'[a-f\d]{1,2}(:[a-f\d]{1,2}){2,5}'
+        ipv6_pat = r'[a-f\d]{1,4}(:([a-f\d]{1,4})?)+:[a-f\d]{1,4}'
+
+        is_time = bool(re.search(r'\d+(:\d+)+', chk_word))
+        is_mac_addr = bool(re.match(mac_pat, chk_word, re.I))
+        is_ipv6 = chk_word.endswith('::') or chk_word.startswith('::')
+
+        is_ipv6 = is_ipv6 or bool(re.match(ipv6_pat, chk_word, re.I))
+
+        if is_time or is_mac_addr or is_ipv6:
+            return
+        import pdb; pdb.set_trace()
+        var_txt, remaining = self.get_pair_of_separator()
+
+        self._lst.append(TextPattern(var_txt.strip()))
+        self._lst.append(CategorySepPattern(' %s ' % self.separator.strip()))
+
+        method = CategoryValuePattern.try_to_get_value
+        val, other_remaining = method(remaining, count=self.count - 1)
+
+        value_node = CategoryValuePattern(val, var_txt)
+        self._lst.append(value_node)
+
+        if other_remaining:
+            other_node = self(other_remaining, count=self.count-1)
+            if other_node.parsed:
+                self._lst.append(other_node)
+            else:
+                return
