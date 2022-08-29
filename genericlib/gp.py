@@ -1546,11 +1546,11 @@ class SnippetElement:
 
 class EditingSnippet:
     def __init__(self, editing_snippet):
-        self.editing_snippet = editing_snippet
+        self.data = editing_snippet
         self.capture = ''
         self.keep = ''
         self.action = ''
-        self.raw_snippet = ''
+        self.raw_data = ''
         self.snippet = ''
         self.snippet_elements = []
 
@@ -1564,12 +1564,12 @@ class EditingSnippet:
 
     @property
     def leading(self):
-        match = re.match(PATTERN.SPACES, self.raw_snippet)
+        match = re.match(PATTERN.SPACES, self.raw_data)
         return match.group() if match else STRING.EMPTY
 
     @property
     def trailing(self):
-        match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_snippet)
+        match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_data)
         return match.group() if match else STRING.EMPTY
 
     @property
@@ -1588,17 +1588,17 @@ class EditingSnippet:
                r'action[(](?P<action>[^\)]*)[)]: '
                r'(?P<snippet>.+)')
 
-        match = re.match(pat, self.editing_snippet)
+        match = re.match(pat, self.data)
         if not match:
             fmt = 'EditingSnippetError - Invalid argument\n%s'
-            error = fmt % self.editing_snippet
+            error = fmt % self.data
             raise Exception(error)
 
         self.capture = match.group('capture').strip()
         self.keep = match.group('keep').strip()
         self.action = match.group('action').strip()
-        self.raw_snippet = match.group('snippet')
-        self.snippet = self.raw_snippet.strip()
+        self.raw_data = match.group('snippet')
+        self.snippet = self.raw_data.strip()
 
         pat = r'\w+\([cCkK]?var=[^\)]+, value=[^\)]+\)'
         spacers = re.split(pat, self.snippet)[NUMBER.ONE:-NUMBER.ONE]
@@ -1807,8 +1807,8 @@ class IterativeLinePattern:
     def __init__(self, line, label=''):
         pat = r'[\x20-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+'
         self.label = re.sub(pat, '_', str(label))
-        self.raw_line = line
-        self.line = line.strip()
+        self.raw_data = line
+        self.data = line.strip()
         self._snippet = STRING.EMPTY
         self._leading = STRING.EMPTY
         self._trailing = STRING.EMPTY
@@ -1820,12 +1820,12 @@ class IterativeLinePattern:
 
     @property
     def leading(self):
-        match = re.match(PATTERN.SPACES, self.raw_line)
+        match = re.match(PATTERN.SPACES, self.raw_data)
         return match.group() if match else STRING.EMPTY
 
     @property
     def trailing(self):
-        match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_line)
+        match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_data)
         return match.group() if match else STRING.EMPTY
 
     @property
@@ -1839,9 +1839,9 @@ class IterativeLinePattern:
         return chk
 
     def symbolize(self):
-        spaces = re.findall(PATTERN.SPACES, self.line)
+        spaces = re.findall(PATTERN.SPACES, self.data)
         lst = []
-        for index, item in enumerate(re.split(PATTERN.SPACES, self.line)):
+        for index, item in enumerate(re.split(PATTERN.SPACES, self.data)):
             node = TranslatedPattern.do_factory_create(item)
             var_ = 'v%s%s' % (self.label, index)
 
@@ -1857,21 +1857,21 @@ class IterativeLinePattern:
 
     def is_line_editable_snippet(self):
         pat = r'capture[(][^\)]*[)] keep[(][^\)]*[)] action[(][^\)]*[)]:.+'
-        match = re.match(pat, self.line)
+        match = re.match(pat, self.data)
         chk = bool(match)
         return chk
 
     def process(self):
         if self.is_line_editable_snippet():
-            node = EditingSnippet(self.line)
+            node = EditingSnippet(self.data)
             self._snippet = node.to_snippet()
             self._leading = node.leading
             self._trailing = node.trailing
         else:
-            match = re.match(PATTERN.SPACES, self.raw_line)
+            match = re.match(PATTERN.SPACES, self.raw_data)
             self._leading = match.group() if match else STRING.EMPTY
 
-            match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_line)
+            match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_data)
             self._trailing = match.group() if match else STRING.EMPTY
 
             self._snippet = self.symbolize()
