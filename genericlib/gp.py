@@ -15,6 +15,36 @@ from genericlib import Misc
 from regexpro import TextPattern
 
 
+class LData:
+    def __init__(self, data):
+        self.raw_data = str(data)
+        self.data = self.raw_data.strip()
+
+    def __call__(self, *args, **kwargs):
+        new_instance = self.__class__(*args, **kwargs)
+        return new_instance
+
+    @property
+    def leading(self):
+        match = re.match(PATTERN.SPACES, self.raw_data)
+        return match.group() if match else STRING.EMPTY
+
+    @property
+    def trailing(self):
+        match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_data)
+        return match.group() if match else STRING.EMPTY
+
+    @property
+    def is_leading(self):
+        chk = self.leading != STRING.EMPTY
+        return chk
+
+    @property
+    def is_trailing(self):
+        chk = self.trailing != STRING.EMPTY
+        return chk
+
+
 class TranslatedPattern:
 
     def __init__(self, data, *other, name='',
@@ -1544,8 +1574,8 @@ class SnippetElement:
         return snippet
 
 
-class EditingSnippet:
-    def __init__(self, editing_snippet):
+class EditingSnippet(LData):
+    def __init__(self, editing_snippet):    # noqa
         self.data = editing_snippet
         self.capture = ''
         self.keep = ''
@@ -1561,26 +1591,6 @@ class EditingSnippet:
         self.is_capture_applied = False
 
         self.process()
-
-    @property
-    def leading(self):
-        match = re.match(PATTERN.SPACES, self.raw_data)
-        return match.group() if match else STRING.EMPTY
-
-    @property
-    def trailing(self):
-        match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_data)
-        return match.group() if match else STRING.EMPTY
-
-    @property
-    def is_leading(self):
-        chk = self.leading != STRING.EMPTY
-        return chk
-
-    @property
-    def is_trailing(self):
-        chk = self.trailing != STRING.EMPTY
-        return chk
 
     def prepare(self):
         pat = (r'capture[(](?P<capture>[^\)]*)[)] '
@@ -1637,7 +1647,7 @@ class EditingSnippet:
         elif re.match(r'\w+(,\w+)*', grp):
             var_names = ['v%s' % i if i.isdigit() else i for i in grp.split(',')]
 
-        first_index, first_node = self.find_element(var_names[NUMBER.ZERO])
+        first_index, first_node = self.find_element(var_names[NUMBER.ZERO]) # noqa
         if first_index >= NUMBER.ZERO:
             remain_modes = []
 
@@ -1713,7 +1723,7 @@ class EditingSnippet:
             elif re.match(r'\w+(,\w+)*', item):
                 var_names = ['v%s' % i if i.isdigit() else i for i in item.split(',')]
 
-            for var_name in var_names:
+            for var_name in var_names:  # noqa
                 index, node = self.find_element(var_name)
                 if index >= NUMBER.ZERO:
                     node.set_kept()
@@ -1744,7 +1754,7 @@ class EditingSnippet:
             elif re.match(r'\w+(,\w+)*', item):
                 var_names = ['v%s' % i if i.isdigit() else i for i in item.split(',')]
 
-            for var_name in var_names:
+            for var_name in var_names:  # noqa
                 index, node = self.find_element(var_name)
                 if index >= NUMBER.ZERO:
                     node.set_captured()
@@ -1803,12 +1813,11 @@ class EditingSnippet:
         return tmpl_snippet
 
 
-class IterativeLinePattern:
+class IterativeLinePattern(LData):
     def __init__(self, line, label=''):
+        super().__init__(line)
         pat = r'[\x20-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+'
         self.label = re.sub(pat, '_', str(label))
-        self.raw_data = line
-        self.data = line.strip()
         self._snippet = STRING.EMPTY
         self._leading = STRING.EMPTY
         self._trailing = STRING.EMPTY
@@ -1817,26 +1826,6 @@ class IterativeLinePattern:
     def __len__(self):
         chk = bool(len(self._snippet))
         return int(chk)
-
-    @property
-    def leading(self):
-        match = re.match(PATTERN.SPACES, self.raw_data)
-        return match.group() if match else STRING.EMPTY
-
-    @property
-    def trailing(self):
-        match = re.match(PATTERN.SPACES_AT_END_OF_STR, self.raw_data)
-        return match.group() if match else STRING.EMPTY
-
-    @property
-    def is_leading(self):
-        chk = self.leading != STRING.EMPTY
-        return chk
-
-    @property
-    def is_trailing(self):
-        chk = self.trailing != STRING.EMPTY
-        return chk
 
     def symbolize(self):
         spaces = re.findall(PATTERN.SPACES, self.data)
