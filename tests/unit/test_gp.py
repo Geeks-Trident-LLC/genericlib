@@ -446,20 +446,79 @@ class TestIterativeLinesPattern:
 class TestCategoryLinePattern:
     """Test class for CategoryLinePattern"""
     @pytest.mark.parametrize(
-        "line,expected_pattern,expected_result",
+        "line,count,expected_pattern,expected_result",
         [
             (
                 'fruits: orange, peach',
-                '',
-                ''
+                1,
+                r'fruits *: *(?P<fruits>[\x21-\x7e]+( +[\x21-\x7e]+)+)',
+                {'fruits': 'orange, peach'}
+            ),
+            (
+                'total   fruits: orange, peach',
+                1,
+                r'total +fruits *: *(?P<total_fruits>[\x21-\x7e]+( +[\x21-\x7e]+)+)',
+                {'total_fruits': 'orange, peach'}
+            ),
+            (
+                'total fruit(s): orange, peach',
+                1,
+                r'total fruit\(s\) *: *(?P<total_fruit_s>[\x21-\x7e]+( +[\x21-\x7e]+)+)',
+                {'total_fruit_s': 'orange, peach'}
+            ),
+            (
+                'fruits: orange   meat: pork  drinks: water',
+                3,
+                r'fruits *: *(?P<fruits>[a-zA-Z]+) +meat *: *(?P<meat>[a-zA-Z]+) +drinks *: *(?P<drinks>[a-zA-Z]+)',
+                {'fruits': 'orange', 'meat': 'pork', 'drinks': 'water'}
             ),
         ]
     )
-    def test_to_regex(self, line, expected_pattern, expected_result, ):
-        import pdb; pdb.set_trace()
-        node = CategoryLinePattern(line)
+    def test_to_regex(self, line, count, expected_pattern, expected_result, ):
+        node = CategoryLinePattern(line, count=count)
         pattern = node.to_regex()
         assert pattern == expected_pattern
+        match = re.match(pattern, line)
+        if match:
+            result = match.groupdict()
+            assert result == expected_result
+        else:
+            assert False, 'No Match - Pattern is %r' % pattern
+
+    @pytest.mark.parametrize(
+        "line,count,expected_template_snippet,expected_result",
+        [
+            (
+                'fruits: orange, peach',
+                1,
+                r'',
+                {'fruits': 'orange, peach'}
+            ),
+            # (
+            #     'total   fruits: orange, peach',
+            #     1,
+            #     r'total +fruits *: *(?P<total_fruits>[\x21-\x7e]+( +[\x21-\x7e]+)+)',
+            #     {'total_fruits': 'orange, peach'}
+            # ),
+            # (
+            #     'total fruit(s): orange, peach',
+            #     1,
+            #     r'total fruit\(s\) *: *(?P<total_fruit_s>[\x21-\x7e]+( +[\x21-\x7e]+)+)',
+            #     {'total_fruit_s': 'orange, peach'}
+            # ),
+            # (
+            #     'fruits: orange   meat: pork  drinks: water',
+            #     3,
+            #     r'fruits *: *(?P<fruits>[a-zA-Z]+) +meat *: *(?P<meat>[a-zA-Z]+) +drinks *: *(?P<drinks>[a-zA-Z]+)',
+            #     {'fruits': 'orange', 'meat': 'pork', 'drinks': 'water'}
+            # ),
+        ]
+    )
+    def test_to_template_snippet(self, line, count,
+                                 expected_template_snippet, expected_result, ):
+        node = CategoryLinePattern(line, count=count)
+        tmpl_snippet = node.to_template_snippet()
+        assert tmpl_snippet == expected_template_snippet
 
 
 class TestSnippetElement:

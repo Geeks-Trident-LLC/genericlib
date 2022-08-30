@@ -228,7 +228,7 @@ class TranslatedPattern:
             error = 'TranslatedPatternTemplateSnippetError - CANT create snippet without name'
             raise Exception(error)
 
-        var_txt = 'var_' % self.name if var else STRING.EMPTY
+        var_txt = 'var_%s' % self.name if var else STRING.EMPTY
         tmpl_snippet = '%s(%s)' % (self.name, var_txt)
         return tmpl_snippet
 
@@ -1973,19 +1973,29 @@ class CategorySepPattern(BaseCategoryPattern):
         return tmpl_snippet
 
 
+class CategorySpacerPattern(BaseCategoryPattern):
+    def __init__(self):
+        self.spacers = '  '
+
+    def to_regex(self):
+        pattern = TextPattern(self.spacers)
+        return pattern
+
+    def to_template_snippet(self):
+        return self.spacers
+
+
 class CategoryValuePattern(BaseCategoryPattern):
 
     def __init__(self, value, var_txt):
         self.value = value.strip()
         symbol_n_space_pat = '[ %s' % PATTERN.SYMBOLS[NUMBER.ONE:]
-        self.var_name = re.sub(symbol_n_space_pat, '_', var_txt)
+        self.var_name = re.sub(symbol_n_space_pat, '_', var_txt).strip('_')
 
     def to_regex(self):
         if self.value:
             pat_obj = TranslatedPattern.do_factory_create(self.value)
-            editable_snippet = pat_obj.get_readable_snippet(var=self.var_name)
-            node = SnippetElement(editable_snippet)
-            pattern = node.to_regex()
+            pattern = pat_obj.get_regex_pattern(var=self.var_name)
         else:
             pattern = '(?P<%s>.*)' % self.var_name
 
@@ -1994,9 +2004,7 @@ class CategoryValuePattern(BaseCategoryPattern):
     def to_template_snippet(self):
         if self.value:
             pat_obj = TranslatedPattern.do_factory_create(self.value)
-            editable_snippet = pat_obj.get_readable_snippet(var=self.var_name)
-            node = SnippetElement(editable_snippet)
-            tmpl_snippet = node.to_template_snippet()
+            tmpl_snippet = pat_obj.get_template_snippet(var=self.var_name)
         else:
             tmpl_snippet = 'anything_but(var_%s)' % self.var_name
 
@@ -2115,7 +2123,6 @@ class CategoryLinePattern(LData, BaseCategoryPattern):
 
         if is_time or is_mac_addr or is_ipv6:
             return
-        import pdb; pdb.set_trace()
         var_txt, remaining = self.get_pair_of_separator()
 
         self._lst.append(TextPattern(var_txt.strip()))
@@ -2130,6 +2137,7 @@ class CategoryLinePattern(LData, BaseCategoryPattern):
         if other_remaining:
             other_node = self(other_remaining, count=self.count-1)
             if other_node.parsed:
+                self._lst.append(CategorySpacerPattern())
                 self._lst.append(other_node)
             else:
                 return
