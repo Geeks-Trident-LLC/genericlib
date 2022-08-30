@@ -223,6 +223,15 @@ class TranslatedPattern:
         pattern = fmt % (var, self.pattern) if var else self.pattern
         return pattern
 
+    def get_template_snippet(self, var=''):
+        if not self.name:
+            error = 'TranslatedPatternTemplateSnippetError - CANT create snippet without name'
+            raise Exception(error)
+
+        var_txt = 'var_' % self.name if var else STRING.EMPTY
+        tmpl_snippet = '%s(%s)' % (self.name, var_txt)
+        return tmpl_snippet
+
     @classmethod
     def do_factory_create(cls, data, *other):
         classes = [
