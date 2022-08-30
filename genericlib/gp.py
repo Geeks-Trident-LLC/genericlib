@@ -214,6 +214,15 @@ class TranslatedPattern:
             snippet = '%s(value=%s)' % (self.name, value)
         return snippet
 
+    def get_regex_pattern(self, var=''):
+        if not self.name:
+            error = 'TranslatedPatternRegexError - CANT create regex pattern without name'
+            raise Exception(error)
+
+        fmt = '(?P<%s>%s)'
+        pattern = fmt % (var, self.pattern) if var else self.pattern
+        return pattern
+
     @classmethod
     def do_factory_create(cls, data, *other):
         classes = [
