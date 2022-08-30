@@ -228,7 +228,7 @@ class TranslatedPattern:
             error = 'TranslatedPatternTemplateSnippetError - CANT create snippet without name'
             raise Exception(error)
 
-        var_txt = 'var_%s' % self.name if var else STRING.EMPTY
+        var_txt = 'var_%s' % var if var else STRING.EMPTY
         tmpl_snippet = '%s(%s)' % (self.name, var_txt)
         return tmpl_snippet
 
@@ -1959,17 +1959,17 @@ class BaseCategoryPattern:
     pass
 
 
-class CategorySepPattern(BaseCategoryPattern):
+class CategorySepPattern(LData, BaseCategoryPattern):
     def __init__(self, sep):
-        self.separator = sep
+        super().__init__(sep)
 
     def to_regex(self):
-        node = IterativeLinePattern(self.separator)
+        node = IterativeLinePattern(self.raw_data)
         pattern = node.to_regex()
         return pattern
 
     def to_template_snippet(self):
-        tmpl_snippet = 'spaces_but()%sspaces_but()' % TextPattern(self.separator.strip())
+        tmpl_snippet = '%s%s%s' % (self.leading, TextPattern(self.data), self.trailing)
         return tmpl_snippet
 
 
@@ -1985,7 +1985,20 @@ class CategorySpacerPattern(BaseCategoryPattern):
         return self.spacers
 
 
-class CategoryValuePattern(BaseCategoryPattern):
+class CategoryLeftDataPattern(BaseCategoryPattern):
+
+    def __init__(self, data):
+        self.data = data
+
+    def to_regex(self):
+        pattern = TextPattern(self.data)
+        return pattern
+
+    def to_template_snippet(self):
+        return self.data
+
+
+class CategoryRightDataPattern(BaseCategoryPattern):
 
     def __init__(self, value, var_txt):
         self.value = value.strip()
@@ -2045,14 +2058,13 @@ class CategoryLinePattern(LData, BaseCategoryPattern):
         return chk
 
     def to_regex(self):
-        result = []
+        result = [PATTERN.SPACES_BUT if self.leading else self.leading]
         for item in self._lst:
             is_category_pat_obj = isinstance(item, BaseCategoryPattern)
             pat = item.to_regex() if is_category_pat_obj else str(item)
             result.append(pat)
 
-        self.is_leading and self._lst.insert(NUMBER.ZERO, PATTERN.SPACES_BUT)
-        self.is_trailing and self._lst.append(PATTERN.SPACES_BUT)
+        result.append(PATTERN.SPACES_BUT if self.trailing else self.trailing)
 
         pattern = str.join(STRING.EMPTY, result)
         return pattern
@@ -2064,7 +2076,7 @@ class CategoryLinePattern(LData, BaseCategoryPattern):
             _snippet = item.to_template_snippet() if is_category_pat_obj else str(item)
             result.append(_snippet)
 
-        self._lst.append(self.trailing)
+        result.append(self.trailing)
 
         pattern = str.join(STRING.EMPTY, result)
         return pattern
@@ -2088,19 +2100,16 @@ class CategoryLinePattern(LData, BaseCategoryPattern):
         word = self.data[most_left_pos:most_right_pos]
         return word
 
-    def get_pair_of_separator(self):
-        if self.separator not in self.data:
-            first, last = self.data, STRING.EMPTY
-        else:
-            index = self.data.index(self.separator)
-            first = self.data[:index]
-            last = self.data[index + len(self.separator):].strip()
-        return first, last
+    def get_triple_by_separator(self):
+        v1, v2 = self.data.split(self.separator, maxsplit=1)
+        node1 = LData(v1)
+        node2 = LData(v2)
+        left = '%s%s' % (node1.leading, node1.data)
+        right = '%s%s' % (node2.data, node2.trailing)
+        separator = '%s%s%s' % (node1.trailing, self.separator, node2.leading)
+        return left, separator, right
 
-    def process(self):
-        if not self.count:
-            return
-
+    def raise_exception_if_not_category_pattern(self):
         if self.separator not in self.data:
             error = 'CategoryLinePatternError - data DOESNT have separator'
             raise Exception(error)
@@ -2122,16 +2131,24 @@ class CategoryLinePattern(LData, BaseCategoryPattern):
         is_ipv6 = is_ipv6 or bool(re.match(ipv6_pat, chk_word, re.I))
 
         if is_time or is_mac_addr or is_ipv6:
+            error = 'CategoryLinePatternError - unsupported var text'
+            raise Exception(error)
+
+    def process(self):
+        if not self.count:
             return
-        var_txt, remaining = self.get_pair_of_separator()
 
-        self._lst.append(TextPattern(var_txt.strip()))
-        self._lst.append(CategorySepPattern(' %s ' % self.separator.strip()))
+        self.raise_exception_if_not_category_pattern()
 
-        method = CategoryValuePattern.try_to_get_value
+        var_txt, whole_sep, remaining = self.get_triple_by_separator()
+
+        self._lst.append(CategoryLeftDataPattern(var_txt))
+        self._lst.append(CategorySepPattern(whole_sep))
+
+        method = CategoryRightDataPattern.try_to_get_value
         val, other_remaining = method(remaining, count=self.count - 1)
 
-        value_node = CategoryValuePattern(val, var_txt)
+        value_node = CategoryRightDataPattern(val, var_txt)
         self._lst.append(value_node)
 
         if other_remaining:
