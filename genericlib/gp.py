@@ -13,6 +13,23 @@ from genericlib import SYMBOL
 from genericlib import Misc
 
 from regexpro import TextPattern
+from templatepro import TemplateBuilder
+
+
+def get_textfsm_template(template_snippet, author='', email='',
+                         company='', description=''):
+    builder = TemplateBuilder(user_data=template_snippet, author=author,
+                              email=email, company=company, description=description)
+    textfsm_tmpl = builder.template
+    return textfsm_tmpl
+
+
+def verify(template_snippet, test_data,
+           expected_rows_count=None, expected_result=None):
+    builder = TemplateBuilder(user_data=template_snippet, test_data=test_data)
+    is_verified = builder.verify(expected_rows_count=expected_rows_count,
+                                 expected_result=expected_result)
+    return is_verified
 
 
 class LData:
@@ -1929,7 +1946,7 @@ class IterativeLinesPattern:
                 lst.append(r'[ \t\v]*')
 
         if lst:
-            pattern = str.join(r'(\r?\n|\r)', lst)
+            pattern = str.join(r'(%s)' % PATTERN.CRNL, lst)
             return pattern
         else:
             return STRING.EMPTY
@@ -2225,3 +2242,63 @@ class CategoryLinePattern(BaseCategoryPattern):
                     return
             except Exception as ex: # noqa
                 return
+
+
+class CategoryLinesPattern:
+    def __init__(self, *lines, options=None, count=1, separator=':' ):
+        self.lines = Misc.get_list_of_lines(*lines)
+        self.options = options or dict()
+        self.count = count
+        self.separator = separator
+        self.kwargs = dict(count=self.count, separator=self.separator)
+        self._lst = []
+        self.process()
+
+    @property
+    def is_category_format(self):
+        chk = any(isinstance(item, CategoryLinePattern) for item in self._lst)
+        return chk
+
+    def __len__(self):
+        chk = self.is_category_format
+        return chk
+
+    def process(self):
+        for index, line in enumerate(self.lines):
+            try:
+                kwargs = self.options.get(str(index), self.kwargs)
+                node = CategoryLinePattern(line, **kwargs)
+                if node.parsed:
+                    self._lst.append(node)
+                else:
+                    self._lst.append(line)
+            except Exception as ex: # noqa
+                self._lst.append(line)
+
+    def raise_exception_if_not_category_format(self):
+        if not self.is_category_format:
+            error = 'CategoryLinesFormatError - text is not category format'
+            raise Exception(error)
+
+    def to_regex(self):
+        self.raise_exception_if_not_category_format()
+
+        result = []
+        for item in self._lst:
+            if isinstance(item, CategoryLinePattern):
+                result.append(item.to_regex())
+            else:
+                result.append(TextPattern(item))
+        pattern = str.join('(%s)' % PATTERN.CRNL, result)
+        return pattern
+
+    def to_template_snippet(self):
+        self.raise_exception_if_not_category_format()
+        result = []
+        for item in self._lst:
+            if isinstance(item, CategoryLinePattern):
+                result.append(item.to_template_snippet())
+            else:
+                result.append(item)
+        tmpl_snippet = str.join(STRING.NEWLINE, result)
+        return tmpl_snippet

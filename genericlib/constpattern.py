@@ -19,7 +19,7 @@ class PATTERN:
     WHITESPACES = r'\s+'
     ZOWHITESPACES = r'\s*'
 
-    CRNL = r'[\r\n]'
+    CRNL = r'\r?\n|\r'
     CR_NL = CRNL
     MULTICRNL = r'[\r\n]+'
     ZOMULTICRNL = r'[\r\n]*'

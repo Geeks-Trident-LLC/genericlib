@@ -4,10 +4,14 @@ import re
 import pytest           # noqa
 from textwrap import dedent
 
+from genericlib.gp import verify
+from genericlib.gp import get_textfsm_template
+
 from genericlib.gp import DiffLinePattern
 from genericlib.gp import IterativeLinePattern
 from genericlib.gp import IterativeLinesPattern
 from genericlib.gp import CategoryLinePattern
+from genericlib.gp import CategoryLinesPattern
 
 from genericlib.gp import SnippetElement
 from genericlib.gp import EditingSnippet
@@ -431,18 +435,14 @@ class TestIterativeLinesPattern:
         tmpl_snippet = node.to_template_snippet()
         assert tmpl_snippet == expected_template_snippet
 
-        try:
-            test_data = lst_of_text[0]
-            from templatepro import TemplateBuilder
-            builder = TemplateBuilder(test_data=test_data, user_data=tmpl_snippet)
-            template = builder.template
-            template = re.sub(r'\d{4}-\d\d-\d\d', 'YYYY-mm-dd', template)
-            assert template == expected_template
-            is_verified = builder.verify(expected_rows_count=expected_rows_count,
-                                         expected_result=expected_result)
-            assert is_verified
-        except ModuleNotFoundError as ex:  # noqa
-            pass
+        template = get_textfsm_template(tmpl_snippet)
+        template = re.sub(r'\d{4}-\d\d-\d\d', 'YYYY-mm-dd', template)
+        assert template == expected_template
+
+        test_data = lst_of_text[0]
+        is_verified = verify(tmpl_snippet, test_data,
+                             expected_result=expected_result)
+        assert is_verified
 
 
 class TestCategoryLinePattern:
@@ -700,17 +700,139 @@ class TestCategoryLinePattern:
         tmpl_snippet = node.to_template_snippet()
         assert tmpl_snippet == expected_template_snippet
 
-        try:
-            test_data = line
-            from templatepro import TemplateBuilder
-            builder = TemplateBuilder(test_data=test_data, user_data=tmpl_snippet)
-            template = builder.template
-            template = re.sub(r'\d{4}-\d\d-\d\d', 'YYYY-mm-dd', template)
-            assert template == expected_template
-            is_verified = builder.verify(expected_result=expected_result)
-            assert is_verified
-        except ModuleNotFoundError as ex:     # noqa
-            pass
+        template = get_textfsm_template(tmpl_snippet)
+        template = re.sub(r'\d{4}-\d\d-\d\d', 'YYYY-mm-dd', template)
+        assert template == expected_template
+
+        test_data = line
+        is_verified = verify(tmpl_snippet, test_data,
+                             expected_result=expected_result)
+        assert is_verified
+
+
+class TestCategoryLinesPattern:
+    """Test class for CategoryLinesPattern"""
+
+    @pytest.mark.parametrize(
+        "test_data,expected_pattern,expected_result",
+        [
+            (
+                dedent("""
+                    fruits: orange, peach
+                    meat: pork
+                    drinks: water
+                """).strip(),
+                (r'fruits: *(?P<fruits>[\x21-\x7e]+( +[\x21-\x7e]+)+)(\r?\n|\r)'
+                 r'meat: *(?P<meat>[a-zA-Z]+)(\r?\n|\r)'
+                 r'drinks: *(?P<drinks>[a-zA-Z]+)'),
+                {'fruits': 'orange, peach', 'meat': 'pork', 'drinks': 'water'}
+            ),
+            (
+                dedent("""
+                    blab blab 1 - +++ ***
+                    fruits: orange, peach
+                    blab blab 2 - (?P<)
+                    meat: pork
+                    drinks: water
+                """).strip(),
+                (r'blab blab 1 - \+\+\+ \*\*\*(\r?\n|\r)'
+                 r'fruits: *(?P<fruits>[\x21-\x7e]+( +[\x21-\x7e]+)+)(\r?\n|\r)'
+                 r'blab blab 2 - \(\?P<\)(\r?\n|\r)'
+                 r'meat: *(?P<meat>[a-zA-Z]+)(\r?\n|\r)'
+                 r'drinks: *(?P<drinks>[a-zA-Z]+)'),
+                {'fruits': 'orange, peach', 'meat': 'pork', 'drinks': 'water'}
+            ),
+        ]
+    )
+    def test_to_regex(self, test_data, expected_pattern, expected_result):
+        node = CategoryLinesPattern(test_data)
+        pattern = node.to_regex()
+        assert pattern == expected_pattern
+        match = re.match(pattern, test_data)
+        if match:
+            result = match.groupdict()
+            assert result == expected_result
+        else:
+            assert False, 'No Match - Pattern is %r' % pattern
+
+    @pytest.mark.parametrize(
+        "test_data,expected_template_snippet,expected_template,expected_result",
+        [
+            (
+                dedent("""
+                    fruits: orange, peach
+                    meat: pork
+                    drinks: water
+                """).strip(),
+                dedent(r"""
+                    fruits: mixed_words(var_fruits)
+                    meat: letters(var_meat)
+                    drinks: letters(var_drinks)
+                """).strip(),
+                dedent(r"""
+                    ################################################################################
+                    # Template is generated by template Pro Edition
+                    # Created date: YYYY-mm-dd
+                    ################################################################################
+                    Value fruits (\S*[a-zA-Z0-9]\S*( \S*[a-zA-Z0-9]\S*)*)
+                    Value meat ([a-zA-Z]+)
+                    Value drinks ([a-zA-Z]+)
+                    
+                    Start
+                      ^fruits: ${fruits}
+                      ^meat: ${meat}
+                      ^drinks: ${drinks}
+                """).strip(),
+                [{'fruits': 'orange, peach', 'meat': 'pork', 'drinks': 'water'}]
+            ),
+            (
+                dedent("""
+                    blab blab 1 - +++ ***
+                    fruits: orange, peach
+                    blab blab 2 - (?P<)
+                    meat: pork
+                    drinks: water
+                """).strip(),
+                dedent(r"""
+                    blab blab 1 - +++ ***
+                    fruits: mixed_words(var_fruits)
+                    blab blab 2 - (?P<)
+                    meat: letters(var_meat)
+                    drinks: letters(var_drinks)
+                """).strip(),
+                dedent(r"""
+                    ################################################################################
+                    # Template is generated by template Pro Edition
+                    # Created date: YYYY-mm-dd
+                    ################################################################################
+                    Value fruits (\S*[a-zA-Z0-9]\S*( \S*[a-zA-Z0-9]\S*)*)
+                    Value meat ([a-zA-Z]+)
+                    Value drinks ([a-zA-Z]+)
+                    
+                    Start
+                      ^blab blab 1 - \+\+\+ \*\*\*
+                      ^fruits: ${fruits}
+                      ^blab blab 2 - \(\?P<\)
+                      ^meat: ${meat}
+                      ^drinks: ${drinks}
+                """).strip(),
+                [{'fruits': 'orange, peach', 'meat': 'pork', 'drinks': 'water'}]
+            ),
+        ]
+    )
+    def test_to_template_snippet(self, test_data, expected_template_snippet,
+                                 expected_template, expected_result):
+        node = CategoryLinesPattern(test_data)
+        tmpl_snippet = node.to_template_snippet()
+        assert tmpl_snippet == expected_template_snippet
+
+        template = get_textfsm_template(tmpl_snippet)
+        template = re.sub(r'\d{4}-\d\d-\d\d', 'YYYY-mm-dd', template)
+        assert template == expected_template
+
+        is_verified = verify(tmpl_snippet, test_data,
+                             expected_result=expected_result)
+        assert is_verified
 
 
 class TestSnippetElement:
