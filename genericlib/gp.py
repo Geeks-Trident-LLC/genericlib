@@ -2049,17 +2049,17 @@ class CategoryLinePattern(BaseCategoryPattern):
         return chk
 
     def to_regex(self):
-        result = [PATTERN.ZOSPACES if self.leading else self.leading]
+        result = [PATTERN.ZOSPACES if self.is_leading else STRING.EMPTY]
         prev_item = None
         for item in self._lst:
             pat = item.to_regex()
             if isinstance(item, CategoryRightDataPattern):
-                if item.is_empty and prev_item and not prev_item.trailing:
+                if item.is_empty and prev_item and not prev_item.is_trailing:
                     pat = '%s%s' % (PATTERN.ZOSPACES, pat)
             result.append(pat)
             prev_item = item
 
-        result.append(PATTERN.ZOSPACES if self.trailing else self.trailing)
+        result.append(PATTERN.ZOSPACES if self.is_trailing else STRING.EMPTY)
 
         pattern = str.join(STRING.EMPTY, result)
         return pattern
