@@ -1,7 +1,5 @@
 import re
 
-from collections import OrderedDict
-
 from itertools import combinations
 
 from difflib import ndiff
@@ -1955,11 +1953,11 @@ class IterativeLinesPattern:
         return template_snippet
 
 
-class BaseCategoryPattern:
+class BaseCategoryPattern(LData):
     pass
 
 
-class CategorySepPattern(LData, BaseCategoryPattern):
+class CategorySepPattern(BaseCategoryPattern):
     def __init__(self, sep):
         super().__init__(sep)
 
@@ -1974,77 +1972,70 @@ class CategorySepPattern(LData, BaseCategoryPattern):
 
 
 class CategorySpacerPattern(BaseCategoryPattern):
-    def __init__(self):
-        self.spacers = '  '
+    def __init__(self, is_empty=False):
+        super().__init__(STRING.EMPTY)
+        self.is_empty = is_empty
 
     def to_regex(self):
-        pattern = TextPattern(self.spacers)
+        pattern = PATTERN.SPACES_BUT if self.is_empty else PATTERN.SPACES
         return pattern
 
     def to_template_snippet(self):
-        return self.spacers
+        tmpl_snippet = 'spaces_but()' if self.is_empty else '  '
+        return tmpl_snippet
 
 
 class CategoryLeftDataPattern(BaseCategoryPattern):
 
     def __init__(self, data):
-        self.data = data
+        super().__init__(data)
 
     def to_regex(self):
-        pattern = TextPattern(self.data)
+        pattern = TextPattern(self.raw_data)
         return pattern
 
     def to_template_snippet(self):
-        return self.data
+        return self.raw_data
 
 
 class CategoryRightDataPattern(BaseCategoryPattern):
 
-    def __init__(self, value, var_txt):
-        self.value = value.strip()
+    def __init__(self, data, var_txt):
+        super().__init__(data)
         symbol_n_space_pat = '[ %s' % PATTERN.SYMBOLS[NUMBER.ONE:]
         self.var_name = re.sub(symbol_n_space_pat, '_', var_txt).strip('_')
 
+    @property
+    def is_empty(self):
+        chk = self.data == STRING.EMPTY
+        return chk
+
     def to_regex(self):
-        if self.value:
-            pat_obj = TranslatedPattern.do_factory_create(self.value)
+        if self.data:
+            pat_obj = TranslatedPattern.do_factory_create(self.data)
             pattern = pat_obj.get_regex_pattern(var=self.var_name)
         else:
-            pattern = '(?P<%s>.*)' % self.var_name
+            pattern = '(?P<%s>.*|)' % self.var_name
 
         return pattern
 
     def to_template_snippet(self):
-        if self.value:
-            pat_obj = TranslatedPattern.do_factory_create(self.value)
+        if self.data:
+            pat_obj = TranslatedPattern.do_factory_create(self.data)
             tmpl_snippet = pat_obj.get_template_snippet(var=self.var_name)
         else:
-            tmpl_snippet = 'anything_but(var_%s)' % self.var_name
+            tmpl_snippet = 'something(var_%s, or_empty)' % self.var_name
 
         return tmpl_snippet
 
-    @classmethod
-    def try_to_get_value(cls, data, count=0):
-        data = data.strip()
-        if not count:
-            return data, STRING.EMPTY
-        else:
-            try:
-                val, remaining = re.split(PATTERN.AT_LEAST_ONE_SPACES, data, maxsplit=1)
-                return val, remaining
-            except Exception as ex:     # noqa
-                try:
-                    val, remaining = re.split(PATTERN.SPACES, data, maxsplit=1)
-                    return val, remaining
-                except Exception as other_ex:   # noqa
-                    return data, STRING.EMPTY
 
-
-class CategoryLinePattern(LData, BaseCategoryPattern):
+class CategoryLinePattern(BaseCategoryPattern):
     def __init__(self, line, count=1, separator=':'):
         super().__init__(line)
         self.count = count
         self.separator = separator
+        self.left_data = STRING.EMPTY
+        self.right_data = STRING.EMPTY
         self._lst = []
         self.process()
 
@@ -2059,10 +2050,14 @@ class CategoryLinePattern(LData, BaseCategoryPattern):
 
     def to_regex(self):
         result = [PATTERN.SPACES_BUT if self.leading else self.leading]
+        prev_item = None
         for item in self._lst:
-            is_category_pat_obj = isinstance(item, BaseCategoryPattern)
-            pat = item.to_regex() if is_category_pat_obj else str(item)
+            pat = item.to_regex()
+            if isinstance(item, CategoryRightDataPattern):
+                if item.is_empty and prev_item and not prev_item.trailing:
+                    pat = '%s%s' % (PATTERN.SPACES_BUT, pat)
             result.append(pat)
+            prev_item = item
 
         result.append(PATTERN.SPACES_BUT if self.trailing else self.trailing)
 
@@ -2120,19 +2115,67 @@ class CategoryLinePattern(LData, BaseCategoryPattern):
             raise Exception(error)
 
         chk_word = self.get_word_by_pos(index)
+        if self.is_time_ipv6_or_mac_addr_format(chk_word):
+            error = 'CategoryLinePatternError - unsupported var text'
+            raise Exception(error)
 
+    def is_time_ipv6_or_mac_addr_format(self, data):    # noqa
         mac_pat = r'[a-f\d]{1,2}(:[a-f\d]{1,2}){2,5}'
         ipv6_pat = r'[a-f\d]{1,4}(:([a-f\d]{1,4})?)+:[a-f\d]{1,4}'
 
-        is_time = bool(re.search(r'\d+(:\d+)+', chk_word))
-        is_mac_addr = bool(re.match(mac_pat, chk_word, re.I))
-        is_ipv6 = chk_word.endswith('::') or chk_word.startswith('::')
+        is_time = bool(re.search(r'\d+(:\d+)+', data))
+        is_mac_addr = bool(re.match(mac_pat, data, re.I))
+        is_ipv6 = data.endswith('::') or data.startswith('::')
 
-        is_ipv6 = is_ipv6 or bool(re.match(ipv6_pat, chk_word, re.I))
+        is_ipv6 = is_ipv6 or bool(re.match(ipv6_pat, data, re.I))
+        chk = is_time or is_mac_addr or is_ipv6
+        return chk
 
-        if is_time or is_mac_addr or is_ipv6:
-            error = 'CategoryLinePatternError - unsupported var text'
-            raise Exception(error)
+    def try_to_get_value(self):
+        next_count = self.count - NUMBER.ONE
+        if not next_count or not self.right_data.strip():
+            return self.right_data, STRING.EMPTY
+        else:
+            try:
+                node = self(self.right_data, count=next_count, separator=self.separator)
+                left_data = node.left_data
+                pat = PATTERN.AT_LEAST_ONE_SPACES if '  ' in left_data else PATTERN.SPACES
+                if STRING.SPACE_CHAR in left_data:
+                    val, remaining = re.split(pat, self.right_data, maxsplit=1)
+                    return val, remaining
+                else:
+                    return STRING.EMPTY, self.right_data
+            except Exception as ex: # noqa
+                items = re.split(PATTERN.SPACES, self.right_data)
+                lst = []
+                for item in items:
+                    chk1 = item == self.separator
+                    chk2 = not self.is_time_ipv6_or_mac_addr_format(item)
+                    chk2 = chk2 and item.endswith(self.separator)
+                    lst.append(TextPattern(item))
+                    if chk1 and chk2:
+                        break
+                other_pat = str.join(PATTERN.SPACES, lst)
+                match = re.search(other_pat, self.right_data)
+                other_left = match.group()
+                other_remaining = self.right_data[len(other_left):]
+
+                if '  ' in other_left:
+                    pat = PATTERN.AT_LEAST_ONE_SPACES
+                    other_first, other_last = re.split(pat, other_left, maxsplit=1)
+                    return other_first, '%s%s' % (other_last, other_remaining)
+                else:
+                    lst.clear()
+                    for item in items:
+                        lst.append(item)
+                        if self.is_time_ipv6_or_mac_addr_format(item):
+                            break
+
+                    other_pat = str.join(PATTERN.SPACES, lst)
+                    match = re.search(other_pat, self.right_data)
+                    other_left = match.group()
+                    other_remaining = self.right_data[len(other_left):]
+                    return other_left, other_remaining
 
     def process(self):
         if not self.count:
@@ -2141,20 +2184,24 @@ class CategoryLinePattern(LData, BaseCategoryPattern):
         self.raise_exception_if_not_category_pattern()
 
         var_txt, whole_sep, remaining = self.get_triple_by_separator()
+        self.left_data = var_txt
+        self.right_data = remaining
 
         self._lst.append(CategoryLeftDataPattern(var_txt))
         self._lst.append(CategorySepPattern(whole_sep))
 
-        method = CategoryRightDataPattern.try_to_get_value
-        val, other_remaining = method(remaining, count=self.count - 1)
+        val, other_remaining = self.try_to_get_value()
 
         value_node = CategoryRightDataPattern(val, var_txt)
         self._lst.append(value_node)
 
         if other_remaining:
-            other_node = self(other_remaining, count=self.count-1)
-            if other_node.parsed:
-                self._lst.append(CategorySpacerPattern())
-                self._lst.append(other_node)
-            else:
+            try:
+                other_node = self(other_remaining, count=self.count-1)
+                if other_node.parsed:
+                    self._lst.append(CategorySpacerPattern())
+                    self._lst.append(other_node)
+                else:
+                    return
+            except Exception as ex: # noqa
                 return

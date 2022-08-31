@@ -474,6 +474,54 @@ class TestCategoryLinePattern:
                 r'fruits: *(?P<fruits>[a-zA-Z]+) +meat: *(?P<meat>[a-zA-Z]+) +drinks: *(?P<drinks>[a-zA-Z]+)',
                 {'fruits': 'orange', 'meat': 'pork', 'drinks': 'water'}
             ),
+            (
+                'fruits:   meat: ',
+                2,
+                r'fruits: *(?P<fruits>.*|) +meat: *(?P<meat>.*|) *',
+                {'fruits': '', 'meat': ''}
+            ),
+            (
+                'fruits:   meat:  drinks: ',
+                3,
+                r'fruits: *(?P<fruits>.*|) +meat: *(?P<meat>.*|) +drinks: *(?P<drinks>.*|) *',
+                {'fruits': '', 'meat': '', 'drinks': ''}
+            ),
+            (
+                'fruits:   meat: pork  drinks: ',
+                3,
+                r'fruits: *(?P<fruits>.*|) +meat: *(?P<meat>[a-zA-Z]+) +drinks: *(?P<drinks>.*|) *',
+                {'fruits': '', 'meat': 'pork', 'drinks': ''}
+            ),
+            (
+                'fruits:   meat: pork  drinks: water',
+                3,
+                r'fruits: *(?P<fruits>.*|) +meat: *(?P<meat>[a-zA-Z]+) +drinks: *(?P<drinks>[a-zA-Z]+)',
+                {'fruits': '', 'meat': 'pork', 'drinks': 'water'}
+            ),
+            (
+                'fruits: orange, peach  meat:   drinks: water',
+                3,
+                r'fruits: *(?P<fruits>[\x21-\x7e]+( +[\x21-\x7e]+)+) +meat: *(?P<meat>.*|) +drinks: *(?P<drinks>[a-zA-Z]+)',    # noqa
+                {'fruits': 'orange, peach', 'meat': '', 'drinks': 'water'}
+            ),
+            (
+                'time: 08:30:00 P.M.',
+                1,
+                r'time: *(?P<time>[\x21-\x7e]+( +[\x21-\x7e]+)+)',
+                {'time': '08:30:00 P.M.'}
+            ),
+            (
+                'time: 08:30:00 P.M.  mac_addr: 11:22:33:44:55:66',
+                2,
+                r'time: *(?P<time>[\x21-\x7e]+( +[\x21-\x7e]+)+) +mac_addr: *(?P<mac_addr>[\x21-\x7e]+)',
+                {'time': '08:30:00 P.M.', 'mac_addr': '11:22:33:44:55:66'}
+            ),
+            (
+                'time: 08:30:00 P.M.   ipv6: ::1234, 2000::ab, 2000::   mac_addr: 11:22:33:44:55:66',
+                3,
+                r'time: *(?P<time>[\x21-\x7e]+( +[\x21-\x7e]+)+) +ipv6: *(?P<ipv6>[\x21-\x7e]+( +[\x21-\x7e]+)+) +mac_addr: *(?P<mac_addr>[\x21-\x7e]+)',   # noqa
+                {'time': '08:30:00 P.M.', 'ipv6': '::1234, 2000::ab, 2000::', 'mac_addr': '11:22:33:44:55:66'}
+            ),
         ]
     )
     def test_to_regex(self, line, count, expected_pattern, expected_result, ):
@@ -500,7 +548,7 @@ class TestCategoryLinePattern:
                     # Created date: YYYY-mm-dd
                     ################################################################################
                     Value fruits (\S*[a-zA-Z0-9]\S*( \S*[a-zA-Z0-9]\S*)*)
-                    
+
                     Start
                       ^fruits: +${fruits}
                 """).strip(),
@@ -516,7 +564,7 @@ class TestCategoryLinePattern:
                     # Created date: YYYY-mm-dd
                     ################################################################################
                     Value total_fruit_s (\S*[a-zA-Z0-9]\S*( \S*[a-zA-Z0-9]\S*)*)
-                    
+
                     Start
                       ^total fruit\(s\): ${total_fruit_s}
                 """).strip(),
