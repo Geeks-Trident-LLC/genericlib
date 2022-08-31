@@ -1020,7 +1020,7 @@ class NDiffBaseText:
         self._is_common = False
         self._is_changed = False
 
-        if txt.startswith('  '):
+        if txt.startswith(STRING.DOUBLE_SPACES):
             self._lst.append(txt.lstrip(STRING.SPACE_CHAR))
             self._is_common = True
 
@@ -1076,7 +1076,7 @@ class NDiffBaseText:
 
     @classmethod
     def do_factory_create(cls, txt):
-        if txt.startswith('  '):
+        if txt.startswith(STRING.DOUBLE_SPACES):
             return NDiffCommonText(txt)
         else:
             changed_node = NDiffChangedText(txt)
@@ -1100,8 +1100,8 @@ class NDiffChangedText(NDiffBaseText):
             return False
 
     def get_pattern(self, var=''):
-        txt1 = '  '.join(self.lst)
-        txt2 = '  '.join(self.lst_other)
+        txt1 = str.join(STRING.DOUBLE_SPACES, self.lst)
+        txt2 = str.join(STRING.DOUBLE_SPACES, self.lst_other)
         if txt1 or txt2:
             args = [txt1, txt2] if txt1 and txt2 else [txt1] if txt1 else [txt2]
             translated_obj = TranslatedPattern.do_factory_create(*args)
@@ -1126,7 +1126,7 @@ class NDiffCommonText(NDiffBaseText):
         return name_
 
     def get_pattern(self, var=''):
-        txt = '  '.join(self.lst)
+        txt = str.join(STRING.DOUBLE_SPACES, self.lst)
         pattern = TextPattern(txt) if txt else STRING.EMPTY
         pattern = '(?P<%s>%s)' % (var, pattern) if var else pattern
         return pattern
@@ -1144,7 +1144,7 @@ class NDiffLinePattern:
         self._line_a = self.line_a.strip()
         self._line_b = self.line_b.strip()
 
-        self._pattern = ''
+        self._pattern = STRING.EMPTY
         self.process()
 
     def __len__(self):
@@ -1179,7 +1179,7 @@ class NDiffLinePattern:
             lst_a = re.split(PATTERN.SPACES, self._line_a)
             lst_b = re.split(PATTERN.SPACES, self._line_b)
             if lst_a == lst_b:
-                self._pattern = TextPattern('  '.join(lst_a))
+                self._pattern = TextPattern(str.join(STRING.DOUBLE_SPACES, lst_a))
                 if self.is_leading:
                     self._pattern = '%s%s' % (PATTERN.ZOSPACES, self._pattern)
                 if self.is_trailing:
@@ -1267,7 +1267,7 @@ class DiffLinePattern:
     def __init__(self, line1, line2, *other_lines):
         self.raw_lines = []
         self.lines = []
-        self._pattern = ''
+        self._pattern = STRING.EMPTY
         self.prepare(line1, line2, *other_lines)
         self.process()
 
@@ -1316,7 +1316,7 @@ class DiffLinePattern:
 
     def reset(self):
         self.lines.clear()
-        self._pattern = ''
+        self._pattern = STRING.EMPTY
 
     def prepare(self, line1, line2, *other_lines):
 
@@ -1595,11 +1595,11 @@ class SnippetElement:
 class EditingSnippet(LData):
     def __init__(self, editing_snippet):    # noqa
         self.data = editing_snippet
-        self.capture = ''
-        self.keep = ''
-        self.action = ''
-        self.raw_data = ''
-        self.snippet = ''
+        self.capture = STRING.EMPTY
+        self.keep = STRING.EMPTY
+        self.action = STRING.EMPTY
+        self.raw_data = STRING.EMPTY
+        self.snippet = STRING.EMPTY
         self.snippet_elements = []
 
         self.largest_index = 0
@@ -1981,7 +1981,7 @@ class CategorySpacerPattern(BaseCategoryPattern):
         return pattern
 
     def to_template_snippet(self):
-        tmpl_snippet = 'zospaces()' if self.is_empty else '  '
+        tmpl_snippet = 'zospaces()' if self.is_empty else STRING.DOUBLE_SPACES
         return tmpl_snippet
 
 
@@ -2139,7 +2139,7 @@ class CategoryLinePattern(BaseCategoryPattern):
             try:
                 node = self(self.right_data, count=next_count, separator=self.separator)
                 left_data = node.left_data
-                pat = PATTERN.ATLONESPACES if '  ' in left_data else PATTERN.SPACES
+                pat = PATTERN.ATLONESPACES if STRING.DOUBLE_SPACES in left_data else PATTERN.SPACES
                 if STRING.SPACE_CHAR in left_data:
                     val, remaining = re.split(pat, self.right_data, maxsplit=1)
                     return val, remaining
@@ -2160,7 +2160,7 @@ class CategoryLinePattern(BaseCategoryPattern):
                 other_left = match.group()
                 other_remaining = self.right_data[len(other_left):]
 
-                if '  ' in other_left:
+                if STRING.DOUBLE_SPACES in other_left:
                     pat = PATTERN.ATLONESPACES
                     other_first, other_last = re.split(pat, other_left, maxsplit=1)
                     return other_first, '%s%s' % (other_last, other_remaining)

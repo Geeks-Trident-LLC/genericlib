@@ -81,6 +81,7 @@ class STRING:
     FORWARD_FLASH = '/'
     EQUAL_SYMBOL = '='
     SPACE_CHAR = ' '
+    DOUBLE_SPACES = '  '
     DOT_CHAR = '.'
 
     CMDLINE = 'cmdline'
