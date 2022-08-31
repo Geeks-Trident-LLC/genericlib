@@ -49,11 +49,11 @@ class Wildcard:
             end = match.groupdict().get(STRING.END, STRING.EMPTY)
             middle = match.groupdict().get(STRING.MIDDLE, STRING.EMPTY)
             if start:
-                replaced = PATTERN.SPACES_BUT if len(start) > NUMBER.EIGHT else STRING.EMPTY
+                replaced = PATTERN.ZOSPACES if len(start) > NUMBER.EIGHT else STRING.EMPTY
             elif end:
-                replaced = PATTERN.SPACES_BUT if len(end) > NUMBER.EIGHT else STRING.EMPTY
+                replaced = PATTERN.ZOSPACES if len(end) > NUMBER.EIGHT else STRING.EMPTY
             else:
-                replaced = PATTERN.SPACES_BUT if len(middle) > NUMBER.EIGHT else STRING.EMPTY
+                replaced = PATTERN.ZOSPACES if len(middle) > NUMBER.EIGHT else STRING.EMPTY
             self._pattern = re.sub(p, replaced, self.data)
         else:
             method = self.parse_multiline if self.is_multiline else self.parse_line
@@ -70,7 +70,7 @@ class Wildcard:
             self._pattern = pattern
 
     def escape_data(self, data):        # noqa
-        if re.match(PATTERN.SPACES_AT_END_OF_STR, data):
+        if re.match(PATTERN.SPACESATEOS, data):
             return data if len(data) <= NUMBER.ONE else PATTERN.SPACES
 
         start = NUMBER.ZERO
@@ -85,7 +85,7 @@ class Wildcard:
                 lst.append(matched_data)
             else:
                 if last == SYMBOL.QUESTION_MARK:
-                    lst.append(PATTERN.ANYTHING_BUT)
+                    lst.append(PATTERN.ZOANYTHING)
                 elif last == SYMBOL.ASTERISK:
                     lst.append(PATTERN.SOMETHING)
                 elif last == SYMBOL.PLUS:
@@ -307,7 +307,7 @@ class Wildcard:
         line = data
         if not line:
             return STRING.EMPTY
-        elif re.match(PATTERN.SPACES_AT_END_OF_STR, line):
+        elif re.match(PATTERN.SPACESATEOS, line):
             return PATTERN.SPACES
 
         lst = []
@@ -347,7 +347,7 @@ class Wildcard:
         line = data
         if not line:
             return STRING.EMPTY
-        elif re.match(PATTERN.SPACES_AT_END_OF_STR, line):
+        elif re.match(PATTERN.SPACESATEOS, line):
             return PATTERN.SPACES
 
         lst = []
@@ -380,7 +380,7 @@ class Wildcard:
         return pattern
 
     def parse_data(self, data):
-        if re.match(PATTERN.SPACES_AT_END_OF_STR, data):
+        if re.match(PATTERN.SPACESATEOS, data):
             return data if len(data) <= NUMBER.ONE else PATTERN.SPACES
 
         start = NUMBER.ZERO
@@ -472,7 +472,7 @@ class Wildcard:
         line = data
         if not line:
             return STRING.EMPTY
-        elif re.match(PATTERN.SPACES_AT_END_OF_STR, line):
+        elif re.match(PATTERN.SPACESATEOS, line):
             return PATTERN.SPACES
 
         is_start_of_line = False
@@ -486,7 +486,7 @@ class Wildcard:
             is_end_of_line = True
 
         is_started_space = bool(re.match(PATTERN.SPACE, line))
-        is_ended_space = bool(re.search(PATTERN.SPACE_AT_END_OF_STR, line))
+        is_ended_space = bool(re.search(PATTERN.SPACEATEOS, line))
         line = line.strip()
 
         line = self.mark_posix_char_class(line)
@@ -512,9 +512,9 @@ class Wildcard:
 
     def parse_multiline(self, data):
         lst = []
-        for line in re.split(PATTERN.MULTI_CRNL, data):
+        for line in re.split(PATTERN.MULTICRNL, data):
             pat = self.parse_line(line)
             lst.append(pat)
 
-        pattern = PATTERN.MULTI_CRNL.join(lst)
+        pattern = PATTERN.MULTICRNL.join(lst)
         return pattern

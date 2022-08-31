@@ -31,7 +31,7 @@ class LData:
 
     @property
     def trailing(self):
-        match = re.search(PATTERN.SPACES_AT_END_OF_STR, self.raw_data)
+        match = re.search(PATTERN.SPACESATEOS, self.raw_data)
         return match.group() if match else STRING.EMPTY
 
     @property
@@ -1172,18 +1172,18 @@ class NDiffLinePattern:
         if self._line_a == self._line_b:
             self._pattern = TextPattern(self._line_a)
             if self.is_leading:
-                self._pattern = '%s%s' % (PATTERN.SPACES_BUT, self._pattern)
+                self._pattern = '%s%s' % (PATTERN.ZOSPACES, self._pattern)
             if self.is_trailing:
-                self._pattern = '%s%s' % (self._pattern, PATTERN.SPACES_BUT)
+                self._pattern = '%s%s' % (self._pattern, PATTERN.ZOSPACES)
         else:
             lst_a = re.split(PATTERN.SPACES, self._line_a)
             lst_b = re.split(PATTERN.SPACES, self._line_b)
             if lst_a == lst_b:
                 self._pattern = TextPattern('  '.join(lst_a))
                 if self.is_leading:
-                    self._pattern = '%s%s' % (PATTERN.SPACES_BUT, self._pattern)
+                    self._pattern = '%s%s' % (PATTERN.ZOSPACES, self._pattern)
                 if self.is_trailing:
-                    self._pattern = '%s%s' % (self._pattern, PATTERN.SPACES_BUT)
+                    self._pattern = '%s%s' % (self._pattern, PATTERN.ZOSPACES)
                 return True
         return False
 
@@ -1284,13 +1284,13 @@ class DiffLinePattern:
             if self.are_all_leading:
                 pattern = fmt % (PATTERN.SPACES, pattern)
             else:
-                pattern = fmt % (PATTERN.SPACES_BUT, pattern)
+                pattern = fmt % (PATTERN.ZOSPACES, pattern)
 
         if self.is_trailing:
             if self.are_all_trailing:
                 pattern = fmt % (pattern, PATTERN.SPACES)
             else:
-                pattern = fmt % (pattern, PATTERN.SPACES_BUT)
+                pattern = fmt % (pattern, PATTERN.ZOSPACES)
 
         return pattern
 
@@ -1365,12 +1365,12 @@ class DiffLinePattern:
         if is_both_leading:
             pattern = fmt % (PATTERN.SPACES, pattern)
         elif is_leading:
-            pattern = fmt % (PATTERN.SPACES_BUT, pattern)
+            pattern = fmt % (PATTERN.ZOSPACES, pattern)
 
         if is_both_trailing:
             pattern = fmt % (pattern, PATTERN.SPACES)
         elif is_trailing:
-            pattern = fmt % (pattern, PATTERN.SPACES_BUT)
+            pattern = fmt % (pattern, PATTERN.ZOSPACES)
 
         return pattern
 
@@ -1555,7 +1555,7 @@ class SnippetElement:
 
             if self.is_empty:
                 if self.trailing:
-                    if re.match(PATTERN.SPACES_AT_END_OF_STR, self.trailing):
+                    if re.match(PATTERN.SPACESATEOS, self.trailing):
                         pat = '(%s)?(%s)?' % (pat, TextPattern(self.trailing))
                     else:
                         pat = '(%s)?%s' % (pat, TextPattern(self.trailing))
@@ -1811,10 +1811,10 @@ class EditingSnippet(LData):
             STRING.EMPTY, [elmt.to_regex() for elmt in self.snippet_elements]
         )
         if self.is_leading:
-            pattern = '%s%s' % (PATTERN.SPACES_BUT, pattern)
+            pattern = '%s%s' % (PATTERN.ZOSPACES, pattern)
 
         if self.is_trailing:
-            pattern = '%s%s' % (pattern, PATTERN.SPACES_BUT)
+            pattern = '%s%s' % (pattern, PATTERN.ZOSPACES)
 
         return pattern
 
@@ -1823,10 +1823,10 @@ class EditingSnippet(LData):
             STRING.EMPTY, [elmt.to_template_snippet() for elmt in self.snippet_elements]
         )
         if self.is_leading:
-            tmpl_snippet = '%s%s' % (PATTERN.SPACES_BUT, tmpl_snippet)
+            tmpl_snippet = '%s%s' % (PATTERN.ZOSPACES, tmpl_snippet)
 
         if self.is_trailing:
-            tmpl_snippet = '%s%s' % (tmpl_snippet, PATTERN.SPACES_BUT)
+            tmpl_snippet = '%s%s' % (tmpl_snippet, PATTERN.ZOSPACES)
 
         return tmpl_snippet
 
@@ -1977,11 +1977,11 @@ class CategorySpacerPattern(BaseCategoryPattern):
         self.is_empty = is_empty
 
     def to_regex(self):
-        pattern = PATTERN.SPACES_BUT if self.is_empty else PATTERN.SPACES
+        pattern = PATTERN.ZOSPACES if self.is_empty else PATTERN.SPACES
         return pattern
 
     def to_template_snippet(self):
-        tmpl_snippet = 'spaces_but()' if self.is_empty else '  '
+        tmpl_snippet = 'zospaces()' if self.is_empty else '  '
         return tmpl_snippet
 
 
@@ -2049,17 +2049,17 @@ class CategoryLinePattern(BaseCategoryPattern):
         return chk
 
     def to_regex(self):
-        result = [PATTERN.SPACES_BUT if self.leading else self.leading]
+        result = [PATTERN.ZOSPACES if self.leading else self.leading]
         prev_item = None
         for item in self._lst:
             pat = item.to_regex()
             if isinstance(item, CategoryRightDataPattern):
                 if item.is_empty and prev_item and not prev_item.trailing:
-                    pat = '%s%s' % (PATTERN.SPACES_BUT, pat)
+                    pat = '%s%s' % (PATTERN.ZOSPACES, pat)
             result.append(pat)
             prev_item = item
 
-        result.append(PATTERN.SPACES_BUT if self.trailing else self.trailing)
+        result.append(PATTERN.ZOSPACES if self.trailing else self.trailing)
 
         pattern = str.join(STRING.EMPTY, result)
         return pattern
@@ -2139,7 +2139,7 @@ class CategoryLinePattern(BaseCategoryPattern):
             try:
                 node = self(self.right_data, count=next_count, separator=self.separator)
                 left_data = node.left_data
-                pat = PATTERN.AT_LEAST_ONE_SPACES if '  ' in left_data else PATTERN.SPACES
+                pat = PATTERN.ATLONESPACES if '  ' in left_data else PATTERN.SPACES
                 if STRING.SPACE_CHAR in left_data:
                     val, remaining = re.split(pat, self.right_data, maxsplit=1)
                     return val, remaining
@@ -2161,7 +2161,7 @@ class CategoryLinePattern(BaseCategoryPattern):
                 other_remaining = self.right_data[len(other_left):]
 
                 if '  ' in other_left:
-                    pat = PATTERN.AT_LEAST_ONE_SPACES
+                    pat = PATTERN.ATLONESPACES
                     other_first, other_last = re.split(pat, other_left, maxsplit=1)
                     return other_first, '%s%s' % (other_last, other_remaining)
                 else:

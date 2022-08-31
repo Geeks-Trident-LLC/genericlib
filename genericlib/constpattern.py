@@ -2,27 +2,27 @@
 class PATTERN:
 
     ANYTHING = '.'
-    ANYTHING_BUT = '.?'
+    ZOANYTHING = '.?'
     SOMETHING = '.*'
     EVERYTHING = '.+'
 
     SPACE = ' '
     SPACES = ' +'
-    MORE_THAN_ONE_SPACES = '  +'
-    AT_LEAST_ONE_SPACES = '  +'
-    SPACE_BUT = ' ?'
-    SPACES_BUT = ' *'
-    SPACE_AT_END_OF_STR = ' $'
-    SPACES_AT_END_OF_STR = ' +$'
+    MTONESPACES = '  +'
+    ATLONESPACES = '  +'
+    ZOSPACE = ' ?'
+    ZOSPACES = ' *'
+    SPACEATEOS = ' $'
+    SPACESATEOS = ' +$'
 
     WHITESPACE = r'\s'
     WHITESPACES = r'\s+'
-    WHITESPACES_BUT = r'\s*'
+    ZOWHITESPACES = r'\s*'
 
     CRNL = r'[\r\n]'
     CR_NL = CRNL
-    MULTI_CRNL = r'[\r\n]+'
-    MULTI_CRNL_BUT = r'[\r\n]*'
+    MULTICRNL = r'[\r\n]+'
+    ZOMULTICRNL = r'[\r\n]*'
 
     DIGIT = '[0-9]'
     DIGITS = '%s+' % DIGIT
