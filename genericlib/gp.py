@@ -2051,6 +2051,7 @@ class CategoryLinePattern(BaseCategoryPattern):
     def to_regex(self):
         result = [PATTERN.ZOSPACES if self.is_leading else STRING.EMPTY]
         prev_item = None
+        is_last_item_empty = False
         for item in self._lst:
             pat = item.to_regex()
             if isinstance(item, CategoryRightDataPattern):
@@ -2058,23 +2059,42 @@ class CategoryLinePattern(BaseCategoryPattern):
                     pat = '%s%s' % (PATTERN.ZOSPACES, pat)
             result.append(pat)
             prev_item = item
+        else:
+            if isinstance(item, CategoryRightDataPattern) and item.is_empty:
+                is_last_item_empty = True
 
-        result.append(PATTERN.ZOSPACES if self.is_trailing else STRING.EMPTY)
+        if is_last_item_empty:
+            result.append(PATTERN.ZOSPACES if self.is_trailing else STRING.EMPTY)
 
         pattern = str.join(STRING.EMPTY, result)
+        replaced_pat = r'( +)(something[\(]var_\w+, or_empty[\)])'
+        pattern = re.sub(replaced_pat, r'zospaces()\2', pattern)
+
         return pattern
 
     def to_template_snippet(self):
         result = [self.leading]
+        prev_item = None
+        item = None
+        is_last_item_empty = False
         for item in self._lst:
-            is_category_pat_obj = isinstance(item, BaseCategoryPattern)
-            _snippet = item.to_template_snippet() if is_category_pat_obj else str(item)
+            _snippet = item.to_template_snippet()
+            if isinstance(item, CategoryRightDataPattern):
+                if item.is_empty and prev_item and not prev_item.is_trailing:
+                    _snippet = 'zospaces()%s' % _snippet
             result.append(_snippet)
+            prev_item = item
+        else:
+            if isinstance(item, CategoryRightDataPattern) and item.is_empty:
+                is_last_item_empty = True
 
-        result.append(self.trailing)
+        is_last_item_empty and result.append(self.trailing)
 
-        pattern = str.join(STRING.EMPTY, result)
-        return pattern
+        tmpl_snippet = str.join(STRING.EMPTY, result)
+        replaced_pat = r'( +)(something[\(]var_\w+, or_empty[\)])'
+        tmpl_snippet = re.sub(replaced_pat, r'zospaces()\2', tmpl_snippet)
+
+        return tmpl_snippet
 
     def get_remaining_chars_by_pos(self, char_pos, direction='right'):
 
