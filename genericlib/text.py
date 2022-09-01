@@ -1,4 +1,5 @@
-from time import time
+# from time import time
+from .constant import STRING
 
 
 class BaseText(str):
@@ -57,7 +58,7 @@ class Text(BaseText):
         tag = str(tag).strip()
         attributes = [str(arg).strip() for arg in args if str(arg).strip()]
         if attributes:
-            attrs_txt = ' '.join(attributes)
+            attrs_txt = str.join(STRING.SPACE_CHAR, attributes)
             if data.strip():
                 result = '<{0} {1}>{2}</{0}>'.format(tag, attrs_txt, data)
             else:

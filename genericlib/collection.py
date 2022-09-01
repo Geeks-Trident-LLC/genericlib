@@ -2,7 +2,8 @@
 import re
 from copy import deepcopy
 
-from genericlib.constnum import NUMBER
+from .constnum import NUMBER
+from .constant import STRING
 
 
 class DictObject(dict):
@@ -83,9 +84,9 @@ def substitute_variable(data, root_var_name='self'):
                 else:
                     if lst:
                         lst.append(line[start:])
-                        lines[index] = ''.join(lst)
+                        lines[index] = str.join(STRING.EMPTY, lst)
 
-        new_txt = '\n'.join(lines)
+        new_txt = str.join(STRING.NEWLINE, lines)
         return new_txt
 
     def substitute(node, variables_):

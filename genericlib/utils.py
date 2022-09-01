@@ -108,7 +108,7 @@ class Printer:
         if failure_msg:
             result.append(failure_msg)
 
-        txt = '\n'.join(result)
+        txt = str.join(STRING.NEWLINE, result)
         return txt
 
     @classmethod
@@ -324,7 +324,7 @@ class Misc:
 
         sep = kwargs.get('separator', '')
         sep = kwargs.get('sep', sep)
-        return sep.join(str(item) for item in args)
+        return str.join(sep, [str(item) for item in args])
 
     @classmethod
     def indent_string(cls, *args, width=2):
@@ -334,7 +334,7 @@ class Misc:
             item = item or ''
             lst.extend(str(item).splitlines())
 
-        data = '\n'.join(lst)
+        data = str.join(STRING.NEWLINE, lst)
         result = indent(data, ' ' * width)
         return result
 
@@ -352,8 +352,8 @@ class Misc:
 
         lines = cls.indent_string(*args, width=0).splitlines()
         pprint(lines)
-        txt1 = indent('\n'.join(lines[:start_pos]), ' ' * width)
-        txt2 = indent('\n'.join(lines[start_pos:]), ' ' * other_width)
+        txt1 = indent(str.join(STRING.NEWLINE, lines[:start_pos]), ' ' * width)
+        txt2 = indent(str.join(STRING.NEWLINE, lines[start_pos:]), ' ' * other_width)
         result = '%s\n%s' % (txt1, txt2)
         return result
 
@@ -369,7 +369,7 @@ class Misc:
         if not cls.is_string(data):
             return data
         else:
-            new_data = '\n'.join(data.splitlines()[1:])
+            new_data = str.join(STRING.NEWLINE, data.splitlines()[1:])
             return new_data
 
     @classmethod
@@ -703,7 +703,7 @@ class Tabular:
             width = width_tbl.get(col)
             new_col = self.align_string(col, width)
             lst.append(new_col)
-        return '| {} |'.format(' | '.join(lst))
+        return '| {} |'.format(str.join(' | ', lst))
 
     def build_tabular_string(self, columns, width_tbl):
         """Build data to tabular format
@@ -725,9 +725,9 @@ class Tabular:
                 width = width_tbl.get(col)
                 new_val = self.align_string(val, width)
                 lst.append(new_val)
-            lst_of_str.append('| {} |'.format(' | '.join(lst)))
+            lst_of_str.append('| {} |'.format(str.join(' | ', lst)))
 
-        return '\n'.join(lst_of_str)
+        return str.join(STRING.NEWLINE, lst_of_str)
 
     def process(self):
         """Process data to tabular format."""
@@ -739,12 +739,12 @@ class Tabular:
             columns = self.columns or keys
             width_tbl = self.build_width_table(columns)
             deco = ['-' * width_tbl.get(c) for c in columns]
-            deco_str = '+-{}-+'.format('-+-'.join(deco))
+            deco_str = '+-{}-+'.format(str.join('-+-', deco))
             headers_str = self.build_headers_string(columns, width_tbl)
             tabular_data = self.build_tabular_string(columns, width_tbl)
 
             lst = [deco_str, headers_str, deco_str, tabular_data, deco_str]
-            self.result = '\n'.join(lst)
+            self.result = str.join(STRING.NEWLINE, lst)
             self.is_tabular = True
         except Exception as ex:
             self.failure = '{}: {}'.format(type(ex).__name__, ex)

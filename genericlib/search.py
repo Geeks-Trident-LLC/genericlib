@@ -101,7 +101,7 @@ class Wildcard:
         else:
             lst.append(data)
 
-        pattern = STRING.EMPTY.join(lst)
+        pattern = str.join(STRING.EMPTY, lst)
         return pattern
 
     def get_pattern_for_two_unsigned_int(self, v1, v2):     # noqa
@@ -249,7 +249,7 @@ class Wildcard:
                 else:
                     is_empty_item = True
             if lst:
-                pattern = '(%s)' % SYMBOL.VERTICAL_LINE.join(lst)
+                pattern = '(%s)' % str.join(SYMBOL.VERTICAL_LINE, lst)
                 pattern = '%s?' % pattern if is_empty_item else pattern
                 return pattern
             else:
@@ -298,7 +298,7 @@ class Wildcard:
             else:
                 escaped_txt = self.escape_data(data)
                 lst.append(escaped_txt)
-            data = STRING.EMPTY.join(lst)
+            data = str.join(STRING.EMPTY, lst)
         else:
             data = self.escape_data(data)
         return data
@@ -338,7 +338,7 @@ class Wildcard:
             parsed_txt = self.replace_whitespace(parsed_txt)
             lst.append(parsed_txt)
 
-        pattern = STRING.EMPTY.join(lst)
+        pattern = str.join(STRING.EMPTY, lst)
 
         return pattern
 
@@ -375,7 +375,7 @@ class Wildcard:
             parsed_txt = self.replace_whitespace(parsed_txt)
             lst.append(parsed_txt)
 
-        pattern = STRING.EMPTY.join(lst)
+        pattern = str.join(STRING.EMPTY, lst)
 
         return pattern
 
@@ -403,7 +403,7 @@ class Wildcard:
             parsed_data = self.parse_curly_bracket(data)
             lst.append(parsed_data)
 
-        pattern = STRING.EMPTY.join(lst)
+        pattern = str.join(STRING.EMPTY, lst)
         return pattern
 
     def mark_posix_char_class(self, line):      # noqa
@@ -463,7 +463,7 @@ class Wildcard:
         if lst:
             post_matched = line[item.end():]
             lst.append(post_matched)
-            pattern = STRING.EMPTY.join(lst)
+            pattern = str.join(STRING.EMPTY, lst)
             return pattern
         else:
             return line
@@ -516,5 +516,5 @@ class Wildcard:
             pat = self.parse_line(line)
             lst.append(pat)
 
-        pattern = PATTERN.MULTICRNL.join(lst)
+        pattern = str.join(PATTERN.MULTICRNL, lst)
         return pattern

@@ -1260,7 +1260,7 @@ class NDiffLinePattern:
                     else:
                         pat = item.get_pattern()
                         result.append(pat)
-            pattern = STRING.EMPTY.join(result)
+            pattern = str.join(STRING.EMPTY, result)
             return pattern
 
     def analyze_and_parse_diff_case(self):
@@ -1354,7 +1354,7 @@ class DiffLinePattern:
             lst = ['Line 1: %r' % line1, 'Line 2: %r' % line2]
             if other_lines:
                 lst.append('Other Lines: %r' % other_lines)
-            error = fmt % '\n'.join(lst)
+            error = fmt % str.join(STRING.NEWLINE, lst)
             raise Exception(error)
         else:
             self.reset()
@@ -1418,7 +1418,7 @@ class DiffLinePattern:
                 return
 
         fmt = 'DiffLinePatternError - built pattern(s) did not match text\n  %s'
-        error = fmt % '\n  '.join(repr(item) for item in lst)
+        error = fmt % str.join('\n  ', [repr(item) for item in lst])
         raise Exception(error)
 
 
@@ -1872,7 +1872,7 @@ class IterativeLinePattern(LData):
             if index < len(spaces):
                 lst.append(spaces[index])
 
-        snippet = STRING.EMPTY.join(lst)
+        snippet = str.join(STRING.EMPTY, lst)
         fmt = 'capture() keep() action(): %s%s%s'
         editing_snippet = fmt % (self.leading, snippet, self.trailing)
         return editing_snippet
@@ -1966,7 +1966,7 @@ class IterativeLinesPattern:
                      'because no captured variable is created')
             raise Exception(error)
 
-        template_snippet = str.join('\n', lst)
+        template_snippet = str.join(STRING.NEWLINE, lst)
         return template_snippet
 
 

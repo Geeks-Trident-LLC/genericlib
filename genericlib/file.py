@@ -15,6 +15,8 @@ from genericlib import Text
 from genericlib import DotObject
 from genericlib import substitute_variable
 
+from .constant import STRING
+
 
 def try_to_call(func):
     """Wrap the classmethod and return False if on_failure is false.
@@ -429,7 +431,7 @@ class File:
         cls.on_failure = on_failure
 
         if isinstance(data, list):
-            content = '\n'.join(str(item) for item in data)
+            content = str.join(STRING.NEWLINE, [str(item) for item in data])
         else:
             content = str(data)
 
