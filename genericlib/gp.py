@@ -202,7 +202,7 @@ class TranslatedPattern:
                 if self.is_plural() and other.is_plural():
                     return self.data
                 else:
-                    result = self.data.split(STRING.SPACE_CHAR)[NUMBER.ZERO]
+                    result = str.split(self.data, STRING.SPACE_CHAR)[NUMBER.ZERO]
                     return result
         else:
             return self.data
@@ -1449,7 +1449,7 @@ class SnippetElement:
             if matched_txt.isdigit():
                 result = int(matched_txt)
             else:
-                first, last = matched_txt.split('_', 1)
+                first, last = str.split(matched_txt, STRING.UNDERSCORE_CHAR, maxsplit=1)
                 result = int(first) * NUMBER.TEN + int(last)
 
             return result
@@ -1673,14 +1673,14 @@ class EditingSnippet(LData):
         grp = re.split('[_-]join', action_op, re.I)[NUMBER.ZERO]
 
         if re.match(r'\d+:\d+$', grp):
-            first, last = grp.split(':', NUMBER.ONE)
+            first, last = str.split(grp, STRING.COLON_CHAR, maxsplit=NUMBER.ONE)
             var_names = ['v%s' % i for i in range(int(first), int(last) + 1)]
             if not var_names:
                 fmt = 'EditingSnippetActionJoinError - Invalid range (%s)'
                 error = fmt % action_op
                 raise Exception(error)
         elif re.match(r'\w+(,\w+)*', grp):
-            var_names = ['v%s' % i if i.isdigit() else i for i in grp.split(',')]
+            var_names = ['v%s' % i if str.isdigit(i) else i for i in str.split(grp, STRING.COMMA_CHAR)]
 
         first_index, first_node = self.find_element(var_names[NUMBER.ZERO]) # noqa
         if first_index >= NUMBER.ZERO:
@@ -1749,7 +1749,7 @@ class EditingSnippet(LData):
             item = re.sub('[_-]?or([_-]empty)?', STRING.EMPTY, item, re.I)
 
             if re.match(r'\d+:\d+$', item):
-                first, last = item.split(':', NUMBER.ONE)
+                first, last = str.split(item, STRING.COLON_CHAR, maxsplit=NUMBER.ONE)
                 var_names = ['v%s' % i for i in range(int(first), int(last) + 1)]
                 if not var_names:
                     fmt = 'EditingSnippetActionKeepError - Invalid range (%s)'
@@ -2133,7 +2133,7 @@ class CategoryLinePattern(BaseCategoryPattern):
         return word
 
     def get_triple_by_separator(self):
-        v1, v2 = self.data.split(self.separator, maxsplit=1)
+        v1, v2 = str.split(self.data, self.separator, maxsplit=1)
         node1 = LData(v1)
         node2 = LData(v2)
         left = '%s%s' % (node1.leading, node1.data)

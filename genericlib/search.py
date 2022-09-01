@@ -242,7 +242,7 @@ class Wildcard:
         elif match3:
             is_empty_item = False
             lst = []
-            for item in data[SLICE.FIRST_TO_LAST].split(SYMBOL.COMMA):
+            for item in str.split(data[SLICE.FIRST_TO_LAST], SYMBOL.COMMA):
                 if item:
                     escaped_txt = self.escape_data(item)
                     lst.append(escaped_txt)

@@ -83,6 +83,9 @@ class STRING:
     SPACE_CHAR = ' '
     DOUBLE_SPACES = '  '
     DOT_CHAR = '.'
+    UNDERSCORE_CHAR = '_'
+    COLON_CHAR = ':'
+    COMMA_CHAR = ','
 
     CMDLINE = 'cmdline'
     CMDLINES = 'cmdlines'
