@@ -69,3 +69,11 @@ class Text(BaseText):
             else:
                 result = '<{0}/>'.format(tag)
         return result
+
+
+def get_generic_error_msg(instance, fmt, *other):
+    args = ['%sError' % instance.__class__.__name__]
+    args.extend(other)
+    new_fmt = '%%s - %s' % fmt
+    err_msg = new_fmt % tuple(args)
+    return err_msg
