@@ -2302,3 +2302,28 @@ class CategoryLinesPattern:
                 result.append(item)
         tmpl_snippet = str.join(STRING.NEWLINE, result)
         return tmpl_snippet
+
+
+class TabularTextPattern:
+    def __init__(self, *lines, columns_count=1):
+        self.lines = Misc.get_list_of_lines(*lines)
+        self.columns_count = columns_count
+        self.process()
+
+    def __len__(self):
+        chk = True
+        return chk
+
+    def process(self):
+        pass
+
+    def raise_exception_if_not_ready(self):
+        if not self:
+            error = 'TabularTextPatternError - text is not tabular data'
+            raise Exception(error)
+
+    def to_regex(self):
+        self.raise_exception_if_not_ready()
+
+    def to_template_snippet(self):
+        self.raise_exception_if_not_ready()
