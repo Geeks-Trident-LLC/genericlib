@@ -242,6 +242,24 @@ class TestMisc:
         assert Misc.join_string('Jack', 'Brown', sep=' ') == 'Jack Brown'
         assert Misc.join_string('Jack', 'Brown', separator='.') == 'Jack.Brown'
 
+    def test_get_instance_class_name(self):
+        class Foo:
+            pass
+
+        class Bar:
+            pass
+
+        class FooBar(Foo, Bar):
+            pass
+
+        foo = Foo()
+        bar = Bar()
+        foobar = FooBar()
+
+        assert Misc.get_instance_class_name(foo) == 'Foo'
+        assert Misc.get_instance_class_name(bar) == 'Bar'
+        assert Misc.get_instance_class_name(foobar) == 'FooBar'
+
 
 class TestMiscOutput:
 

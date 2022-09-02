@@ -344,14 +344,12 @@ class Misc:
         start_pos = start_pos if start_pos >= 0 else 0
         other_width = other_width if other_width > width else width
 
-        print(other_width)
-
         if start_pos == 0 or other_width == width:
             result = cls.indent_string(*args, width=width)
             return result
 
         lines = cls.indent_string(*args, width=0).splitlines()
-        pprint(lines)
+
         txt1 = indent(str.join(STRING.NEWLINE, lines[:start_pos]), ' ' * width)
         txt2 = indent(str.join(STRING.NEWLINE, lines[start_pos:]), ' ' * other_width)
         result = '%s\n%s' % (txt1, txt2)
@@ -469,8 +467,7 @@ class Misc:
 
     @classmethod
     def get_instance_class_name(cls, obj):
-        cls_obj = type(obj)
-        cls_name = cls_obj.__class__.__name__
+        cls_name = obj.__class__.__name__
         return cls_name
 
     @classmethod
