@@ -4,6 +4,7 @@ from genericlib import Printer
 from genericlib import File
 from genericlib import Misc
 from genericlib import MiscOutput
+from genericlib import MiscObject
 from genericlib import get_data_as_tabular
 
 TEST_DATA = File.get_result_from_yaml_file(
@@ -315,3 +316,42 @@ class TestMiscOutput:
 def test_get_data_as_tabular(data, columns, justify, missing, expected_result):
     result = get_data_as_tabular(data, columns=columns, justify=justify, missing=missing)
     assert result == expected_result
+
+
+class TestMiscObject:
+    @pytest.mark.parametrize(
+        "data,expected_result",
+        [
+            ([1, 2], [True, True]),
+            ([dict(item1=1, item2=2), dict(item3=3, item4=4)], [True, True]),
+
+        ]
+    )
+    def test_copy(self, data, expected_result):
+        new_data = MiscObject.copy(data)
+        equality_chk = new_data == data
+        identity_chk = id(new_data) != id(data)
+        result = [equality_chk, identity_chk]
+        assert result == expected_result
+
+    @pytest.mark.parametrize(
+        "data,expected_result",
+        [
+            (
+                [
+                    {'key1': 'item 1', 'key2': '  item2  '},
+                    {'key1': 'other item1', 'key2': ' other item 2'}
+                ],
+                [
+                    {'key1': 'item 1', 'key2': 'item2'},
+                    {'key1': 'other item1', 'key2': 'other item 2'}
+                ]
+            ),
+        ]
+    )
+    def test_cleanup_list_of_dict(self, data, expected_result):
+        result = MiscObject.cleanup_list_of_dict(data)
+        assert result == expected_result
+
+
+

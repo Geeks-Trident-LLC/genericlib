@@ -574,6 +574,24 @@ class MiscObject:
             new_instance = copy.copy(instance)
         return new_instance
 
+    @classmethod
+    def cleanup_list_of_dict(cls, lst_of_dict):
+        if not Misc.is_list(lst_of_dict):
+            return lst_of_dict
+        lst = []
+        for node in lst_of_dict:
+            if Misc.is_dict(node):
+                new_node = dict()
+                for key, val in node.items():
+                    if Misc.is_string(val):
+                        new_node[key] = str.strip(val)
+                    else:
+                        new_node[key] = cls.copy(val)
+                lst.append(new_node)
+            else:
+                lst.append(cls.copy(node))
+        return lst
+
 
 class Tabular:
     """Construct Tabular Format
