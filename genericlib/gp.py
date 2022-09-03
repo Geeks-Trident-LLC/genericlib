@@ -11,9 +11,12 @@ from genericlib import TEXT
 from genericlib import SYMBOL
 
 from genericlib import Misc
+from genericlib import DotObject
 
 from regexpro import TextPattern
 from templatepro import TemplateBuilder
+
+from .text import get_generic_error_msg
 
 
 def get_textfsm_template(template_snippet, author='', email='',
@@ -2305,25 +2308,99 @@ class CategoryLinesPattern:
 
 
 class TabularTextPattern:
-    def __init__(self, *lines, columns_count=1):
+    def __init__(self, *lines, col_widths_as_ref='', separator_as_ref='',
+                 symbols_group_as_ref=False, lines_as_col_names='',
+                 skipped_symbol_line=True):
         self.lines = Misc.get_list_of_lines(*lines)
-        self.columns_count = columns_count
+        self.kwargs = DotObject(
+            col_widths_as_ref=col_widths_as_ref,
+            separator_as_ref=str(separator_as_ref),
+            symbols_group_as_ref=str(symbols_group_as_ref),
+            lines_as_col_names=lines_as_col_names,
+            skipped_symbol_line=skipped_symbol_line
+        )
+        self.columns_widths = []
+        self.columns_widths_snippet = STRING.EMPTY
+        self.sep_snippet = STRING.EMPTY
+        self.symbols_group_snippet = STRING.EMPTY
         self.process()
 
     def __len__(self):
-        chk = True
+        chk = bool(self.columns_widths_snippet or
+                   self.sep_snippet or
+                   self.symbols_group_snippet)
         return chk
 
+    @property
+    def longest_line_length(self):
+        max_len = max(len(line) for line in self.lines)
+        return max_len
+
+    def prepare_columns_width(self):
+        error = get_generic_error_msg(self, 'col_widths_as_ref MUST BE string/list '
+                                            'datatype of group of digit(s)')
+        data = self.kwargs.col_widths_as_ref
+        if not data:
+            return
+
+        if Misc.is_string(data) or Misc.is_list(data):
+            if Misc.is_string():
+                pat = '(?: *, *)|(?: +)'
+                lst = [item or '0' for item in re.split(pat, str.strip(data))]
+            else:
+                lst = [str(item) for item in data]
+
+            chk = all(str(item).isdigit() for item in lst)
+            if chk:
+                self.columns_widths = [int(item) for item in lst[:-1]]
+                self.columns_widths.append(0)
+            else:
+                raise Exception(error)
+        else:
+            raise Exception(error)
+
+    def generate_columns_width_snippet(self):
+        self.prepare_columns_width()
+        if not self.columns_widths:
+            return False
+
+        result = []
+
+        for item in self.columns_widths:
+            pass
+
+        return True
+
+    def generate_separator_snippet(self):
+        is_empty = self.kwargs.separator_as_ref == STRING.EMPTY
+        if is_empty:
+            return False
+
+        return True
+
+    def generate_symbols_group_snippet(self):
+        is_empty = self.kwargs.symbols_group_as_ref == STRING.EMPTY
+        if is_empty:
+            return False
+
+        return True
+
     def process(self):
-        pass
+        is_generated = self.generate_columns_width_snippet()
+        is_generated = is_generated and self.generate_symbols_group_snippet()
+        is_generated and self.generate_separator_snippet()
 
     def raise_exception_if_not_ready(self):
         if not self:
-            error = 'TabularTextPatternError - text is not tabular data'
+            error = get_generic_error_msg(self, 'text is not tabular data')
             raise Exception(error)
 
     def to_regex(self):
         self.raise_exception_if_not_ready()
+        
+        return ''
 
     def to_template_snippet(self):
         self.raise_exception_if_not_ready()
+        
+        return ''
