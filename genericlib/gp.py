@@ -2324,6 +2324,7 @@ class TabularTextPattern:
         self.sep_snippet = STRING.EMPTY
         self.symbols_group_snippet = STRING.EMPTY
         self._is_leading = None
+        self._is_trailing = None
         self.process()
 
     def __len__(self):
@@ -2345,6 +2346,15 @@ class TabularTextPattern:
                     self._is_leading = True
                     return self._is_leading
         return self._is_leading
+
+    @property
+    def is_trailing(self):
+        if self._is_trailing is None:
+            for line in self.lines:
+                if line.strip() and line.startswith(STRING.SPACE_CHAR):
+                    self._is_trailing = True
+                    return self._is_trailing
+        return self._is_trailing
 
     def prepare_columns_width(self):
         error = get_generic_error_msg(self, 'col_widths_as_ref MUST BE string/list '
