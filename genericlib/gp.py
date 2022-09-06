@@ -2323,6 +2323,7 @@ class TabularTextPattern:
         self.columns_widths_snippet = STRING.EMPTY
         self.sep_snippet = STRING.EMPTY
         self.symbols_group_snippet = STRING.EMPTY
+        self._is_leading = None
         self.process()
 
     def __len__(self):
@@ -2335,6 +2336,15 @@ class TabularTextPattern:
     def longest_line_length(self):
         max_len = max(len(line) for line in self.lines)
         return max_len
+
+    @property
+    def is_leading(self):
+        if self._is_leading is None:
+            for line in self.lines:
+                if line.strip() and line.startswith(STRING.SPACE_CHAR):
+                    self._is_leading = True
+                    return self._is_leading
+        return self._is_leading
 
     def prepare_columns_width(self):
         error = get_generic_error_msg(self, 'col_widths_as_ref MUST BE string/list '
