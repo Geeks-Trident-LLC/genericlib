@@ -561,6 +561,19 @@ class MiscFunction:
 
         return result
 
+    @classmethod
+    def create_runtime_error(cls, obj=None, msg=''):
+        cls_name = obj.__class__.__name__
+        exc_cls_name = obj if cls_name == 'str' else '%sRTError' % cls_name
+        exc_cls = type(exc_cls_name, (Exception,), {})
+        exc_obj = exc_cls(msg)
+        return exc_obj
+
+    @classmethod
+    def raise_runtime_error(cls, obj=None, msg=''):
+        exc_obj = cls.create_runtime_error(obj=obj, msg=msg)
+        raise exc_obj
+
 
 class MiscObject:
     @classmethod

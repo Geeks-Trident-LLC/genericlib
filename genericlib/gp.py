@@ -11,12 +11,11 @@ from genericlib import TEXT
 from genericlib import SYMBOL
 
 from genericlib import Misc
+from genericlib import MiscFunction
 from genericlib import DotObject
 
 from regexpro import TextPattern
 from templatepro import TemplateBuilder
-
-from .text import get_generic_error_msg
 
 
 def get_textfsm_template(template_snippet, author='', email='',
@@ -35,7 +34,18 @@ def verify(template_snippet, test_data,
     return is_verified
 
 
-class LData:
+class RuntimeException:
+    def raise_runtime_error(self, name='', msg=''):
+        name = name.strip()
+        obj = name or self
+        MiscFunction.raise_runtime_error(obj=obj, msg=msg)
+
+    @classmethod
+    def do_raise_runtime_error(cls, obj=None, msg=''):
+        MiscFunction.raise_runtime_error(obj=obj, msg=msg)
+
+
+class LData(RuntimeException):
     def __init__(self, data):
         self.raw_data = str(data)
         self.data = self.raw_data.strip()
@@ -65,7 +75,7 @@ class LData:
         return chk
 
 
-class TranslatedPattern:
+class TranslatedPattern(RuntimeException):
 
     def __init__(self, data, *other, name='',
                  defined_pattern='', defined_patterns=None):
@@ -241,15 +251,18 @@ class TranslatedPattern:
 
     def raise_recommend_exception(self, other):
         cls_name = Misc.get_instance_class_name(self)
-        fmt = ('NotImplementRecommendedPattern - Need to implement '
-               'this case (%r, %r) for %s')
-        err_msg = fmt % (self.data, other.data, cls_name)
-        raise Exception(err_msg)
+        fmt = 'Need to implement this case (%r, %r) for %s'
+        self.raise_runtime_error(
+            name='NotImplementRecommendedRTPattern',
+            msg=fmt % (self.data, other.data, cls_name),
+        )
 
     def get_readable_snippet(self, var=''):
         if not self.name:
-            error = 'TranslatedPatternSnippetError - CANT create snippet without name'
-            raise Exception(error)
+            self.raise_runtime_error(
+                name='TranslatedPatternSnippetRTError',
+                msg='CANT create snippet without name',
+            )
 
         value = self.data
         value = value.replace(SYMBOL.LEFT_PARENTHESIS, '_SYMBOL_LEFT_PARENTHESIS_')
@@ -263,8 +276,10 @@ class TranslatedPattern:
 
     def get_regex_pattern(self, var=''):
         if not self.name:
-            error = 'TranslatedPatternRegexError - CANT create regex pattern without name'
-            raise Exception(error)
+            self.raise_runtime_error(
+                name='TranslatedPatternRegexRTError',
+                msg='CANT create regex pattern without name'
+            )
 
         fmt = '(?P<%s>%s)'
         pattern = fmt % (var, self.pattern) if var else self.pattern
@@ -272,8 +287,10 @@ class TranslatedPattern:
 
     def get_template_snippet(self, var=''):
         if not self.name:
-            error = 'TranslatedPatternTemplateSnippetError - CANT create snippet without name'
-            raise Exception(error)
+            self.raise_runtime_error(
+                name='TranslatedPatternTemplateSnippetRTError',
+                msg='CANT create snippet without name'
+            )
 
         var_txt = 'var_%s' % var if var else STRING.EMPTY
         tmpl_snippet = '%s(%s)' % (self.name, var_txt)
@@ -315,9 +332,10 @@ class TranslatedPattern:
             if node:
                 return node
 
-        fmt = 'FactoryTranslatedPatternIssue - Need to implement this case (%r, %r)'
-        err_msg = fmt % (data, other)
-        raise Exception(err_msg)
+        RuntimeException.do_raise_runtime_error(
+            obj='FactoryTranslatedPatternRTIssue',
+            msg='Need to implement this case (%r, %r)' % (data, other)
+        )
 
     @classmethod
     def recommend_pattern(cls, translated_pat_obj1, translated_pat_obj2):
@@ -1312,7 +1330,7 @@ class NDiffLinePattern:
         not is_similar and self.analyze_and_parse_diff_case()
 
 
-class DiffLinePattern:
+class DiffLinePattern(RuntimeException):
     def __init__(self, line1, line2, *other_lines):
         self.raw_lines = []
         self.lines = []
@@ -1381,13 +1399,13 @@ class DiffLinePattern:
                 trim_line not in lines and lines.append(trim_line)
 
         if len(lines) < NUMBER.TWO:
-            fmt = ('DiffLinePatternError - CANT form pattern because provided '
+            fmt = ('CANT form pattern because provided '
                    'lines are less than two\n%s')
             lst = ['Line 1: %r' % line1, 'Line 2: %r' % line2]
             if other_lines:
                 lst.append('Other Lines: %r' % other_lines)
-            error = fmt % str.join(STRING.NEWLINE, lst)
-            raise Exception(error)
+
+            self.raise_runtime_error(msg=fmt % str.join(STRING.NEWLINE, lst))
         else:
             self.reset()
             self.lines.extend(lines)
@@ -1449,12 +1467,11 @@ class DiffLinePattern:
                 self._pattern = pattern
                 return
 
-        fmt = 'DiffLinePatternError - built pattern(s) did not match text\n  %s'
-        error = fmt % str.join('\n  ', [repr(item) for item in lst])
-        raise Exception(error)
+        fmt = 'built pattern(s) did not match text\n  %s'
+        self.raise_runtime_error(msg=fmt % str.join('\n  ', [repr(item) for item in lst]))
 
 
-class SnippetElement:
+class SnippetElement(RuntimeException):
     def __init__(self, element_txt, trailing=''):
         self.element_txt = element_txt
         self.trailing = trailing
@@ -1494,9 +1511,7 @@ class SnippetElement:
                'value=(?P<value>.+) *[)]')
         match = re.match(pat, self.element_txt)
         if not match:
-            fmt = 'SnippetElementError - Invalid element text\n%s'
-            error = fmt % self.element_txt
-            raise Exception(error)
+            self.raise_runtime_error(msg='Invalid element text\n%s' % self.element_txt)
 
         check = match.group('check')
         if check.lower() == 'cvar':
@@ -1667,9 +1682,7 @@ class EditingSnippet(LData):
 
         match = re.match(pat, self.data)
         if not match:
-            fmt = 'EditingSnippetError - Invalid argument\n%s'
-            error = fmt % self.data
-            raise Exception(error)
+            self.raise_runtime_error(msg='Invalid argument\n%s' % self.data)
 
         self.capture = match.group('capture').strip()
         self.keep = match.group('keep').strip()
@@ -1708,9 +1721,10 @@ class EditingSnippet(LData):
             first, last = str.split(grp, STRING.COLON_CHAR, maxsplit=NUMBER.ONE)
             var_names = ['v%s' % i for i in range(int(first), int(last) + 1)]
             if not var_names:
-                fmt = 'EditingSnippetActionJoinError - Invalid range (%s)'
-                error = fmt % action_op
-                raise Exception(error)
+                self.raise_runtime_error(
+                    name='EditingSnippetActionJoinRTError',
+                    msg='Invalid range (%s)' % action_op
+                )
         elif re.match(r'\w+(,\w+)*', grp):
             var_names = ['v%s' % i if str.isdigit(i) else i for i in str.split(grp, STRING.COMMA_CHAR)]
 
@@ -1732,9 +1746,10 @@ class EditingSnippet(LData):
             self.refresh_largest_index()
             return True
         else:
-            fmt = 'EditingSnippetActionJoinError - Not found index (%s)'
-            error = fmt % action_op
-            raise Exception(error)
+            self.raise_runtime_error(
+                name='EditingSnippetActionJoinRTError',
+                msg='Not found index (%s)' % action_op
+            )
 
     def apply_action_split(self, action_op):
         if not re.search('[_-]split', action_op, re.I):
@@ -1755,9 +1770,10 @@ class EditingSnippet(LData):
             self.is_action_applied = True
             self.refresh_largest_index()
         else:
-            fmt = 'EditingSnippetActionSplitError - Not found index (%s)'
-            error = fmt % var_name
-            raise Exception(error)
+            self.raise_runtime_error(
+                name='EditingSnippetActionSplitRTError',
+                msg='Not found index (%s)' % var_name
+            )
 
     def apply_action(self):
         if not self.action:
@@ -1784,9 +1800,10 @@ class EditingSnippet(LData):
                 first, last = str.split(item, STRING.COLON_CHAR, maxsplit=NUMBER.ONE)
                 var_names = ['v%s' % i for i in range(int(first), int(last) + 1)]
                 if not var_names:
-                    fmt = 'EditingSnippetActionKeepError - Invalid range (%s)'
-                    error = fmt % self.keep
-                    raise Exception(error)
+                    self.raise_runtime_error(
+                        name='EditingSnippetActionKeepRTError',
+                        msg='Invalid range (%s)' % self.keep
+                    )
             elif re.match(r'\w+(,\w+)*', item):
                 var_names = ['v%s' % i if i.isdigit() else i for i in item.split(',')]
 
@@ -1797,9 +1814,10 @@ class EditingSnippet(LData):
                     is_empty and node.set_empty()
                     self.is_keep_applied = True
                 else:
-                    fmt = 'EditingSnippetActionKeepError - Not found index (%s)'
-                    error = fmt % var_name
-                    raise Exception(error)
+                    self.raise_runtime_error(
+                        name='EditingSnippetActionKeepRTError',
+                        msg='Not found index (%s)' % var_name
+                    )
 
     def apply_capture(self):
         if not self.capture:
@@ -1815,9 +1833,10 @@ class EditingSnippet(LData):
                 first, last = item.split(':', NUMBER.ONE)
                 var_names = ['v%s' % i for i in range(int(first), int(last) + 1)]
                 if not var_names:
-                    fmt = 'EditingSnippetActionCaptureError - Invalid range (%s)'
-                    error = fmt % self.capture
-                    raise Exception(error)
+                    self.raise_runtime_error(
+                        name='EditingSnippetActionCaptureRTError',
+                        msg='Invalid range (%s)' % self.capture
+                    )
             elif re.match(r'\w+(,\w+)*', item):
                 var_names = ['v%s' % i if i.isdigit() else i for i in item.split(',')]
 
@@ -1828,9 +1847,10 @@ class EditingSnippet(LData):
                     is_empty and node.set_empty()
                     self.is_capture_applied = True
                 else:
-                    fmt = 'EditingSnippetActionCaptureError - Not found index (%s)'
-                    error = fmt % var_name
-                    raise Exception(error)
+                    self.raise_runtime_error(
+                        name='EditingSnippetActionCaptureRTError',
+                        msg='Not found index (%s)' % var_name
+                    )
 
     def process(self):
         self.prepare()
@@ -1950,7 +1970,7 @@ class IterativeLinePattern(LData):
         return chk
 
 
-class IterativeLinesPattern:
+class IterativeLinesPattern(RuntimeException):
     def __init__(self, *lines_or_snippets):
         self.lines_or_snippets = Misc.get_list_of_readonly_lines(*lines_or_snippets)
 
@@ -1994,9 +2014,9 @@ class IterativeLinesPattern:
                 lst.append(tmpl_snippet)
 
         if not is_captured:
-            error = ('IterativeLinesPatternError - CANT form template snippet '
-                     'because no captured variable is created')
-            raise Exception(error)
+            self.raise_runtime_error(
+                msg='CANT form template snippet because no captured variable is created'
+            )
 
         template_snippet = str.join(STRING.NEWLINE, lst)
         return template_snippet
@@ -2101,6 +2121,7 @@ class CategoryLinePattern(BaseCategoryPattern):
         result = [PATTERN.ZOSPACES if self.is_leading else STRING.EMPTY]
         prev_item = None
         is_last_item_empty = False
+        item = None
         for item in self._lst:
             pat = item.to_regex()
             if isinstance(item, CategoryRightDataPattern):
@@ -2175,18 +2196,15 @@ class CategoryLinePattern(BaseCategoryPattern):
 
     def raise_exception_if_not_category_pattern(self):
         if self.separator not in self.data:
-            error = 'CategoryLinePatternError - data DOESNT have separator'
-            raise Exception(error)
+            self.raise_runtime_error(msg='data DOESNT have separator')
 
         index = self.data.index(self.separator)
         if index == NUMBER.ZERO:
-            error = 'CategoryLinePatternError - data DOESNT have var text'
-            raise Exception(error)
+            self.raise_runtime_error(msg='data DOESNT have var text')
 
         chk_word = self.get_word_by_pos(index)
         if self.is_time_ipv6_or_mac_addr_format(chk_word):
-            error = 'CategoryLinePatternError - unsupported var text'
-            raise Exception(error)
+            self.raise_runtime_error(msg='unsupported var text')
 
     def is_time_ipv6_or_mac_addr_format(self, data):    # noqa
         mac_pat = r'[a-f\d]{1,2}(:[a-f\d]{1,2}){2,5}'
@@ -2276,8 +2294,8 @@ class CategoryLinePattern(BaseCategoryPattern):
                 return
 
 
-class CategoryLinesPattern:
-    def __init__(self, *lines, options=None, count=1, separator=':' ):
+class CategoryLinesPattern(RuntimeException):
+    def __init__(self, *lines, options=None, count=1, separator=':'):
         self.lines = Misc.get_list_of_lines(*lines)
         self.options = options or dict()
         self.count = count
@@ -2309,8 +2327,7 @@ class CategoryLinesPattern:
 
     def raise_exception_if_not_category_format(self):
         if not self.is_category_format:
-            error = 'CategoryLinesFormatError - text is not category format'
-            raise Exception(error)
+            self.raise_runtime_error(msg='text is not category format')
 
     def to_regex(self):
         self.raise_exception_if_not_category_format()
@@ -2336,7 +2353,7 @@ class CategoryLinesPattern:
         return tmpl_snippet
 
 
-class TabularTextPattern:
+class TabularTextPattern(RuntimeException):
     def __init__(self, *lines, col_widths_as_ref='', separator_as_ref='',
                  symbols_group_as_ref=False, lines_as_col_names='',
                  skipped_symbol_line=True):
@@ -2386,14 +2403,13 @@ class TabularTextPattern:
         return self._is_trailing
 
     def prepare_columns_width(self):
-        error = get_generic_error_msg(self, 'col_widths_as_ref MUST BE string/list '
-                                            'datatype of group of digit(s)')
+        error_msg = 'col_widths_as_ref MUST BE string/list datatype of group of digit(s)'
         data = self.kwargs.col_widths_as_ref
         if not data:
             return
 
         if Misc.is_string(data) or Misc.is_list(data):
-            if Misc.is_string():
+            if Misc.is_string(data):
                 pat = '(?: *, *)|(?: +)'
                 lst = [item or '0' for item in re.split(pat, str.strip(data))]
             else:
@@ -2404,9 +2420,9 @@ class TabularTextPattern:
                 self.columns_widths = [int(item) for item in lst[:-1]]
                 self.columns_widths.append(0)
             else:
-                raise Exception(error)
+                self.raise_runtime_error(msg=error_msg)
         else:
-            raise Exception(error)
+            self.raise_runtime_error(msg=error_msg)
 
     def generate_columns_width_snippet(self):
         self.prepare_columns_width()
@@ -2441,8 +2457,7 @@ class TabularTextPattern:
 
     def raise_exception_if_not_ready(self):
         if not self:
-            error = get_generic_error_msg(self, 'text is not tabular data')
-            raise Exception(error)
+            self.raise_runtime_error(msg='text is not tabular data')
 
     def to_regex(self):
         self.raise_exception_if_not_ready()
@@ -2455,7 +2470,7 @@ class TabularTextPattern:
         return ''
 
 
-class TabularTextPatternByFixedColumns:
+class TabularTextPatternByFixedColumns(RuntimeException):
     def __init__(self, *lines, col_widths=None, headers=None, headers_data=None):
         self.lines = Misc.get_list_of_lines(*lines)
         self.col_widths = col_widths
@@ -2565,8 +2580,7 @@ class TabularTextPatternByFixedColumns:
 
     def raise_exception_if_columns_widths_not_provided(self):
         if not self:
-            error = get_generic_error_msg(self, 'col_widths MUST be provided')
-            raise Exception(error)
+            self.raise_runtime_error(msg='col_widths MUST be provided')
 
     def to_regex(self):
         pattern = self.build_pattern(is_default=False)
@@ -2587,7 +2601,7 @@ class TabularTextPatternByFixedColumns:
         return tmpl_snippet
 
 
-class TabularTextPatternBySeparator:
+class TabularTextPatternBySeparator(RuntimeException):
     def __init__(self, *lines, separator=' ', columns_count=0,
                  headers=None, headers_data=None):
         self.lines = Misc.get_list_of_lines(*lines)
@@ -2598,15 +2612,14 @@ class TabularTextPatternBySeparator:
         self.raw_headers_data = []
         self.headers = headers
         self.variables = []
-        self.parse_headers()
+        # self.parse_headers()
 
     def __len__(self):
         return bool(self.columns_count)
 
     def raise_exception_if_columns_count_not_provided(self):
         if not self:
-            error = get_generic_error_msg(self, 'columns_count CANT be zero')
-            raise Exception(error)
+            self.raise_runtime_error(msg='columns_count CANT be zero')
 
     def get_default_variables(self):  # noqa
         var_names = ['col%s' % i for i in range(self.columns_count)]
