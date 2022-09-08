@@ -2442,8 +2442,8 @@ class TabularTextPatternByFixedColumns:
         return bool(self.columns_count)
 
     def get_default_variables(self):  # noqa
-        default_headers = ['col%s' % i for i in range(self.columns_count)]
-        return default_headers
+        var_names = ['col%s' % i for i in range(self.columns_count)]
+        return var_names
 
     def parse_headers_by_ref_data(self, reference_data):
         variables = []
@@ -2556,3 +2556,29 @@ class TabularTextPatternByFixedColumns:
         snippet = '%s -> record' % str.join(STRING.EMPTY, lst)
         tmpl_snippet = str.join(STRING.NEWLINE, self.raw_headers_data + [snippet])
         return tmpl_snippet
+
+
+class TabularTextPatternBySeparator:
+    def __init__(self, *lines, separator=' ', columns_count=0,
+                 headers=None, headers_data=None):
+        self.lines = Misc.get_list_of_lines(*lines)
+        self.separator = separator
+        self.columns_count = columns_count
+        self.raise_exception_if_columns_count_not_provided()
+        self.headers_data = headers_data
+        self.raw_headers_data = []
+        self.headers = headers
+        self.variables = []
+        self.parse_headers()
+
+    def __len__(self):
+        return bool(self.columns_count)
+
+    def raise_exception_if_columns_count_not_provided(self):
+        if not self:
+            error = get_generic_error_msg(self, 'columns_count CANT be zero')
+            raise Exception(error)
+
+    def get_default_variables(self):  # noqa
+        var_names = ['col%s' % i for i in range(self.columns_count)]
+        return var_names
