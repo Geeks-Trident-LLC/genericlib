@@ -70,7 +70,8 @@ class TranslatedPattern:
     def __init__(self, data, *other, name='',
                  defined_pattern='', defined_patterns=None):
         self.data = str(data)
-        self.other_data = other[NUMBER.ZERO] if other else STRING.EMPTY
+        self.lst_of_other_data = list(other)
+        self.lst_of_all_data = [self.data] + self.lst_of_other_data
         self.defined_pattern = str(defined_pattern)
         lst = defined_patterns if isinstance(defined_patterns, list) else []
         self.defined_patterns = lst
@@ -97,25 +98,29 @@ class TranslatedPattern:
 
     def process(self):
         if self.defined_patterns:
-            for pat in self.defined_patterns[::-NUMBER.ONE]:
-                matched_pat = self.check_matching(pat)
-                if matched_pat:
-                    self._pattern = matched_pat
-                    break
+            is_matched = False
+            for pat in self.defined_patterns:
+                is_matched = is_matched or self.check_matching(pat)
+            if is_matched:
+                if self.is_plural():
+                    self._pattern = self.defined_patterns[-NUMBER.ONE]
+                else:
+                    self._pattern = self.defined_patterns[NUMBER.ZERO]
+            else:
+                self._pattern = STRING.EMPTY
         else:
-            matched_pat = self.check_matching(self.defined_pattern)
-            self._pattern = matched_pat
+            is_matched = self.check_matching(self.defined_pattern)
+            self._pattern = self.defined_pattern if is_matched else STRING.EMPTY
 
     def check_matching(self, pattern):
         pat = '%s$' % pattern
-        match = re.match(pat, self.data)
-        if self.other_data:
-            other_match = re.match(pat, self.other_data)
-            matched_pat = pattern if match and other_match else STRING.EMPTY
-        else:
-            matched_pat = pattern if match else STRING.EMPTY
 
-        return matched_pat
+        chk = True
+        for data in self.lst_of_all_data:
+            match = re.match(pat, data)
+            chk = chk and bool(match)
+
+        return chk
 
     def is_digit(self):
         return self.name == TEXT.DIGIT
@@ -194,8 +199,32 @@ class TranslatedPattern:
         return new_instance
 
     def is_plural(self):
-        chk = STRING.SPACE_CHAR in self.data.strip()
+        chk = True
+        for data in self.lst_of_all_data:
+            chk = chk and STRING.SPACE_CHAR in data.strip()
         return chk
+
+    def is_singular(self):
+        chk = True
+        for data in self.lst_of_all_data:
+            chk = chk and STRING.SPACE_CHAR not in data.strip()
+        return chk
+
+    def is_mixing_singular_plural(self):
+        chk = not self.is_singular() and not self.is_plural()
+        return chk
+
+    def get_singular_data(self):
+        singular_data = str.split(self.data, STRING.SPACE_CHAR)[NUMBER.ZERO]
+        return singular_data
+
+    def get_plural_data(self):
+        for data in self.lst_of_all_data:
+            if STRING.SPACE_CHAR in data.strip():
+                return data
+        else:
+            plural_data = '%s %s' % (self.data, self.data)
+            return plural_data
 
     def get_reference_data(self, other):
         if isinstance(other, TranslatedPattern):
@@ -205,7 +234,7 @@ class TranslatedPattern:
                 if self.is_plural() and other.is_plural():
                     return self.data
                 else:
-                    result = str.split(self.data, STRING.SPACE_CHAR)[NUMBER.ZERO]
+                    result = self.get_singular_data()
                     return result
         else:
             return self.data
