@@ -2609,6 +2609,7 @@ class TabularTextPatternBySeparator(RuntimeException):
         self._is_leading = None
         self._is_trailing = None
         self._is_start_with_sep = None
+        self._is_end_with_sep = None
 
         self.lines = Misc.get_list_of_lines(*lines)
         self.separator = separator
@@ -2657,6 +2658,23 @@ class TabularTextPatternBySeparator(RuntimeException):
             else:
                 self._is_start_with_sep = False
         return self._is_start_with_sep
+
+    @property
+    def is_end_with_separator(self):
+        if self._is_end_with_sep is None:
+            count = 0
+            for line in self.lines:
+                if line.strip().endswith(self.separator):
+                    count += 1
+
+            lines_count = len(self.lines)
+            if count:
+                # chk = count > lines_count / NUMBER.TWO
+                chk = op.gt(count, op.truediv(lines_count, NUMBER.TWO))
+                self._is_end_with_sep = chk
+            else:
+                self._is_end_with_sep = False
+        return self._is_end_with_sep
 
     def raise_exception_if_columns_count_not_provided(self):
         if not self:
