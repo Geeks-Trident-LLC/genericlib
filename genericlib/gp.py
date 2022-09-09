@@ -2683,3 +2683,29 @@ class TabularTextPatternBySeparator(RuntimeException):
     def get_default_variables(self):  # noqa
         var_names = ['col%s' % i for i in range(self.columns_count)]
         return var_names
+
+
+class TabularColumn:
+    def __init__(self, index=0, name='', left_column=None, right_column=None):
+        self.left_column = left_column
+        self.right_column = right_column
+        self.index = index
+        self.name = name
+        self.tabular_cells = []
+        self.left_pos = 0
+        self.right_pos = 1
+
+    def update_left_pos(self, pos):
+        self.left_pos = pos
+
+    def update_right_pos(self, pos):
+        self.right_pos = pos
+
+    def update_cells_data(self, *lst_of_data):
+        for index, data in lst_of_data:
+            cell = self.tabular_cells[index]
+            cell.update_data(data)
+
+    def update_cell_data(self, data, pos):
+        cell = self.tabular_cells[pos]
+        cell.update_data(data)
