@@ -2,6 +2,8 @@ import re
 from collections import OrderedDict
 from itertools import combinations
 
+import operator as op
+
 from difflib import ndiff
 
 from genericlib import NUMBER
@@ -2604,6 +2606,10 @@ class TabularTextPatternByFixedColumns(RuntimeException):
 class TabularTextPatternBySeparator(RuntimeException):
     def __init__(self, *lines, separator=' ', columns_count=0,
                  headers=None, headers_data=None):
+        self._is_leading = None
+        self._is_trailing = None
+        self._is_start_with_sep = None
+
         self.lines = Misc.get_list_of_lines(*lines)
         self.separator = separator
         self.columns_count = columns_count
@@ -2616,6 +2622,41 @@ class TabularTextPatternBySeparator(RuntimeException):
 
     def __len__(self):
         return bool(self.columns_count)
+
+    @property
+    def is_leading(self):
+        if self._is_leading is None:
+            for line in self.lines:
+                if line.strip() and line.startswith(STRING.SPACE_CHAR):
+                    self._is_leading = True
+                    return self._is_leading
+        return self._is_leading
+
+    @property
+    def is_trailing(self):
+        if self._is_trailing is None:
+            for line in self.lines:
+                if line.strip() and line.startswith(STRING.SPACE_CHAR):
+                    self._is_trailing = True
+                    return self._is_trailing
+        return self._is_trailing
+
+    @property
+    def is_start_with_separator(self):
+        if self._is_start_with_sep is None:
+            count = 0
+            for line in self.lines:
+                if line.startswith(self.separator):
+                    count += 1
+
+            lines_count = len(self.lines)
+            if count:
+                # chk = count > lines_count / NUMBER.TWO
+                chk = op.gt(count, op.truediv(lines_count, NUMBER.TWO))
+                self._is_start_with_sep = chk
+            else:
+                self._is_start_with_sep = False
+        return self._is_start_with_sep
 
     def raise_exception_if_columns_count_not_provided(self):
         if not self:
