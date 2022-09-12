@@ -2604,15 +2604,16 @@ class TabularTextPatternByFixedColumns(RuntimeException):
 
 
 class TabularTextPatternByVarColumns(RuntimeException):
-    def __init__(self, *lines, separator=' ', columns_count=0,
+    def __init__(self, *lines, divider=' ', columns_count=0,
                  headers=None, headers_data=None):
         self._is_leading = None
         self._is_trailing = None
-        self._is_start_with_sep = None
-        self._is_end_with_sep = None
+        self._is_start_with_divider = None
+        self._is_end_with_divider = None
 
         self.lines = Misc.get_list_of_lines(*lines)
-        self.separator = separator
+        self.total_lines = len(self.lines)
+        self.divider = divider
         self.columns_count = columns_count
         self.raise_exception_if_columns_count_not_provided()
         self.headers_data = headers_data
@@ -2626,55 +2627,63 @@ class TabularTextPatternByVarColumns(RuntimeException):
 
     @property
     def is_leading(self):
+        if not self.total_lines:
+            return False
         if self._is_leading is None:
             for line in self.lines:
                 if line.strip() and line.startswith(STRING.SPACE_CHAR):
                     self._is_leading = True
                     return self._is_leading
+            else:
+                self._is_leading = False
         return self._is_leading
 
     @property
     def is_trailing(self):
+        if not self.total_lines:
+            return False
         if self._is_trailing is None:
             for line in self.lines:
                 if line.strip() and line.startswith(STRING.SPACE_CHAR):
                     self._is_trailing = True
                     return self._is_trailing
+            else:
+                self._is_trailing = False
         return self._is_trailing
 
     @property
-    def is_start_with_separator(self):
-        if self._is_start_with_sep is None:
+    def is_start_with_divider(self):
+        if self._is_start_with_divider is None:
             count = 0
             for line in self.lines:
-                if line.startswith(self.separator):
+                if line.startswith(self.divider):
                     count += 1
 
             lines_count = len(self.lines)
             if count:
                 # chk = count > lines_count / NUMBER.TWO
                 chk = op.gt(count, op.truediv(lines_count, NUMBER.TWO))
-                self._is_start_with_sep = chk
+                self._is_start_with_divider = chk
             else:
-                self._is_start_with_sep = False
-        return self._is_start_with_sep
+                self._is_start_with_divider = False
+        return self._is_start_with_divider
 
     @property
-    def is_end_with_separator(self):
-        if self._is_end_with_sep is None:
+    def is_end_with_divider(self):
+        if self._is_end_with_divider is None:
             count = 0
             for line in self.lines:
-                if line.strip().endswith(self.separator):
+                if line.strip().endswith(self.divider):
                     count += 1
 
             lines_count = len(self.lines)
             if count:
                 # chk = count > lines_count / NUMBER.TWO
                 chk = op.gt(count, op.truediv(lines_count, NUMBER.TWO))
-                self._is_end_with_sep = chk
+                self._is_end_with_divider = chk
             else:
-                self._is_end_with_sep = False
-        return self._is_end_with_sep
+                self._is_end_with_divider = False
+        return self._is_end_with_divider
 
     def raise_exception_if_columns_count_not_provided(self):
         if not self:
@@ -2683,6 +2692,139 @@ class TabularTextPatternByVarColumns(RuntimeException):
     def get_default_variables(self):  # noqa
         var_names = ['col%s' % i for i in range(self.columns_count)]
         return var_names
+
+    def try_to_get_cells_info_by_space_symbols_divider(self):
+        fmt = ' *%(p)s( +%(p)s){%(rep)s} *$'
+        repetition = self.columns_count - NUMBER.ONE
+        pat = fmt % dict(p=PATTERN.SYMBOLS, rep=repetition)
+        found_line = STRING.EMPTY
+
+        for line in self.lines:
+            match = re.match(pat, line)
+            if match:
+                found_line = line
+                break
+
+        if not found_line:
+            return False, None
+
+        pat = ' * %s*' % PATTERN.SYMBOLS
+        lst = re.findall(pat, found_line)
+
+        lst_of_pos_info = []
+        prev_right = 0
+        for item in lst:
+            curr_width = len(item)
+            left = prev_right
+            right = left + curr_width - NUMBER.ONE
+            prev_right = right
+            pair = LRPosition(left, right)
+            lst_of_pos_info.append(pair)
+        else:
+            if lst_of_pos_info:
+                pair.right = pair.right + NUMBER.ONE
+
+        lst_of_cells_data = []
+
+        for line in self.lines:
+            cells_data = []
+            prev_sub_txt = STRING.EMPTY
+            for pos_info in lst_of_pos_info:
+                sub_txt = line[pos_info.left:pos_info.right]
+                if cells_data and prev_sub_txt.strip():
+                    if prev_sub_txt[-NUMBER.ONE:] == STRING.SPACE_CHAR:
+                        cells_data.append(sub_txt)
+                    else:
+                        space, spaces = STRING.SPACE_CHAR, STRING.DOUBLE_SPACES
+                        if space in prev_sub_txt:
+                            split_chars = spaces if spaces in prev_sub_txt else space
+                            _, last = prev_sub_txt.rsplit(split_chars, maxsplit=1)
+                            prev_data = prev_sub_txt[:-len(last) - NUMBER.ONE]
+                            new_sub_txt = ' %s%s' % (last, sub_txt)
+                            cells_data.pop()
+                            cells_data.append(prev_data)
+                            cells_data.append(new_sub_txt)
+                        else:
+                            cells_data.append(sub_txt)
+                else:
+                    cells_data.append(sub_txt)
+                prev_sub_txt = sub_txt
+            lst_of_cells_data.append(cells_data)
+
+        return True, []
+
+    def try_to_get_cells_info_by_space_mixed_words_divider(self):
+        fmt = ' *%(p)s( +%(p)s){%(rep)s} *$'
+        repetition = self.columns_count - NUMBER.ONE
+        pat = fmt % dict(p=PATTERN.MIXED_WORD_OR_WORDS, rep=repetition)
+
+        found_lines = []
+        for line in self.lines:
+            match = re.match(pat, line)
+            if match:
+                found_lines.append(line)
+
+        if not found_lines:
+            return False, None
+
+        return True, []
+
+    def get_cells_info_by_space_divider(self):
+        parsed, cells_info = self.try_to_get_cells_info_by_space_symbols_divider()
+        if not parsed:
+            parsed, cells_info = self.try_to_get_cells_info_by_space_mixed_words_divider()
+            if not parsed:
+                raise Exception('')
+        return cells_info
+
+    def get_cells_info_by_symbol_divider(self):
+        divider_pat = re.escape(self.divider.strip())
+        repetition = self.columns_count - NUMBER.ONE
+        fmt = r' *(%(d)s)? *%(p)s( *%(d)s *%(p)s){%(rep)s} *(%(d)s)? *$'
+        pat = fmt % dict(d=divider_pat, p=PATTERN.EVERYTHING, rep=repetition)
+
+        found_line = ''
+        for line in self.lines:
+            match = re.match(pat, line)
+            if match:
+                found_line = line
+                break
+        if not found_line:
+            return False, []
+
+        return True, []
+
+    def get_cells_info(self):
+        divider = self.divider.strip()
+        if divider == STRING.EMPTY:
+            cells_info = self.get_cells_info_by_space_divider()
+            return cells_info
+
+        elif re.match(PATTERN.SYMBOLS, divider):
+            cells_info = self.get_cells_info_by_symbol_divider()
+            return cells_info
+        else:
+            self.raise_runtime_error(msg='Unsupported divider %r' % self.divider)
+
+
+class LRPosition(RuntimeException):
+    def __init__(self, left_pos, right_pos, alignment=None):
+        is_left, left = Misc.try_to_get_number(left_pos, return_type=int)
+        is_right, right = Misc.try_to_get_number(right_pos, return_type=int)
+
+        if not is_left:
+            self.raise_runtime_error(msg='left position must be integer')
+        if not is_right:
+            self.raise_runtime_error(msg='right position must be integer')
+
+        self.left = left
+        self.right = right
+        self.alignment = alignment
+
+    def __len__(self):
+        chk = self.left >= NUMBER.ZERO
+        chk = chk and self.right > self.left
+        return chk
 
 
 class TabularColumn:
