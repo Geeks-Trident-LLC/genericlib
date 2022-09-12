@@ -2603,7 +2603,7 @@ class TabularTextPatternByFixedColumns(RuntimeException):
         return tmpl_snippet
 
 
-class TabularTextPatternBySeparator(RuntimeException):
+class TabularTextPatternByVarColumns(RuntimeException):
     def __init__(self, *lines, separator=' ', columns_count=0,
                  headers=None, headers_data=None):
         self._is_leading = None
