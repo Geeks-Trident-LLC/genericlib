@@ -12,6 +12,8 @@ class PATTERN:
     ATLONESPACES = '  +'
     ZOSPACE = ' ?'
     ZOSPACES = ' *'
+    SPACEATSOS = '^ '
+    SPACESATSOS = '^ +'
     SPACEATEOS = ' $'
     SPACESATEOS = ' +$'
 

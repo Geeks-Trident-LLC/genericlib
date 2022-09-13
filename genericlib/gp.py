@@ -2718,7 +2718,7 @@ class TabularTextPatternByVarColumns(RuntimeException):
             left = prev_right
             right = left + curr_width - NUMBER.ONE
             prev_right = right
-            pair = LRPosition(left, right)
+            pair = TabularCell(found_line, left, right)
             lst_of_pos_info.append(pair)
         else:
             if lst_of_pos_info:
@@ -2807,24 +2807,201 @@ class TabularTextPatternByVarColumns(RuntimeException):
             self.raise_runtime_error(msg='Unsupported divider %r' % self.divider)
 
 
-class LRPosition(RuntimeException):
-    def __init__(self, left_pos, right_pos, alignment=None):
-        is_left, left = Misc.try_to_get_number(left_pos, return_type=int)
-        is_right, right = Misc.try_to_get_number(right_pos, return_type=int)
+class TabularCell(RuntimeException):
+    def __init__(self, line, left_pos, right_pos, ref_cell=None):
+        self.args = (line, left_pos, right_pos, ref_cell)
 
-        if not is_left:
-            self.raise_runtime_error(msg='left position must be integer')
-        if not is_right:
-            self.raise_runtime_error(msg='right position must be integer')
+        self._leading = None
+        self._trailing = None
 
-        self.left = left
-        self.right = right
-        self.alignment = alignment
+        self.left = NUMBER.ZERO
+        self.right = NUMBER.ZERO
+        self.other_left = NUMBER.ZERO
+        self.other_right = NUMBER.ZERO
+
+        self.line = STRING.EMPTY
+        self.data = STRING.EMPTY
+        self.text = STRING.EMPTY
+
+        self.ref_cell = None
+
+        self.process()
 
     def __len__(self):
         chk = self.left >= NUMBER.ZERO
         chk = chk and self.right > self.left
         return chk
+
+    @property
+    def leading(self):
+        if self._leading is None:
+            if self.is_empty:
+                self._leading = STRING.EMPTY
+            else:
+                lst = re.findall(PATTERN.SPACESATSOS, self.data)
+                self._leading = lst[NUMBER.ZERO] if lst else STRING.EMPTY
+        return self._leading or STRING.EMPTY
+
+    @property
+    def trailing(self):
+        if self._trailing is None:
+            if self.is_empty:
+                self._trailing = STRING.EMPTY
+            else:
+                lst = re.findall(PATTERN.SPACESATEOS, self.data)
+                self._trailing = lst[NUMBER.ZERO] if lst else STRING.EMPTY
+        return self._trailing or STRING.EMPTY
+
+    @property
+    def is_leading(self):
+        chk = self.leading != STRING.EMPTY
+        return chk
+
+    @property
+    def is_single_leading(self):
+        chk = self.leading == STRING.SPACE_CHAR
+        return chk
+
+    @property
+    def is_multi_leading(self):
+        chk = len(self.leading) > NUMBER.ONE
+        return chk
+
+    @property
+    def is_trailing(self):
+        chk = self.trailing != STRING.EMPTY
+        return chk
+
+    @property
+    def is_single_trailing(self):
+        chk = self.trailing == STRING.SPACE_CHAR
+        return chk
+
+    @property
+    def is_multi_trailing(self):
+        chk = len(self.trailing) > NUMBER.ONE
+        return chk
+
+    @property
+    def is_empty(self):
+        chk = self.text = STRING.EMPTY
+        return chk
+
+    @property
+    def is_not_containing_space(self):
+        chk = STRING.SPACE_CHAR not in self.text
+        return chk
+
+    @property
+    def is_containing_space(self):
+        chk = STRING.SPACE_CHAR in self.text
+        return chk
+
+    @property
+    def is_containing_spaces(self):
+        chk = STRING.DOUBLE_SPACES in self.text
+        return chk
+
+    @property
+    def increase_left(self):
+        self.update_left_position(val=NUMBER.ONE)
+
+    @property
+    def decrease_left(self):
+        self.update_left_position(val=-NUMBER.ONE)
+
+    @property
+    def increase_right(self):
+        self.update_right_position(val=NUMBER.ONE)
+
+    @property
+    def decrease_right(self):
+        self.update_right_position(val=-NUMBER.ONE)
+
+    def update_left_position(self, val=1):
+        self.left = self.left + val
+
+    def update_right_position(self, val=1):
+        self.right = self.right + val
+
+    def get_postfix_data(self):
+        if self.is_multi_trailing or not self.is_containing_space:
+            return STRING.EMPTY
+
+        spaces = STRING.DOUBLE_SPACES
+        space = STRING.SPACE_CHAR
+        repl = spaces if self.is_containing_spaces else space
+        _, remaining_txt = str.rsplit(self.text, repl, maxsplit=NUMBER.ONE)
+        ret_val = Misc.join_string(remaining_txt, self.trailing)
+
+        if self.ref_cell:
+            other_right = self.right - len(ret_val)
+            if other_right > self.ref_cell.other_right:
+                return ret_val
+            else:
+                if space in remaining_txt:
+                    _, remaining_txt1 = str.rsplit(remaining_txt, space, maxsplit=NUMBER.ONE)
+                    ret_val = Misc.join_string(remaining_txt1, self.trailing)
+                    return ret_val
+                else:
+                    return STRING.EMPTY
+        else:
+            return ret_val
+
+    def readjust(self, prev_cell=None):
+        if not isinstance(prev_cell, self.__class__):
+            # dont readjust
+            return
+
+        chk1 = prev_cell.is_multi_trailing
+        chk2 = prev_cell.is_empty
+        chk3 = prev_cell.is_single_trailing and self.is_leading
+
+        if chk1 or chk2 and chk3:
+            # dont readjust
+            return
+        else:
+            prefix = prev_cell.get_postfix_data()
+            if prefix:
+                width = len(prefix) + NUMBER.ONE
+                self.update_left_position(val=self.left-width)
+                self.process()
+                prev_cell.update_right_position(val=self.right-width)
+                prev_cell.process()
+            else:
+                # dont readjust
+                return
+
+    def process(self):
+        line, left_pos, right_pos, ref_cell = self.args
+
+        is_left, left = Misc.try_to_get_number(left_pos, return_type=int)
+        is_right, right = Misc.try_to_get_number(right_pos, return_type=int)
+
+        not is_left and self.raise_runtime_error(msg='left position must be integer')
+        not is_right and self.raise_runtime_error(msg='right position must be integer')
+
+        self._leading = None
+        self._trailing = None
+
+        if isinstance(ref_cell, self.__class__) or ref_cell is None:
+            self.ref_cell = ref_cell
+        else:
+            cls_name = Misc.get_instance_class_name(self)
+            self.raise_runtime_error(msg='invalid ref_cell type (%s)' % cls_name)
+
+        self.left = left
+        self.right = right
+        self.line = line
+        self.data = self.line[self.left:self.right]
+        self.text = self.data.strip()
+
+        if self.is_empty:
+            self.other_left = self.left
+            self.other_right = self.right
+        else:
+            self.other_left = self.left + len(str.rstrip(self.data)) - len(self.text)
+            self.other_right = self.right - len(str.lstrip(self.data)) + len(self.text)
 
 
 class TabularColumn:
