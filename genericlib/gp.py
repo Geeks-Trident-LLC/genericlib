@@ -3020,6 +3020,7 @@ class TabularRow(RuntimeException):
         self.line = line
         self.ref_row = ref_row
         self.cells = []
+        self.process()
 
     def __len__(self):
         chk = bool(self.cells)
@@ -3033,6 +3034,13 @@ class TabularRow(RuntimeException):
             prev_cell = self.cells[-NUMBER.ONE] if index else None
             cell.do_first_pass_adjustment(prev_cell=prev_cell)
         self.cells.append(cell)
+
+    def process(self):
+        self.cells.clear()
+        if self.ref_row:
+            for ref_cell in self.ref_row.cells:
+                left_pos, right_pos = ref_cell.left, ref_cell.right
+                self.append_new_cell(left_pos, right_pos)
 
     @classmethod
     def create_ref_row(cls, line, pattern):
