@@ -3027,14 +3027,11 @@ class TabularRow(RuntimeException):
                 msg='Failed to parse\nPattern: %r\nLine: %r' % (pattern, line)
             )
 
-        total = len(lst)
         ref_tabular_row = cls(line)
 
         prev_right = NUMBER.ZERO
         for count, item in enumerate(lst, NUMBER.ONE):
-            width = len(item)
-            left = prev_right
-            right = left + width - NUMBER.ONE if count == total else left + width
+            left, right = prev_right, prev_right + len(item)
             prev_right = right
             ref_tabular_row.append_new_cell(left, right)
 
