@@ -3004,6 +3004,45 @@ class TabularCell(RuntimeException):
             self.other_right = self.right - len(str.lstrip(self.data)) + len(self.text)
 
 
+class TabularRow(RuntimeException):
+    def __init__(self, line, ref_row=None):
+        self.line = line
+        self.ref_row = ref_row
+        self.cells = []
+
+    def __len__(self):
+        chk = bool(self.cells)
+        return chk
+
+    def append_new_cell(self, left_pos, right_pos):
+        index = len(self.cells)
+        ref_cell = self.ref_row[index] if self.ref_row else None
+        tabular_cell = TabularCell(self.line, left_pos, right_pos, ref_cell=ref_cell)
+        self.cells.append(tabular_cell)
+
+    @classmethod
+    def create_ref_row(cls, line, pattern):
+        lst = re.findall(pattern, line)
+        if not lst:
+            RuntimeException.do_raise_runtime_error(
+                obj=Misc.join_string(cls.__name__, 'RTError'),
+                msg='Failed to parse\nPattern: %r\nLine: %r' % (pattern, line)
+            )
+
+        total = len(lst)
+        ref_tabular_row = cls(line)
+
+        prev_right = NUMBER.ZERO
+        for count, item in enumerate(lst, NUMBER.ONE):
+            width = len(item)
+            left = prev_right
+            right = left + width - NUMBER.ONE if count == total else left + width
+            prev_right = right
+            ref_tabular_row.append_new_cell(left, right)
+
+        return ref_tabular_row
+
+
 class TabularColumn:
     def __init__(self, index=0, name='', left_column=None, right_column=None):
         self.left_column = left_column
