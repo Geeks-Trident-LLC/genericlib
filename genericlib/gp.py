@@ -2952,6 +2952,19 @@ class TabularCell(RuntimeException):
         else:
             return ret_val
 
+    def do_first_pass_adjustment(self, prev_cell=None):
+        if not isinstance(prev_cell, self.__class__):
+            # skip adjustment
+            return
+
+        prefix = prev_cell.get_possible_prefix()
+        prefix_length = len(prefix)
+        if not self.is_leading and prefix:
+            self.left = self.left - prefix_length
+            prev_cell.right = prev_cell.right - prefix_length
+            self.process()
+            prev_cell.process()
+
     def readjust(self, prev_cell=None):
         if not isinstance(prev_cell, self.__class__):
             # dont readjust
@@ -3015,8 +3028,11 @@ class TabularRow(RuntimeException):
     def append_new_cell(self, left_pos, right_pos):
         index = len(self.cells)
         ref_cell = self.ref_row[index] if self.ref_row else None
-        tabular_cell = TabularCell(self.line, left_pos, right_pos, ref_cell=ref_cell)
-        self.cells.append(tabular_cell)
+        cell = TabularCell(self.line, left_pos, right_pos, ref_cell=ref_cell)
+        if self.ref_row:
+            prev_cell = self.cells[-NUMBER.ONE] if index else None
+            cell.do_first_pass_adjustment(prev_cell=prev_cell)
+        self.cells.append(cell)
 
     @classmethod
     def create_ref_row(cls, line, pattern):
