@@ -2921,6 +2921,13 @@ class TabularCell(RuntimeException):
         setattr(self, attr, val)
         self.process()
 
+    def get_possible_prefix(self):
+        if self.is_empty or self.is_trailing:
+            return STRING.EMPTY
+        else:
+            *chk, prefix = self.text.rsplit(STRING.SPACE_CHAR, maxsplit=NUMBER.ONE)
+            return STRING.EMPTY if chk else prefix
+
     def get_postfix_data(self):
         if self.is_multi_trailing or not self.is_containing_space:
             return STRING.EMPTY
