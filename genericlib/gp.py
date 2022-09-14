@@ -2816,8 +2816,8 @@ class TabularCell(RuntimeException):
 
         self.left = NUMBER.ZERO
         self.right = NUMBER.ZERO
-        self.other_left = NUMBER.ZERO
-        self.other_right = NUMBER.ZERO
+        self.left_bound = NUMBER.ZERO
+        self.right_bound = NUMBER.ZERO
 
         self.line = STRING.EMPTY
         self.data = STRING.EMPTY
@@ -2888,6 +2888,20 @@ class TabularCell(RuntimeException):
         return chk
 
     @property
+    def is_just_chars(self):
+        if self.is_empty:
+            return False
+        chk = STRING.SPACE_CHAR not in self.text
+        return chk
+
+    @property
+    def is_group_of_chars(self):
+        if self.is_empty:
+            return False
+        chk = STRING.SPACE_CHAR in self.text
+        return chk
+
+    @property
     def is_not_containing_space(self):
         chk = STRING.SPACE_CHAR not in self.text
         return chk
@@ -2902,27 +2916,10 @@ class TabularCell(RuntimeException):
         chk = STRING.DOUBLE_SPACES in self.text
         return chk
 
-    @property
-    def increase_left(self):
-        self.update_left_position(val=NUMBER.ONE)
-
-    @property
-    def decrease_left(self):
-        self.update_left_position(val=-NUMBER.ONE)
-
-    @property
-    def increase_right(self):
-        self.update_right_position(val=NUMBER.ONE)
-
-    @property
-    def decrease_right(self):
-        self.update_right_position(val=-NUMBER.ONE)
-
-    def update_left_position(self, val=1):
-        self.left = self.left + val
-
-    def update_right_position(self, val=1):
-        self.right = self.right + val
+    def update_position(self, attr, val=0):
+        attr = 'left' if attr.lower() == 'left' else 'right'
+        setattr(self, attr, val)
+        self.process()
 
     def get_postfix_data(self):
         if self.is_multi_trailing or not self.is_containing_space:
@@ -2936,7 +2933,7 @@ class TabularCell(RuntimeException):
 
         if self.ref_cell:
             other_right = self.right - len(ret_val)
-            if other_right > self.ref_cell.other_right:
+            if other_right > self.ref_cell.right_bound:
                 return ret_val
             else:
                 if space in remaining_txt:
@@ -2964,10 +2961,8 @@ class TabularCell(RuntimeException):
             prefix = prev_cell.get_postfix_data()
             if prefix:
                 width = len(prefix) + NUMBER.ONE
-                self.update_left_position(val=self.left-width)
-                self.process()
-                prev_cell.update_right_position(val=self.right-width)
-                prev_cell.process()
+                self.update_position('left', val=self.left-width)
+                prev_cell.update_position('right', val=self.right-width)
             else:
                 # dont readjust
                 return
@@ -2996,12 +2991,8 @@ class TabularCell(RuntimeException):
         self.data = self.line[self.left:self.right]
         self.text = self.data.strip()
 
-        if self.is_empty:
-            self.other_left = self.left
-            self.other_right = self.right
-        else:
-            self.other_left = self.left + len(str.rstrip(self.data)) - len(self.text)
-            self.other_right = self.right - len(str.lstrip(self.data)) + len(self.text)
+        self.left_bound = self.left + len(self.leading)
+        self.right_bound = self.right - len(self.trailing)
 
 
 class TabularRow(RuntimeException):
