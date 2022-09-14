@@ -3043,6 +3043,19 @@ class TabularRow(RuntimeException):
         return ref_tabular_row
 
 
+class TabularRows(RuntimeException):
+    def __init__(self, *lines, ref_row=None):
+        self.lines = Misc.get_list_of_lines(*lines)
+        self.ref_row = ref_row
+
+        self.rows = []
+
+    def process(self):
+        for line in self.lines:
+            row = TabularRow(line, ref_row=self.ref_row)
+            self.rows.append(row)
+
+
 class TabularColumn:
     def __init__(self, index=0, name='', left_column=None, right_column=None):
         self.left_column = left_column
