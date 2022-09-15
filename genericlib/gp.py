@@ -3070,6 +3070,10 @@ class TabularTable(RuntimeException):
         self.rows = []
         self.columns = []
 
+    def __len__(self):
+        chk = bool(self.rows) and bool(self.columns)
+        return chk
+
     def add_data_to_rows(self):
         self.rows.clear()
         for line in self.lines:
