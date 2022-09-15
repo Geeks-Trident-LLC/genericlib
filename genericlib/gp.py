@@ -3070,6 +3070,11 @@ class TabularTable(RuntimeException):
         self.rows = []
         self.columns = []
 
+    def add_data_to_rows(self):
+        for line in self.lines:
+            row = TabularRow(line, ref_row=self.ref_row)
+            self.rows.append(row)
+
     def process(self):
         are_cols_created = False
         for line in self.lines:
