@@ -3071,32 +3071,36 @@ class TabularTable(RuntimeException):
         self.columns = []
 
     def add_data_to_rows(self):
+        self.rows.clear()
         for line in self.lines:
             row = TabularRow(line, ref_row=self.ref_row)
             self.rows.append(row)
 
-    def process(self):
-        are_cols_created = False
-        for line in self.lines:
-            row = TabularRow(line, ref_row=self.ref_row)
-            self.rows.append(row)
-
-            left_column = None
+    def add_data_to_columns(self):
+        self.columns.clear()
+        is_created = False
+        for row in self.rows:
+            prev_column = None
             for index, cell in enumerate(row.cells):
-                column = self.columns[index] if are_cols_created else TabularColumn(index=index)
+                new_col = TabularColumn(index=index)
+                column = self.columns[index] if is_created else new_col
                 self.columns[index] = column
-                column.left_column = left_column
+                column.left_column = prev_column
                 column.append_cell(cell)
                 self.columns[index] = column
 
-                if left_column:
-                    left_column.right_column = column
+                if prev_column:
+                    prev_column.right_column = column
 
-                left_column = column
-            are_cols_created = True
+                prev_column = column
+            is_created = True
 
         for col in self.columns:
             col.analyze_and_update_alignment()
+
+    def process(self):
+        self.add_data_to_rows()
+        self.add_data_to_columns()
 
 
 class TabularColumn:
