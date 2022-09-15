@@ -2967,7 +2967,7 @@ class TabularCell(RuntimeException):
 
     def readjust(self, prev_cell=None):
         if not isinstance(prev_cell, self.__class__):
-            # dont readjust
+            # skip adjustment
             return
 
         chk1 = prev_cell.is_multi_trailing
@@ -2975,7 +2975,7 @@ class TabularCell(RuntimeException):
         chk3 = prev_cell.is_single_trailing and self.is_leading
 
         if chk1 or chk2 and chk3:
-            # dont readjust
+            # skip adjustment
             return
         else:
             prefix = prev_cell.get_postfix_data()
@@ -2984,7 +2984,7 @@ class TabularCell(RuntimeException):
                 self.update_position('left', val=self.left-width)
                 prev_cell.update_position('right', val=self.right-width)
             else:
-                # dont readjust
+                # skip adjustment
                 return
 
     def process(self):
@@ -3068,11 +3068,30 @@ class TabularRows(RuntimeException):
         self.ref_row = ref_row
 
         self.rows = []
+        self.columns = []
 
     def process(self):
+        are_cols_created = False
         for line in self.lines:
             row = TabularRow(line, ref_row=self.ref_row)
             self.rows.append(row)
+
+            left_column = None
+            for index, cell in enumerate(row.cells):
+                column = self.columns[index] if are_cols_created else TabularColumn(index=index)
+                self.columns[index] = column
+                column.left_column = left_column
+                column.append_cell(cell)
+                self.columns[index] = column
+
+                if left_column:
+                    left_column.right_column = column
+
+                left_column = column
+            are_cols_created = True
+
+        for col in self.columns:
+            col.analyze_and_update_alignment()
 
 
 class TabularColumn:
@@ -3080,22 +3099,50 @@ class TabularColumn:
         self.left_column = left_column
         self.right_column = right_column
         self.index = index
-        self.name = name
-        self.tabular_cells = []
-        self.left_pos = 0
-        self.right_pos = 1
+        self.name = name or 'col%s' % index
+        self.cells = []
+        self.left_border = NUMBER.ZERO
+        self.right_border = NUMBER.ZERO
 
-    def update_left_pos(self, pos):
-        self.left_pos = pos
+        self._alignment = 'left'
 
-    def update_right_pos(self, pos):
-        self.right_pos = pos
+    def __len__(self):
+        chk = bool(self.cells)
+        return chk
 
-    def update_cells_data(self, *lst_of_data):
-        for index, data in lst_of_data:
-            cell = self.tabular_cells[index]
-            cell.update_data(data)
+    @property
+    def is_left_alignment(self):
+        if not self:
+            return False
+        else:
+            chk = self._alignment == 'left'
+            return chk
 
-    def update_cell_data(self, data, pos):
-        cell = self.tabular_cells[pos]
-        cell.update_data(data)
+    @property
+    def is_right_alignment(self):
+        if not self:
+            return False
+        else:
+            chk = self._alignment == 'right'
+            return chk
+
+    @property
+    def is_center_alignment(self):
+        chk = not self.is_left_alignment or not self.is_right_alignment
+        return chk
+
+    def append_cell(self, cell):
+        self.cells.append(cell)
+
+    def analyze_and_update_alignment(self):
+        if not self.cells:
+            return
+
+        lst_of_left = [cell.left for cell in self.cells]
+        lst_of_right = [cell.right for cell in self.cells]
+        are_all_left_same = len(set(lst_of_left)) == NUMBER.ONE
+        are_all_right_same = len(set(lst_of_right)) == NUMBER.ONE
+
+        tbl = {'11': 'right', '10': 'left', '01': 'right', '00': 'center'}
+        key = Misc.join_string(str(int(are_all_left_same)), str(int(are_all_right_same)))
+        self._alignment = tbl.get(key)
