@@ -2816,8 +2816,8 @@ class TabularCell(RuntimeException):
 
         self.left = NUMBER.ZERO
         self.right = NUMBER.ZERO
-        self.left_bound = NUMBER.ZERO
-        self.right_bound = NUMBER.ZERO
+        self.inner_left = NUMBER.ZERO
+        self.inner_right = NUMBER.ZERO
 
         self.line = STRING.EMPTY
         self.data = STRING.EMPTY
@@ -2940,7 +2940,7 @@ class TabularCell(RuntimeException):
 
         if self.ref_cell:
             other_right = self.right - len(ret_val)
-            if other_right > self.ref_cell.right_bound:
+            if other_right > self.ref_cell.inner_right:
                 return ret_val
             else:
                 if space in remaining_txt:
@@ -3011,8 +3011,8 @@ class TabularCell(RuntimeException):
         self.data = self.line[self.left:self.right]
         self.text = self.data.strip()
 
-        self.left_bound = self.left + len(self.leading)
-        self.right_bound = self.right - len(self.trailing)
+        self.inner_left = self.left + len(self.leading)
+        self.inner_right = self.right - len(self.trailing)
 
 
 class TabularRow(RuntimeException):
