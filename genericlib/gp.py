@@ -3062,7 +3062,7 @@ class TabularRow(RuntimeException):
         return ref_tabular_row
 
 
-class TabularRows(RuntimeException):
+class TabularTable(RuntimeException):
     def __init__(self, *lines, ref_row=None):
         self.lines = Misc.get_list_of_lines(*lines)
         self.ref_row = ref_row
