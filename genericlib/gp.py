@@ -2693,7 +2693,7 @@ class TabularTextPatternByVarColumns(RuntimeException):
         var_names = ['col%s' % i for i in range(self.columns_count)]
         return var_names
 
-    def try_to_get_cells_info_by_space_symbols_divider(self):
+    def try_to_get_table_by_space_symbols_divider(self):
         fmt = ' *%(p)s( +%(p)s){%(rep)s} *$'
         repetition = self.columns_count - NUMBER.ONE
         pat = fmt % dict(p=PATTERN.SYMBOLS, rep=repetition)
@@ -2708,52 +2708,13 @@ class TabularTextPatternByVarColumns(RuntimeException):
         if not found_line:
             return False, None
 
-        pat = ' * %s*' % PATTERN.SYMBOLS
-        lst = re.findall(pat, found_line)
+        pattern = ' *%s *' % PATTERN.SYMBOLS
+        ref_row = TabularRow.create_ref_row(found_line, pattern)
+        table = TabularTable(*self.lines, ref_row=ref_row)
 
-        lst_of_pos_info = []
-        prev_right = 0
-        for item in lst:
-            curr_width = len(item)
-            left = prev_right
-            right = left + curr_width - NUMBER.ONE
-            prev_right = right
-            pair = TabularCell(found_line, left, right)
-            lst_of_pos_info.append(pair)
-        else:
-            if lst_of_pos_info:
-                pair.right = pair.right + NUMBER.ONE
+        return True, table
 
-        lst_of_cells_data = []
-
-        for line in self.lines:
-            cells_data = []
-            prev_sub_txt = STRING.EMPTY
-            for pos_info in lst_of_pos_info:
-                sub_txt = line[pos_info.left:pos_info.right]
-                if cells_data and prev_sub_txt.strip():
-                    if prev_sub_txt[-NUMBER.ONE:] == STRING.SPACE_CHAR:
-                        cells_data.append(sub_txt)
-                    else:
-                        space, spaces = STRING.SPACE_CHAR, STRING.DOUBLE_SPACES
-                        if space in prev_sub_txt:
-                            split_chars = spaces if spaces in prev_sub_txt else space
-                            _, last = prev_sub_txt.rsplit(split_chars, maxsplit=1)
-                            prev_data = prev_sub_txt[:-len(last) - NUMBER.ONE]
-                            new_sub_txt = ' %s%s' % (last, sub_txt)
-                            cells_data.pop()
-                            cells_data.append(prev_data)
-                            cells_data.append(new_sub_txt)
-                        else:
-                            cells_data.append(sub_txt)
-                else:
-                    cells_data.append(sub_txt)
-                prev_sub_txt = sub_txt
-            lst_of_cells_data.append(cells_data)
-
-        return True, []
-
-    def try_to_get_cells_info_by_space_mixed_words_divider(self):
+    def try_to_get_table_by_space_mixed_words_divider(self):
         fmt = ' *%(p)s( +%(p)s){%(rep)s} *$'
         repetition = self.columns_count - NUMBER.ONE
         pat = fmt % dict(p=PATTERN.MIXED_WORD_OR_WORDS, rep=repetition)
@@ -2769,15 +2730,15 @@ class TabularTextPatternByVarColumns(RuntimeException):
 
         return True, []
 
-    def get_cells_info_by_space_divider(self):
-        parsed, cells_info = self.try_to_get_cells_info_by_space_symbols_divider()
+    def get_table_by_space_divider(self):
+        parsed, cells_info = self.try_to_get_table_by_space_symbols_divider()
         if not parsed:
-            parsed, cells_info = self.try_to_get_cells_info_by_space_mixed_words_divider()
+            parsed, cells_info = self.try_to_get_table_by_space_mixed_words_divider()
             if not parsed:
                 raise Exception('')
         return cells_info
 
-    def get_cells_info_by_symbol_divider(self):
+    def get_table_by_symbol_divider(self):
         divider_pat = re.escape(self.divider.strip())
         repetition = self.columns_count - NUMBER.ONE
         fmt = r' *(%(d)s)? *%(p)s( *%(d)s *%(p)s){%(rep)s} *(%(d)s)? *$'
@@ -2797,11 +2758,11 @@ class TabularTextPatternByVarColumns(RuntimeException):
     def get_cells_info(self):
         divider = self.divider.strip()
         if divider == STRING.EMPTY:
-            cells_info = self.get_cells_info_by_space_divider()
+            cells_info = self.get_table_by_space_divider()
             return cells_info
 
         elif re.match(PATTERN.SYMBOLS, divider):
-            cells_info = self.get_cells_info_by_symbol_divider()
+            cells_info = self.get_table_by_symbol_divider()
             return cells_info
         else:
             self.raise_runtime_error(msg='Unsupported divider %r' % self.divider)
@@ -2821,7 +2782,6 @@ class TabularCell(RuntimeException):
 
         self.line = STRING.EMPTY
         self.data = STRING.EMPTY
-        self.text = STRING.EMPTY
 
         self.ref_cell = None
 
@@ -2831,6 +2791,16 @@ class TabularCell(RuntimeException):
         chk = self.left >= NUMBER.ZERO
         chk = chk and self.right > self.left
         return chk
+
+    def __repr__(self):
+        fmt = '%s(text=%r, data=%r, left=%s, right=%s)'
+        cls_name = Misc.get_instance_class_name(self)
+        result = fmt % (cls_name, self.text, self.data, self.left, self.right)
+        return result
+
+    @property
+    def text(self):
+        return self.data.strip()
 
     @property
     def leading(self):
@@ -2884,7 +2854,7 @@ class TabularCell(RuntimeException):
 
     @property
     def is_empty(self):
-        chk = self.text = STRING.EMPTY
+        chk = self.text == STRING.EMPTY
         return chk
 
     @property
@@ -3006,10 +2976,9 @@ class TabularCell(RuntimeException):
             self.raise_runtime_error(msg='invalid ref_cell type (%s)' % cls_name)
 
         self.left = left
-        self.right = right
+        self.right = len(line) if self.ref_cell and right == 999999 else right
         self.line = line
         self.data = self.line[self.left:self.right]
-        self.text = self.data.strip()
 
         self.inner_left = self.left + len(self.leading)
         self.inner_right = self.right - len(self.trailing)
@@ -3026,14 +2995,30 @@ class TabularRow(RuntimeException):
         chk = bool(self.cells)
         return chk
 
+    def __repr__(self):
+        fmt = '%s(columns_count=%s)'
+        cls_name = Misc.get_instance_class_name(self)
+        result = fmt % (cls_name, len(self.cells))
+        return result
+
+    @property
+    def cells_count(self):
+        total = len(self.cells)
+        return total
+
+    @property
+    def columns_count(self):
+        return self.cells
+
     def append_new_cell(self, left_pos, right_pos):
         index = len(self.cells)
-        ref_cell = self.ref_row[index] if self.ref_row else None
+        ref_cell = self.ref_row.cells[index] if self.ref_row else None
         cell = TabularCell(self.line, left_pos, right_pos, ref_cell=ref_cell)
         if self.ref_row:
             prev_cell = self.cells[-NUMBER.ONE] if index else None
             cell.do_first_pass_adjustment(prev_cell=prev_cell)
         self.cells.append(cell)
+        return cell
 
     def process(self):
         self.cells.clear()
@@ -3051,15 +3036,19 @@ class TabularRow(RuntimeException):
                 msg='Failed to parse\nPattern: %r\nLine: %r' % (pattern, line)
             )
 
-        ref_tabular_row = cls(line)
+        ref_row = cls(line)
 
-        prev_right = NUMBER.ZERO
-        for count, item in enumerate(lst, NUMBER.ONE):
+        prev_right = 0
+        cell = None
+        for item in lst:
             left, right = prev_right, prev_right + len(item)
             prev_right = right
-            ref_tabular_row.append_new_cell(left, right)
+            cell = ref_row.append_new_cell(left, right)
+        else:
+            if cell:
+                cell.right = 999999
 
-        return ref_tabular_row
+        return ref_row
 
 
 class TabularTable(RuntimeException):
@@ -3069,10 +3058,30 @@ class TabularTable(RuntimeException):
 
         self.rows = []
         self.columns = []
+        self.header_columns = []
+        self.header_names = []
+
+        self.process()
 
     def __len__(self):
         chk = bool(self.rows) and bool(self.columns)
         return chk
+
+    def __repr__(self):
+        fmt = '%s(rows_count=%s, columns_count=%s)'
+        cls_name = Misc.get_instance_class_name(self)
+        result = fmt % (cls_name, len(self.rows), len(self.columns))
+        return result
+
+    @property
+    def rows_count(self):
+        total = len(self.rows)
+        return total
+
+    @property
+    def columns_count(self):
+        total = len(self.columns)
+        return total
 
     def add_data_to_rows(self):
         self.rows.clear()
@@ -3083,28 +3092,61 @@ class TabularTable(RuntimeException):
     def add_data_to_columns(self):
         self.columns.clear()
         is_created = False
+
         for row in self.rows:
             prev_column = None
             for index, cell in enumerate(row.cells):
                 new_col = TabularColumn(index=index)
                 column = self.columns[index] if is_created else new_col
-                self.columns[index] = column
+                not is_created and self.columns.append(column)
                 column.left_column = prev_column
                 column.append_cell(cell)
-                self.columns[index] = column
 
                 if prev_column:
                     prev_column.right_column = column
 
                 prev_column = column
             is_created = True
-
         for col in self.columns:
             col.analyze_and_update_alignment()
+
+    def to_list_of_dict(self):
+        lst_of_dict = []
+        for row_index in range(len(self.rows)):
+            dict_obj = dict()
+            lst_of_dict.append(dict_obj)
+            for col in self.columns:
+                dict_obj[col.name] = col.cells[row_index].data.strip()
+        return lst_of_dict
+
+    def do_cleaning_data(self):
+        if not self.ref_row:
+            return
+
+        ref_line = self.ref_row.line
+        row_pos = self.lines.index(ref_line)
+        self.rows = self.rows[row_pos + NUMBER.ONE:]
+
+        for col in self.columns:
+            hdr_col = TabularColumn()
+            hdr_col.cells = col.cells[:row_pos + NUMBER.ONE]
+            self.header_columns.append(hdr_col)
+            col.cells = col.cells[row_pos + NUMBER.ONE:]
+
+    def build_and_update_headers(self):
+        repl_char = STRING.UNDERSCORE_CHAR
+        for index, hdr_col in enumerate(self.header_columns):
+            col_name = str.join(repl_char, [cell.text for cell in hdr_col.cells])
+            col_name = re.sub(PATTERN.MULTI_SPACE_SYMBOLS, repl_char, col_name)
+            col_name = col_name.strip(repl_char).lower()
+            self.header_names.append(col_name)
+            self.columns[index].name = col_name
 
     def process(self):
         self.add_data_to_rows()
         self.add_data_to_columns()
+        self.do_cleaning_data()
+        self.build_and_update_headers()
 
 
 class TabularColumn:
@@ -3122,6 +3164,21 @@ class TabularColumn:
     def __len__(self):
         chk = bool(self.cells)
         return chk
+
+    def __repr__(self):
+        fmt = '%s(name=%r, cells_count=%s)'
+        cls_name = Misc.get_instance_class_name(self)
+        result = fmt % (cls_name, self.name, len(self.cells))
+        return result
+
+    @property
+    def cells_count(self):
+        total = len(self.cells)
+        return total
+
+    @property
+    def rows_count(self):
+        return self.cells_count
 
     @property
     def is_left_alignment(self):

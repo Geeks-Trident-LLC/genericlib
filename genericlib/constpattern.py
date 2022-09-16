@@ -42,6 +42,9 @@ class PATTERN:
     SYMBOLS_OR_GROUP = '%s( +%s)*' % (SYMBOLS, SYMBOLS)
     SYMBOLS_GROUP = '%s( +%s)+' % (SYMBOLS, SYMBOLS)
 
+    SPACE_SYMBOL = r'[ \x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]'
+    MULTI_SPACE_SYMBOLS = '%s+' % SPACE_SYMBOL
+
     GRAPH = r'[\x21-\x7e]'
 
     WORD = r'%s+' % ALPHABET_NUMERIC
