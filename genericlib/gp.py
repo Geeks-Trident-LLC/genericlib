@@ -2693,28 +2693,36 @@ class TabularTextPatternByVarColumns(RuntimeException):
         var_names = ['col%s' % i for i in range(self.columns_count)]
         return var_names
 
-    def try_to_get_table_by_space_symbols_divider(self):
+    def find_ref_row_by_symbols_divider(self):
         fmt = ' *%(p)s( +%(p)s){%(rep)s} *$'
         repetition = self.columns_count - NUMBER.ONE
         pat = fmt % dict(p=PATTERN.SYMBOLS, rep=repetition)
-        found_line = STRING.EMPTY
 
-        for line in self.lines:
-            match = re.match(pat, line)
-            if match:
-                found_line = line
-                break
+        found_lines = [line for line in self.lines if re.match(pat, line)]
 
-        if not found_line:
+        if not found_lines:
+            return None
+        else:
+            found_line = found_lines[NUMBER.ZERO]
+            pattern = ' *%s *' % PATTERN.SYMBOLS
+            ref_row = TabularRow.create_ref_row(found_line, pattern)
+            return ref_row
+
+    def find_ref_row_by_blank_space_divider(self):
+        self.raise_runtime_error(msg='Need to implement find_ref_by_blank_space_divider')
+
+    def find_ref_row_by_separator_divider(self):
+        self.raise_runtime_error(msg='Need to implement find_ref_by_separator_divider')
+
+    def try_to_get_table_by_symbols_divider(self):
+        ref_row = self.find_ref_row_by_symbols_divider()
+        if ref_row:
+            table = TabularTable(*self.lines, ref_row=ref_row)
+            return True, table
+        else:
             return False, None
 
-        pattern = ' *%s *' % PATTERN.SYMBOLS
-        ref_row = TabularRow.create_ref_row(found_line, pattern)
-        table = TabularTable(*self.lines, ref_row=ref_row)
-
-        return True, table
-
-    def try_to_get_table_by_space_mixed_words_divider(self):
+    def try_to_get_table_by_blank_space_divider(self):
         fmt = ' *%(p)s( +%(p)s){%(rep)s} *$'
         repetition = self.columns_count - NUMBER.ONE
         pat = fmt % dict(p=PATTERN.MIXED_WORD_OR_WORDS, rep=repetition)
@@ -2731,9 +2739,9 @@ class TabularTextPatternByVarColumns(RuntimeException):
         return True, []
 
     def get_table_by_space_divider(self):
-        parsed, cells_info = self.try_to_get_table_by_space_symbols_divider()
+        parsed, cells_info = self.try_to_get_table_by_symbols_divider()
         if not parsed:
-            parsed, cells_info = self.try_to_get_table_by_space_mixed_words_divider()
+            parsed, cells_info = self.try_to_get_table_by_blank_space_divider()
             if not parsed:
                 raise Exception('')
         return cells_info
@@ -3028,8 +3036,11 @@ class TabularRow(RuntimeException):
                 self.append_new_cell(left_pos, right_pos)
 
     @classmethod
-    def create_ref_row(cls, line, pattern):
-        lst = re.findall(pattern, line)
+    def create_ref_row(cls, line, pattern, is_findall=True):
+        if is_findall:
+            lst = re.findall(pattern, line)
+        else:
+            lst = []
         if not lst:
             RuntimeException.do_raise_runtime_error(
                 obj=Misc.join_string(cls.__name__, 'RTError'),
