@@ -2705,19 +2705,49 @@ class TabularTextPatternByVarColumns(RuntimeException):
         else:
             found_line = found_lines[NUMBER.ZERO]
             pattern = ' *%s *' % PATTERN.SYMBOLS
-            ref_row = TabularRow.create_ref_row(found_line, pattern)
+            ref_row = TabularRow.create_ref_row(
+                found_line, pattern,
+                case='findall',
+                columns_count=self.columns_count
+            )
             return ref_row
 
     def find_ref_row_by_blank_space_divider(self):
         self.raise_runtime_error(msg='Need to implement find_ref_by_blank_space_divider')
 
     def find_ref_row_by_separator_divider(self):
-        self.raise_runtime_error(msg='Need to implement find_ref_by_separator_divider')
+        fmt = ' *%(sep)s?(%(p)s%(sep)s){%(rep)s}%(p)s%(sep)s? *$'
+        kwargs = dict(
+            p=r'[^%s]+' % self.divider,
+            rep=self.columns_count - NUMBER.ONE,
+            sep=re.escape(self.divider)
+        )
+        pat = fmt % kwargs
+
+        found_lines = [line for line in self.lines if re.match(pat, line)]
+        if not found_lines:
+            return None
+        else:
+            found_line = found_lines[NUMBER.ZERO]
+            ref_row = TabularRow.create_ref_row(
+                found_line, self.divider,
+                columns_count=self.columns_count,
+                case='split'
+            )
+            return ref_row
 
     def try_to_get_table_by_symbols_divider(self):
         ref_row = self.find_ref_row_by_symbols_divider()
         if ref_row:
             table = TabularTable(*self.lines, ref_row=ref_row)
+            return True, table
+        else:
+            return False, None
+
+    def try_to_get_table_by_separator_divider(self):
+        ref_row = self.find_ref_row_by_separator_divider()
+        if ref_row:
+            table = TabularTable(*self.lines, ref_row=ref_row, divider=self.divider)
             return True, table
         else:
             return False, None
@@ -2994,6 +3024,7 @@ class TabularCell(RuntimeException):
 
 class TabularRow(RuntimeException):
     def __init__(self, line, ref_row=None):
+        self._is_symbols_group = None
         self.line = line
         self.ref_row = ref_row
         self.cells = []
@@ -3018,6 +3049,18 @@ class TabularRow(RuntimeException):
     def columns_count(self):
         return self.cells
 
+    @property
+    def is_group_of_symbols(self):
+        if self._is_symbols_group is None:
+            if self.cells:
+                fmt = ' *%(p)s( +%(p)s)* *$'
+                pat = fmt % dict(p=PATTERN.SYMBOLS)
+                match = re.match(pat, self.line)
+                self._is_symbols_group = bool(match)
+            else:
+                return False
+        return self._is_symbols_group
+
     def append_new_cell(self, left_pos, right_pos):
         index = len(self.cells)
         ref_cell = self.ref_row.cells[index] if self.ref_row else None
@@ -3036,9 +3079,52 @@ class TabularRow(RuntimeException):
                 self.append_new_cell(left_pos, right_pos)
 
     @classmethod
-    def create_ref_row(cls, line, pattern, is_findall=True):
-        if is_findall:
+    def create_ref_row(cls, line, pattern, case='',
+                       columns_count=-1):
+        if case == 'findall':
             lst = re.findall(pattern, line)
+            total = len(lst)
+            if columns_count > 0 and columns_count != total:
+                fmt = ('(Parsed columns: %s) != (expected columns: %s)\n'
+                       'Pattern: %r\nLine: %r')
+                RuntimeException.do_raise_runtime_error(
+                    obj=Misc.join_string(cls.__name__, 'RTError'),
+                    msg=fmt % (total, columns_count, pattern, line)
+                )
+        elif str.startswith(case, 'split'):
+            separator = pattern
+            pattern = re.escape(separator)
+            lst = re.split(pattern, line)
+            total = len(lst)
+            if total == columns_count + NUMBER.TWO:
+                prefix, first = lst.pop(NUMBER.ZERO), lst.pop(NUMBER.ZERO)
+                new_first = Misc.join_string(prefix, first, sep=separator)
+                lst.insert(NUMBER.ZERO, new_first)
+
+                postfix, last = lst.pop(), lst.pop()
+                new_last = Misc.join_string(last, postfix, sep=separator)
+                lst.append(new_last)
+                total = len(lst)
+
+            elif total == columns_count + NUMBER.ONE:
+                if line.strip().startswith(separator):
+                    prefix, first = lst.pop(NUMBER.ZERO), lst.pop(NUMBER.ZERO)
+                    new_first = Misc.join_string(prefix, first, sep=separator)
+                    lst.insert(NUMBER.ZERO, new_first)
+                elif line.strip().endswith(separator):
+                    postfix, last = lst.pop(), lst.pop()
+                    new_last = Misc.join_string(last, postfix, sep=separator)
+                    lst.append(new_last)
+
+                total = len(lst)
+
+            if columns_count > 0 and columns_count != total:
+                fmt = ('(Parsed columns: %s) != (expected columns: %s)\n'
+                       'Pattern: %r\nLine: %r')
+                RuntimeException.do_raise_runtime_error(
+                    obj=Misc.join_string(cls.__name__, 'RTError'),
+                    msg=fmt % (total, columns_count, pattern, line)
+                )
         else:
             lst = []
         if not lst:
@@ -3052,7 +3138,9 @@ class TabularRow(RuntimeException):
         prev_right = 0
         cell = None
         for item in lst:
-            left, right = prev_right, prev_right + len(item)
+            left = prev_right
+            prev_right = str.index(line, item) if cell is None else prev_right
+            right = prev_right + len(item)
             prev_right = right
             cell = ref_row.append_new_cell(left, right)
         else:
@@ -3063,9 +3151,10 @@ class TabularRow(RuntimeException):
 
 
 class TabularTable(RuntimeException):
-    def __init__(self, *lines, ref_row=None):
+    def __init__(self, *lines, ref_row=None, divider=''):
         self.lines = Misc.get_list_of_lines(*lines)
         self.ref_row = ref_row
+        self.divider = divider
 
         self.rows = []
         self.columns = []
@@ -3123,11 +3212,16 @@ class TabularTable(RuntimeException):
 
     def to_list_of_dict(self):
         lst_of_dict = []
-        for row_index in range(len(self.rows)):
+        divider = self.divider
+        for row_index, row in enumerate(self.rows):
+            if row.is_group_of_symbols:
+                continue
             dict_obj = dict()
             lst_of_dict.append(dict_obj)
             for col in self.columns:
-                dict_obj[col.name] = col.cells[row_index].data.strip()
+                txt = col.cells[row_index].data.strip()
+                txt = txt.strip(divider).strip() if divider else txt
+                dict_obj[col.name] = txt
         return lst_of_dict
 
     def do_cleaning_data(self):
