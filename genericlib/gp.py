@@ -2736,10 +2736,32 @@ class TabularTextPatternByVarColumns(RuntimeException):
             )
             return ref_row
 
+    def find_ref_row_by_multi_spaces_divider(self):
+        fmt = ' *%(p)s(  +%(p)s){%(rep)s} *$'
+        repetition = self.columns_count - NUMBER.ONE
+        kwargs = dict(
+            p=PATTERN.NON_WHITESPACES_OR_PHRASE,
+            rep=repetition,
+        )
+        pat = fmt % kwargs
+
+        found_lines = [line for line in self.lines if re.match(pat, line)]
+        if not found_lines:
+            return None
+        else:
+            found_line = found_lines[NUMBER.ZERO]
+            pattern = ' *%s  +' % PATTERN.NON_WHITESPACES_OR_PHRASE
+            ref_row = TabularRow.create_ref_row(
+                found_line, pattern,
+                columns_count=self.columns_count,
+                case='finditer'
+            )
+            return ref_row
+
     def try_to_get_table_by_symbols_divider(self):
-        ref_row = self.find_ref_row_by_symbols_divider()
+        ref_row = self.find_ref_row_by_separator_divider()
         if ref_row:
-            table = TabularTable(*self.lines, ref_row=ref_row)
+            table = TabularTable(*self.lines, ref_row=ref_row, divider=self.divider)
             return True, table
         else:
             return False, None
@@ -2753,20 +2775,12 @@ class TabularTextPatternByVarColumns(RuntimeException):
             return False, None
 
     def try_to_get_table_by_blank_space_divider(self):
-        fmt = ' *%(p)s( +%(p)s){%(rep)s} *$'
-        repetition = self.columns_count - NUMBER.ONE
-        pat = fmt % dict(p=PATTERN.MIXED_WORD_OR_WORDS, rep=repetition)
-
-        found_lines = []
-        for line in self.lines:
-            match = re.match(pat, line)
-            if match:
-                found_lines.append(line)
-
-        if not found_lines:
+        ref_row_by_multi_spaces = self.find_ref_row_by_multi_spaces_divider()
+        if ref_row_by_multi_spaces:
+            table = TabularTable(*self.lines, ref_row=ref_row_by_multi_spaces)
+            return True, table
+        else:
             return False, None
-
-        return True, []
 
     def get_table_by_space_divider(self):
         parsed, cells_info = self.try_to_get_table_by_symbols_divider()
@@ -3083,6 +3097,7 @@ class TabularRow(RuntimeException):
                        columns_count=-1):
         if case == 'findall':
             lst = re.findall(pattern, line)
+
             total = len(lst)
             if columns_count > 0 and columns_count != total:
                 fmt = ('(Parsed columns: %s) != (expected columns: %s)\n'
@@ -3125,6 +3140,22 @@ class TabularRow(RuntimeException):
                     obj=Misc.join_string(cls.__name__, 'RTError'),
                     msg=fmt % (total, columns_count, pattern, line)
                 )
+        elif case == 'finditer':
+            lst = []
+            item = None
+            for item in re.finditer(pattern, line):
+                txt = item.group()
+                lst.append(txt)
+            else:
+                if item:
+                    post_txt = line[item.end():]
+                    post_txt.strip() and lst.append(post_txt)
+
+            if len(lst) > columns_count:
+                index = columns_count - NUMBER.ONE
+                last_sub_lst = lst[index:]
+                lst = lst[:index]
+                lst.append(Misc.join_string(*last_sub_lst))
         else:
             lst = []
         if not lst:
