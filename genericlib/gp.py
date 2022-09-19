@@ -3382,6 +3382,11 @@ class TabularColumn:
         chk = not self.is_left_alignment or not self.is_right_alignment
         return chk
 
+    @property
+    def min_width(self):
+        width = min(cell.width for cell in self.cells) if self.cells else NUMBER.ONE
+        return width
+
     def append_cell(self, cell):
         self.cells.append(cell)
 
