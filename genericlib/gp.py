@@ -2934,6 +2934,15 @@ class TabularCell(RuntimeException):
         return chk
 
     @property
+    def items_count(self):
+        if self.is_empty:
+            return NUMBER.ZERO
+        else:
+            lst = re.split(PATTERN.SPACES, self.text)
+            count = len(lst)
+            return count
+
+    @property
     def is_containing_spaces(self):
         chk = STRING.DOUBLE_SPACES in self.text
         return chk

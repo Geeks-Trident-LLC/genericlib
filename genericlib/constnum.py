@@ -1,8 +1,5 @@
 
-from enum import IntFlag
-
-
-class NUMBER(IntFlag):
+class NUMBER:
     ZERO = 0
     ONE = 1
     TWO = 2
