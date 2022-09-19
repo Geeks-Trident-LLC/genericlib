@@ -3094,78 +3094,15 @@ class TabularRow(RuntimeException):
                 self.append_new_cell(left_pos, right_pos)
 
     @classmethod
-    def create_ref_row(cls, line, pattern, case='',
-                       columns_count=-1):
-        if case == 'findall':
-            lst = re.findall(pattern, line)
+    def do_creating_ref_row(cls, line, pattern, lst, aligned=True):
 
-            total = len(lst)
-            if columns_count > 0 and columns_count != total:
-                fmt = ('(Parsed columns: %s) != (expected columns: %s)\n'
-                       'Pattern: %r\nLine: %r')
-                RuntimeException.do_raise_runtime_error(
-                    obj=Misc.join_string(cls.__name__, 'RTError'),
-                    msg=fmt % (total, columns_count, pattern, line)
-                )
-        elif str.startswith(case, 'split'):
-            separator = pattern
-            pattern = re.escape(separator)
-            lst = re.split(pattern, line)
-            total = len(lst)
-            if total == columns_count + NUMBER.TWO:
-                prefix, first = lst.pop(NUMBER.ZERO), lst.pop(NUMBER.ZERO)
-                new_first = Misc.join_string(prefix, first, sep=separator)
-                lst.insert(NUMBER.ZERO, new_first)
-
-                postfix, last = lst.pop(), lst.pop()
-                new_last = Misc.join_string(last, postfix, sep=separator)
-                lst.append(new_last)
-                total = len(lst)
-
-            elif total == columns_count + NUMBER.ONE:
-                if line.strip().startswith(separator):
-                    prefix, first = lst.pop(NUMBER.ZERO), lst.pop(NUMBER.ZERO)
-                    new_first = Misc.join_string(prefix, first, sep=separator)
-                    lst.insert(NUMBER.ZERO, new_first)
-                elif line.strip().endswith(separator):
-                    postfix, last = lst.pop(), lst.pop()
-                    new_last = Misc.join_string(last, postfix, sep=separator)
-                    lst.append(new_last)
-
-                total = len(lst)
-
-            if columns_count > 0 and columns_count != total:
-                fmt = ('(Parsed columns: %s) != (expected columns: %s)\n'
-                       'Pattern: %r\nLine: %r')
-                RuntimeException.do_raise_runtime_error(
-                    obj=Misc.join_string(cls.__name__, 'RTError'),
-                    msg=fmt % (total, columns_count, pattern, line)
-                )
-        elif case == 'finditer':
-            lst = []
-            item = None
-            for item in re.finditer(pattern, line):
-                txt = item.group()
-                lst.append(txt)
-            else:
-                if item:
-                    post_txt = line[item.end():]
-                    post_txt.strip() and lst.append(post_txt)
-
-            if len(lst) > columns_count:
-                index = columns_count - NUMBER.ONE
-                last_sub_lst = lst[index:]
-                lst = lst[:index]
-                lst.append(Misc.join_string(*last_sub_lst))
-        else:
-            lst = []
         if not lst:
             RuntimeException.do_raise_runtime_error(
                 obj=Misc.join_string(cls.__name__, 'RTError'),
                 msg='Failed to parse\nPattern: %r\nLine: %r' % (pattern, line)
             )
 
-        ref_row = cls(line)
+        ref_row = cls(line, aligned=aligned)
 
         prev_right = 0
         cell = None
@@ -3180,6 +3117,99 @@ class TabularRow(RuntimeException):
                 cell.right = 999999
 
         return ref_row
+
+    @classmethod
+    def do_creating_ref_row_by_findall(cls, line, pattern, columns_count=-1):
+        lst = re.findall(pattern, line)
+
+        total = len(lst)
+        if columns_count > 0 and columns_count != total:
+            fmt = ('(Parsed columns: %s) != (expected columns: %s)\n'
+                   'Pattern: %r\nLine: %r')
+            RuntimeException.do_raise_runtime_error(
+                obj=Misc.join_string(cls.__name__, 'RTError'),
+                msg=fmt % (total, columns_count, pattern, line)
+            )
+
+        ref_row = cls.do_creating_ref_row(line, pattern, lst)
+        return ref_row
+
+    @classmethod
+    def do_creating_ref_row_by_splitting(cls, line, pattern, columns_count=1):
+        separator = pattern
+        pattern = re.escape(separator)
+        lst = re.split(pattern, line)
+        total = len(lst)
+        if total == columns_count + NUMBER.TWO:
+            prefix, first = lst.pop(NUMBER.ZERO), lst.pop(NUMBER.ZERO)
+            new_first = Misc.join_string(prefix, first, sep=separator)
+            lst.insert(NUMBER.ZERO, new_first)
+
+            postfix, last = lst.pop(), lst.pop()
+            new_last = Misc.join_string(last, postfix, sep=separator)
+            lst.append(new_last)
+            total = len(lst)
+
+        elif total == columns_count + NUMBER.ONE:
+            if line.strip().startswith(separator):
+                prefix, first = lst.pop(NUMBER.ZERO), lst.pop(NUMBER.ZERO)
+                new_first = Misc.join_string(prefix, first, sep=separator)
+                lst.insert(NUMBER.ZERO, new_first)
+            elif line.strip().endswith(separator):
+                postfix, last = lst.pop(), lst.pop()
+                new_last = Misc.join_string(last, postfix, sep=separator)
+                lst.append(new_last)
+
+            total = len(lst)
+
+        if columns_count > 0 and columns_count != total:
+            fmt = ('(Parsed columns: %s) != (expected columns: %s)\n'
+                   'Pattern: %r\nLine: %r')
+            RuntimeException.do_raise_runtime_error(
+                obj=Misc.join_string(cls.__name__, 'RTError'),
+                msg=fmt % (total, columns_count, pattern, line)
+            )
+
+        ref_row = cls.do_creating_ref_row(line, pattern, lst, aligned=False)
+        return ref_row
+
+    @classmethod
+    def do_creating_ref_row_by_finditer(cls, line, pattern, columns_count=1):
+        lst = []
+        item = None
+        for item in re.finditer(pattern, line):
+            txt = item.group()
+            lst.append(txt)
+        else:
+            if item:
+                post_txt = line[item.end():]
+                post_txt.strip() and lst.append(post_txt)
+
+        if len(lst) > columns_count:
+            index = columns_count - NUMBER.ONE
+            last_sub_lst = lst[index:]
+            lst = lst[:index]
+            lst.append(Misc.join_string(*last_sub_lst))
+
+        ref_row = cls.do_creating_ref_row(line, pattern, lst)
+        return ref_row
+
+    @classmethod
+    def create_ref_row(cls, line, pattern, case='', columns_count=-1):
+        tbl = dict(
+            findall=cls.do_creating_ref_row_by_findall,
+            split=cls.do_creating_ref_row_by_splitting,
+            finditer=cls.do_creating_ref_row_by_finditer
+        )
+        if case in tbl:
+            method = tbl.get(case)
+            ref_row = method(line, pattern, columns_count=columns_count)
+            return ref_row
+        else:
+            RuntimeException.do_raise_runtime_error(
+                obj=Misc.join_string(cls.__name__, 'RTError'),
+                msg='Unsupported %r case create_ref_row' % case
+            )
 
 
 class TabularTable(RuntimeException):
