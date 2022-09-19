@@ -3387,6 +3387,11 @@ class TabularColumn:
         width = min(cell.width for cell in self.cells) if self.cells else NUMBER.ONE
         return width
 
+    @property
+    def max_width(self):
+        width = max(cell.width for cell in self.cells) if self.cells else NUMBER.ONE
+        return width
+
     def append_cell(self, cell):
         self.cells.append(cell)
 
