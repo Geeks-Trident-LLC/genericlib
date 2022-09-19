@@ -2943,6 +2943,11 @@ class TabularCell(RuntimeException):
             return count
 
     @property
+    def width(self):
+        width = len(self.data)
+        return width
+
+    @property
     def is_containing_spaces(self):
         chk = STRING.DOUBLE_SPACES in self.text
         return chk
