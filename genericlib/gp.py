@@ -188,6 +188,13 @@ class TranslatedPattern(RuntimeException):
     def is_non_whitespaces_group(self):
         return self.name == TEXT.NON_WHITESPACES_GROUP
 
+    def is_group(self):
+        chk = self.is_symbols_group()
+        chk = chk or self.is_words()
+        chk = chk or self.is_mixed_words()
+        chk = chk or self.is_non_whitespaces_group()
+        return chk
+
     def is_subset_of(self, other):
         fmt = 'Need to implement subset verification for (%s, %s)'
         cls_name = Misc.get_instance_class_name(self)
@@ -3331,9 +3338,10 @@ class TabularTable(RuntimeException):
 
 
 class TabularColumn:
-    def __init__(self, index=0, name='', left_column=None, right_column=None):
+    def __init__(self, index=0, name='', left_column=None, right_column=None, is_last=False):
         self.left_column = left_column
         self.right_column = right_column
+        self.is_last = is_last
         self.index = index
         self.name = name or 'col%s' % index
         self.cells = []
@@ -3424,10 +3432,38 @@ class TabularColumn:
             return STRING.EMPTY
 
         lst_of_txt = [cell.text for cell in self.cells if cell.text]
-        translated_obj = TranslatedPattern.do_factory_create(*lst_of_txt)
-        pattern = translated_obj.get_regex_pattern(var=self.name)
+        node = TranslatedPattern.do_factory_create(*lst_of_txt)
+        pattern = node.get_regex_pattern(var=self.name)
+
+        if node.is_group() and not self.is_last:
+            max_items_count = max(cell.items_count for cell in self.cells)
+            occurrence = max_items_count - NUMBER.ONE
+            if occurrence > NUMBER.ZERO:
+                pattern = '%s){,%s})' % (pattern[:-NUMBER.TWO], occurrence)
 
         if self.has_empty_cell:
             optional_pat = ' {%s,}' % self.min_width
             pattern = '%s, %s)' % (pattern[:-NUMBER.ONE], optional_pat)
         return pattern
+
+    def to_template_snippet(self):
+        if self:
+            return STRING.EMPTY
+
+        lst_of_txt = [cell.text for cell in self.cells if cell.text]
+        node = TranslatedPattern.do_factory_create(*lst_of_txt)
+        tmpl_snippet = node.get_template_snippet(var=self.name)
+
+        if node.is_group() and not self.is_last:
+            max_items_count = max(cell.items_count for cell in self.cells)
+            occurrence = max_items_count - NUMBER.ONE
+            if occurrence > NUMBER.ZERO:
+                tmpl_snippet = tmpl_snippet.replace('words', 'word')
+                tmpl_snippet = tmpl_snippet.replace('_group', '')
+                fmt = '%s, at_most_%s_group_occurrences)'
+                tmpl_snippet = fmt % (tmpl_snippet[:-NUMBER.ONE], occurrence)
+
+        if self.has_empty_cell:
+            optional_flag = 'or_at_least_%s_spaces' % self.min_width
+            tmpl_snippet = '%s, %s)' % (tmpl_snippet[:-1], optional_flag)
+        return tmpl_snippet
