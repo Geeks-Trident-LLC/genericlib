@@ -3384,13 +3384,24 @@ class TabularColumn:
 
     @property
     def min_width(self):
-        width = min(cell.width for cell in self.cells) if self.cells else NUMBER.ONE
+        width = NUMBER.ONE
+        for cell in self.cells:
+            if cell.text:
+                width = min(width, cell.width)
         return width
 
     @property
     def max_width(self):
-        width = max(cell.width for cell in self.cells) if self.cells else NUMBER.ONE
+        width = NUMBER.ONE
+        for cell in self.cells:
+            if cell.text:
+                width = max(width, cell.width)
         return width
+
+    @property
+    def has_empty_cell(self):
+        chk = any(cell.is_empty for cell in self.cells)
+        return chk
 
     def append_cell(self, cell):
         self.cells.append(cell)
@@ -3407,3 +3418,16 @@ class TabularColumn:
         tbl = {'11': 'right', '10': 'left', '01': 'right', '00': 'center'}
         key = Misc.join_string(str(int(are_all_left_same)), str(int(are_all_right_same)))
         self._alignment = tbl.get(key)
+
+    def to_regex(self):
+        if self:
+            return STRING.EMPTY
+
+        lst_of_txt = [cell.text for cell in self.cells if cell.text]
+        translated_obj = TranslatedPattern.do_factory_create(*lst_of_txt)
+        pattern = translated_obj.get_regex_pattern(var=self.name)
+
+        if self.has_empty_cell:
+            optional_pat = ' {%s,}' % self.min_width
+            pattern = '%s, %s)' % (pattern[:-NUMBER.ONE], optional_pat)
+        return pattern
