@@ -3037,8 +3037,9 @@ class TabularCell(RuntimeException):
 
 
 class TabularRow(RuntimeException):
-    def __init__(self, line, ref_row=None):
+    def __init__(self, line, ref_row=None, aligned=True):
         self._is_symbols_group = None
+        self.aligned = aligned
         self.line = line
         self.ref_row = ref_row
         self.cells = []
@@ -3081,7 +3082,7 @@ class TabularRow(RuntimeException):
         cell = TabularCell(self.line, left_pos, right_pos, ref_cell=ref_cell)
         if self.ref_row:
             prev_cell = self.cells[-NUMBER.ONE] if index else None
-            cell.do_first_pass_adjustment(prev_cell=prev_cell)
+            self.ref_row.aligned and cell.do_first_pass_adjustment(prev_cell=prev_cell)
         self.cells.append(cell)
         return cell
 
