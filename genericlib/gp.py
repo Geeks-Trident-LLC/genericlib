@@ -2480,21 +2480,21 @@ class TabularTextPattern(RuntimeException):
 
 
 class TabularTextPatternByFixedColumns(RuntimeException):
-    def __init__(self, *lines, col_widths=None, headers=None, headers_data=None):
+    def __init__(self, *lines, col_widths=None, header_names=None, headers_data=None):
         self.lines = Misc.get_list_of_lines(*lines)
         self.col_widths = col_widths
         self.columns_count = len(col_widths) if Misc.is_list(col_widths) else NUMBER.ZERO
         self.raise_exception_if_columns_widths_not_provided()
         self.headers_data = headers_data
         self.raw_headers_data = []
-        self.headers = headers
+        self.header_names = header_names
         self.variables = []
         self.parse_headers()
 
     def __len__(self):
         return bool(self.columns_count)
 
-    def get_default_variables(self):  # noqa
+    def get_default_variables(self):
         var_names = ['col%s' % i for i in range(self.columns_count)]
         return var_names
 
@@ -2542,19 +2542,18 @@ class TabularTextPatternByFixedColumns(RuntimeException):
         variables = self.parse_headers_to_variables(headers)
         return variables
 
-    def parse_headers_to_variables(self, headers):
+    def parse_headers_to_variables(self, header_names):
         variables = []
-        if not headers:
+        if not header_names:
             return variables
 
-        if Misc.is_string(headers):
-            headers = re.split(' *, *', headers)
+        if Misc.is_string(header_names):
+            header_names = re.split('[ ,]+', header_names.strip())
 
-        if Misc.is_list(headers) and len(headers) == self.columns_count:
-            pat = '[ %s' % PATTERN.SYMBOLS[1:]
+        if Misc.is_list(header_names) and len(header_names) == self.columns_count:
             repl = STRING.UNDERSCORE_CHAR
-            for i, hdr in enumerate(headers):
-                new_hdr = re.sub(pat, repl, hdr.strip())
+            for i, hdr in enumerate(header_names):
+                new_hdr = re.sub(PATTERN.MULTI_SPACE_SYMBOLS, repl, hdr.strip())
                 new_hdr = new_hdr if new_hdr == repl else new_hdr.rstrip(repl)
                 if new_hdr in variables:
                     variables.append('%s%s' % (new_hdr, i))
@@ -2566,9 +2565,9 @@ class TabularTextPatternByFixedColumns(RuntimeException):
         return variables
 
     def parse_headers(self):
-        if self.headers or self.headers_data:
-            if self.headers:
-                self.variables = self.parse_headers_to_variables(self.headers)
+        if self.header_names or self.headers_data:
+            if self.header_names:
+                self.variables = self.parse_headers_to_variables(self.header_names)
             else:
                 self.variables = self.parse_headers_by_ref_data(self.headers_data)
         else:
@@ -2611,8 +2610,8 @@ class TabularTextPatternByFixedColumns(RuntimeException):
 
 
 class TabularTextPatternByVarColumns(RuntimeException):
-    def __init__(self, *lines, divider=' ', columns_count=0,
-                 headers=None, headers_data=None):
+    def __init__(self, *lines, divider='', columns_count=0,
+                 header_names=None, headers_data=None, custom_headers_data=''):
         self._is_leading = None
         self._is_trailing = None
         self._is_start_with_divider = None
@@ -2624,10 +2623,10 @@ class TabularTextPatternByVarColumns(RuntimeException):
         self.columns_count = columns_count
         self.raise_exception_if_columns_count_not_provided()
         self.headers_data = headers_data
+        self.custom_headers_data = custom_headers_data
         self.raw_headers_data = []
-        self.headers = headers
+        self.header_names = header_names
         self.variables = []
-        # self.parse_headers()
 
     def __len__(self):
         return bool(self.columns_count)
@@ -2696,33 +2695,54 @@ class TabularTextPatternByVarColumns(RuntimeException):
         if not self:
             self.raise_runtime_error(msg='columns_count CANT be zero')
 
+    def parse_headers_to_variables(self):
+        variables = []
+        header_names = self.header_names
+        if not header_names:
+            return variables
+
+        if Misc.is_string(header_names):
+            header_names = re.split('[ ,]+', header_names.strip())
+
+        if Misc.is_list(header_names) and len(header_names) == self.columns_count:
+            pat = '[ %s' % PATTERN.SYMBOLS[1:]
+            repl = STRING.UNDERSCORE_CHAR
+            for i, hdr in enumerate(header_names):
+                new_hdr = re.sub(pat, repl, hdr.strip())
+                new_hdr = new_hdr if new_hdr == repl else new_hdr.rstrip(repl)
+                if new_hdr in variables:
+                    variables.append('%s%s' % (new_hdr, i))
+                else:
+                    variables.append(new_hdr)
+
+        return variables
+
     def get_default_variables(self):  # noqa
         var_names = ['col%s' % i for i in range(self.columns_count)]
         return var_names
 
-    def find_ref_row_by_symbols_divider(self):
+    def find_ref_row_by_symbols_divider(self, custom_line=''):
         fmt = ' *%(p)s( +%(p)s){%(rep)s} *$'
         repetition = self.columns_count - NUMBER.ONE
         pat = fmt % dict(p=PATTERN.SYMBOLS, rep=repetition)
 
-        found_lines = [line for line in self.lines if re.match(pat, line)]
-
-        if not found_lines:
-            return None
+        if custom_line:
+            found_line = custom_line
         else:
-            found_line = found_lines[NUMBER.ZERO]
-            pattern = ' *%s *' % PATTERN.SYMBOLS
-            ref_row = TabularRow.create_ref_row(
-                found_line, pattern,
-                case='findall',
-                columns_count=self.columns_count
-            )
-            return ref_row
+            found_lines = [line for line in self.lines if re.match(pat, line)]
+            found_line = found_lines[NUMBER.ZERO] if found_lines else STRING.EMPTY
+            if not found_line:
+                return None
 
-    def find_ref_row_by_blank_space_divider(self):
-        self.raise_runtime_error(msg='Need to implement find_ref_by_blank_space_divider')
+        pattern = ' *%s *' % PATTERN.SYMBOLS
+        ref_row = TabularRow.create_ref_row(
+            found_line, pattern,
+            case='findall',
+            columns_count=self.columns_count
+        )
+        return ref_row
 
-    def find_ref_row_by_separator_divider(self):
+    def find_ref_row_by_separator_divider(self, custom_line=''):
         fmt = ' *%(sep)s?(%(p)s%(sep)s){%(rep)s}%(p)s%(sep)s? *$'
         kwargs = dict(
             p=r'[^%s]+' % self.divider,
@@ -2731,100 +2751,106 @@ class TabularTextPatternByVarColumns(RuntimeException):
         )
         pat = fmt % kwargs
 
-        found_lines = [line for line in self.lines if re.match(pat, line)]
-        if not found_lines:
-            return None
+        if custom_line:
+            found_line = custom_line
         else:
-            found_line = found_lines[NUMBER.ZERO]
-            ref_row = TabularRow.create_ref_row(
-                found_line, self.divider,
-                columns_count=self.columns_count,
-                case='split'
-            )
-            return ref_row
+            found_lines = [line for line in self.lines if re.match(pat, line)]
+            found_line = found_lines[NUMBER.ZERO] if found_lines else STRING.EMPTY
+            if not found_line:
+                return None
 
-    def find_ref_row_by_multi_spaces_divider(self):
-        fmt = ' *%(p)s(  +%(p)s){%(rep)s} *$'
+        ref_row = TabularRow.create_ref_row(
+            found_line, self.divider,
+            columns_count=self.columns_count,
+            case='split'
+        )
+        return ref_row
+
+    def find_ref_row_by_space_divider(self, spaces=' ', custom_line=''):
         repetition = self.columns_count - NUMBER.ONE
         kwargs = dict(
             p=PATTERN.NON_WHITESPACES_OR_PHRASE,
             rep=repetition,
         )
+        fmt1 = ' *%(p)s( +%(p)s){%(rep)s} *$'
+        fmt2 = ' *%(p)s(  +%(p)s){%(rep)s} *$'
+        fmt = fmt1 if spaces == STRING.SPACE_CHAR else fmt2
         pat = fmt % kwargs
 
-        found_lines = [line for line in self.lines if re.match(pat, line)]
-        if not found_lines:
-            return None
+        if custom_line:
+            found_line = custom_line
         else:
+            found_lines = [line for line in self.lines if re.match(pat, line)]
+            if not found_lines:
+                return None
             found_line = found_lines[NUMBER.ZERO]
-            pattern = ' *%s  +' % PATTERN.NON_WHITESPACES_OR_PHRASE
-            ref_row = TabularRow.create_ref_row(
-                found_line, pattern,
-                columns_count=self.columns_count,
-                case='finditer'
+
+        pattern = ' *%s  +' % PATTERN.NON_WHITESPACES_OR_PHRASE
+        ref_row = TabularRow.create_ref_row(
+            found_line, pattern,
+            columns_count=self.columns_count,
+            case='finditer'
+        )
+        return ref_row
+
+    def find_ref_row_by_blank_space_divider(self):
+        ref_row = self.find_ref_row_by_space_divider()
+        return ref_row
+
+    def find_ref_row_by_multi_spaces_divider(self):
+        ref_row = self.find_ref_row_by_space_divider(spaces='  ')
+        return ref_row
+
+    def find_ref_row_by_custom_headers_line(self):
+        ref_row = self.find_ref_row_by_symbols_divider(custom_line=self.custom_headers_data)
+        return ref_row
+
+    def try_to_get_table_by_divider(self, case):
+        methods = dict(
+            symbols=self.find_ref_row_by_symbols_divider,
+            separator=self.find_ref_row_by_separator_divider,
+            multi_spaces=self.find_ref_row_by_multi_spaces_divider,
+            blank_space=self.find_ref_row_by_blank_space_divider,
+            custom=self.find_ref_row_by_custom_headers_line
+        )
+        default_method = self.find_ref_row_by_blank_space_divider
+        ref_row = methods.get(case, default_method)()
+        if ref_row:
+            header_names = self.parse_headers_to_variables()
+            table = TabularTable(
+                *self.lines, ref_row=ref_row, divider=self.divider,
+                header_names=header_names
             )
-            return ref_row
-
-    def try_to_get_table_by_symbols_divider(self):
-        ref_row = self.find_ref_row_by_separator_divider()
-        if ref_row:
-            table = TabularTable(*self.lines, ref_row=ref_row, divider=self.divider)
             return True, table
         else:
             return False, None
 
-    def try_to_get_table_by_separator_divider(self):
-        ref_row = self.find_ref_row_by_separator_divider()
-        if ref_row:
-            table = TabularTable(*self.lines, ref_row=ref_row, divider=self.divider)
-            return True, table
+    def parse_table(self):
+        case, err_msg = STRING.EMPTY, STRING.EMPTY
+        if re.match('%s$' % PATTERN.SYMBOL, self.divider.strip()):
+            case = 'separator'
+            err_msg = 'Failed to parse tabular text by %r divider' % self.divider
+        elif self.custom_headers_data:
+            case = 'custom'
+            err_msg = 'Failed to parse tabular text by custom headers data'
+        elif self.divider == STRING.SPACE_CHAR:
+            case = 'blank_space'
+            err_msg = 'Failed to parse tabular text by blank space divider'
+        elif re.match('  +$', self.divider):
+            case = 'multi_spaces'
+            err_msg = 'Failed to parse tabular text by multi-space divider'
+        elif self.divider == STRING.EMPTY:
+            case = 'symbols'
+            err_msg = 'Failed to parse tabular text by symbols divider'
         else:
-            return False, None
+            msg = 'Unsupported divider %r' % self.divider
+            self.raise_runtime_error(msg=msg)
 
-    def try_to_get_table_by_blank_space_divider(self):
-        ref_row_by_multi_spaces = self.find_ref_row_by_multi_spaces_divider()
-        if ref_row_by_multi_spaces:
-            table = TabularTable(*self.lines, ref_row=ref_row_by_multi_spaces)
-            return True, table
+        is_parsed, table = self.try_to_get_table_by_divider(case)
+        if is_parsed:
+            return table
         else:
-            return False, None
-
-    def get_table_by_space_divider(self):
-        parsed, cells_info = self.try_to_get_table_by_symbols_divider()
-        if not parsed:
-            parsed, cells_info = self.try_to_get_table_by_blank_space_divider()
-            if not parsed:
-                raise Exception('')
-        return cells_info
-
-    def get_table_by_symbol_divider(self):
-        divider_pat = re.escape(self.divider.strip())
-        repetition = self.columns_count - NUMBER.ONE
-        fmt = r' *(%(d)s)? *%(p)s( *%(d)s *%(p)s){%(rep)s} *(%(d)s)? *$'
-        pat = fmt % dict(d=divider_pat, p=PATTERN.EVERYTHING, rep=repetition)
-
-        found_line = ''
-        for line in self.lines:
-            match = re.match(pat, line)
-            if match:
-                found_line = line
-                break
-        if not found_line:
-            return False, []
-
-        return True, []
-
-    def get_cells_info(self):
-        divider = self.divider.strip()
-        if divider == STRING.EMPTY:
-            cells_info = self.get_table_by_space_divider()
-            return cells_info
-
-        elif re.match(PATTERN.SYMBOLS, divider):
-            cells_info = self.get_table_by_symbol_divider()
-            return cells_info
-        else:
-            self.raise_runtime_error(msg='Unsupported divider %r' % self.divider)
+            self.raise_runtime_error(msg=err_msg)
 
 
 class TabularCell(RuntimeException):
@@ -3234,7 +3260,7 @@ class TabularRow(RuntimeException):
 
 
 class TabularTable(RuntimeException):
-    def __init__(self, *lines, ref_row=None, divider=''):
+    def __init__(self, *lines, ref_row=None, divider='', header_names=None):
         self.lines = Misc.get_list_of_lines(*lines)
         self.ref_row = ref_row
         self.divider = divider
@@ -3242,7 +3268,7 @@ class TabularTable(RuntimeException):
         self.rows = []
         self.columns = []
         self.header_columns = []
-        self.header_names = []
+        self.header_names = header_names or []
 
         self.process()
 
@@ -3312,23 +3338,25 @@ class TabularTable(RuntimeException):
             return
 
         ref_line = self.ref_row.line
-        row_pos = self.lines.index(ref_line)
-        self.rows = self.rows[row_pos + NUMBER.ONE:]
+        if ref_line in self.lines:
+            row_pos = self.lines.index(ref_line)
+            self.rows = self.rows[row_pos + NUMBER.ONE:]
 
-        for col in self.columns:
-            hdr_col = TabularColumn()
-            hdr_col.cells = col.cells[:row_pos + NUMBER.ONE]
-            self.header_columns.append(hdr_col)
-            col.cells = col.cells[row_pos + NUMBER.ONE:]
+            for col in self.columns:
+                hdr_col = TabularColumn()
+                hdr_col.cells = col.cells[:row_pos + NUMBER.ONE]
+                self.header_columns.append(hdr_col)
+                col.cells = col.cells[row_pos + NUMBER.ONE:]
 
     def build_and_update_headers(self):
-        repl_char = STRING.UNDERSCORE_CHAR
-        for index, hdr_col in enumerate(self.header_columns):
-            col_name = str.join(repl_char, [cell.text for cell in hdr_col.cells])
-            col_name = re.sub(PATTERN.MULTI_SPACE_SYMBOLS, repl_char, col_name)
-            col_name = col_name.strip(repl_char).lower()
-            self.header_names.append(col_name)
-            self.columns[index].name = col_name
+        if not self.header_names:
+            repl_char = STRING.UNDERSCORE_CHAR
+            for index, hdr_col in enumerate(self.header_columns):
+                col_name = str.join(repl_char, [cell.text for cell in hdr_col.cells])
+                col_name = re.sub(PATTERN.MULTI_SPACE_SYMBOLS, repl_char, col_name)
+                col_name = col_name.strip(repl_char).lower()
+                self.header_names.append(col_name)
+                self.columns[index].name = col_name
 
     def process(self):
         self.add_data_to_rows()

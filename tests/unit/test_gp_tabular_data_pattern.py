@@ -20,7 +20,7 @@ class TestTabularTextPatternByFixedColumns:
     """Test class for CategoryLinesPattern"""
 
     @pytest.mark.parametrize(
-        "text,col_widths,headers,headers_data,expected_pattern,expected_result",
+        "text,col_widths,header_names,headers_data,expected_pattern,expected_result",
         [
             (
                 dedent("""
@@ -120,10 +120,10 @@ class TestTabularTextPatternByFixedColumns:
             ),
         ]
     )
-    def test_to_regex(self, text, col_widths, headers, headers_data,
+    def test_to_regex(self, text, col_widths, header_names, headers_data,
                       expected_pattern, expected_result):
         node = TabularTextPatternByFixedColumns(
-            text, col_widths=col_widths, headers=headers, headers_data=headers_data
+            text, col_widths=col_widths, header_names=header_names, headers_data=headers_data
         )
         pattern = node.to_regex()
         assert pattern == expected_pattern
@@ -138,7 +138,7 @@ class TestTabularTextPatternByFixedColumns:
         assert lst_of_dict_result == expected_result
 
     @pytest.mark.parametrize(
-        "text,col_widths,headers,headers_data,expected_template_snippet,expected_template,expected_result",
+        "text,col_widths,header_names,headers_data,expected_template_snippet,expected_template,expected_result",
         [
             (
                 dedent("""
@@ -319,11 +319,11 @@ class TestTabularTextPatternByFixedColumns:
             ),
         ]
     )
-    def test_to_regex(self, text, col_widths, headers, headers_data,
+    def test_to_regex(self, text, col_widths, header_names, headers_data,
                       expected_template_snippet, expected_template,
                       expected_result):
         node = TabularTextPatternByFixedColumns(
-            text, col_widths=col_widths, headers=headers, headers_data=headers_data
+            text, col_widths=col_widths, header_names=header_names, headers_data=headers_data
         )
         tmpl_snippet = node.to_template_snippet()
 
@@ -334,8 +334,8 @@ class TestTabularTextPatternByFixedColumns:
         verify(tmpl_snippet, text, expected_result=expected_result)
 
 
-class TestTabularTable:
-    """Test class for TabularTable"""
+class TestTabularTextPatternByVarColumns:
+    """Test class for TabularTextPatternByVarColumns"""
 
     @pytest.mark.parametrize(
         "text,columns_count,expected_result,expected_result_as_tabular_text",
@@ -390,12 +390,12 @@ class TestTabularTable:
             ),
         ]
     )
-    def test_try_to_get_table_by_symbols_divider(
+    def test_parse_table_for_symbols_divider_case(
         self, text, columns_count, expected_result, expected_result_as_tabular_text
     ):
         node = TabularTextPatternByVarColumns(text, columns_count=columns_count)
-        status, table = node.try_to_get_table_by_symbols_divider()
-        assert status
+        table = node.parse_table()
+        assert table
 
         lst_of_dict = table.to_list_of_dict()
         assert lst_of_dict == expected_result
@@ -530,12 +530,12 @@ class TestTabularTable:
             ),
         ]
     )
-    def test_try_to_get_table_by_space_symbols_divider(
+    def test_parse_table_for_separator_divider_case(
         self, text, columns_count, divider, expected_result, expected_result_as_tabular_text
     ):
         node = TabularTextPatternByVarColumns(text, columns_count=columns_count, divider=divider)
-        status, table = node.try_to_get_table_by_separator_divider()
-        assert status
+        table = node.parse_table()
+        assert table
 
         lst_of_dict = table.to_list_of_dict()
         assert lst_of_dict == expected_result
@@ -594,12 +594,149 @@ class TestTabularTable:
             ),
         ]
     )
-    def test_try_to_get_table_by_symbols_divider(
+    def test_parse_table_for_multi_spaces_case(
         self, text, columns_count, expected_result, expected_result_as_tabular_text
     ):
-        node = TabularTextPatternByVarColumns(text, columns_count=columns_count)
-        status, table = node.try_to_get_table_by_blank_space_divider()
-        assert status
+        node = TabularTextPatternByVarColumns(text, columns_count=columns_count, divider='  ')
+        table = node.parse_table()
+        assert table
+
+        lst_of_dict = table.to_list_of_dict()
+        assert lst_of_dict == expected_result
+
+        tabular_txt = get_data_as_tabular(lst_of_dict)
+        assert tabular_txt == expected_result_as_tabular_text
+
+    @pytest.mark.parametrize(
+        "text,columns_count,expected_result,expected_result_as_tabular_text",
+        [
+            (
+                dedent("""
+                    LastWriteTime          Name
+                    9/1/2021 6:13:50 AM    reference
+                    10/5/2021 9:13:50 PM   dsc
+                    11/2/2021 11:58:45 PM  README.md
+                    12/16/2021 12:30:59 PM CONTRIBUTING.md
+                """).strip(),
+                2,
+                [
+                    {'lastwritetime': '9/1/2021 6:13:50 AM', 'name': 'reference'},
+                    {'lastwritetime': '10/5/2021 9:13:50 PM', 'name': 'dsc'},
+                    {'lastwritetime': '11/2/2021 11:58:45 PM', 'name': 'README.md'},
+                    {'lastwritetime': '12/16/2021 12:30:59 PM', 'name': 'CONTRIBUTING.md'}
+                ],
+                dedent("""
+                    +------------------------+-----------------+
+                    | lastwritetime          | name            |
+                    +------------------------+-----------------+
+                    | 9/1/2021 6:13:50 AM    | reference       |
+                    | 10/5/2021 9:13:50 PM   | dsc             |
+                    | 11/2/2021 11:58:45 PM  | README.md       |
+                    | 12/16/2021 12:30:59 PM | CONTRIBUTING.md |
+                    +------------------------+-----------------+
+                """).strip()
+            ),
+            (
+                dedent("""
+                    fruits    meat      drinks
+                    orange    pork      water
+                    peach               pepsi soda
+                """).strip(),
+                3,
+                [
+                    {'fruits': 'orange', 'meat': 'pork', 'drinks': 'water'},
+                    {'fruits': 'peach', 'meat': '', 'drinks': 'pepsi soda'}
+                ],
+                dedent("""
+                    +--------+------+------------+
+                    | fruits | meat | drinks     |
+                    +--------+------+------------+
+                    | orange | pork | water      |
+                    | peach  |      | pepsi soda |
+                    +--------+------+------------+
+                """).strip()
+            ),
+        ]
+    )
+    def test_parse_table_for_blank_space_case(
+        self, text, columns_count, expected_result, expected_result_as_tabular_text
+    ):
+        node = TabularTextPatternByVarColumns(text, columns_count=columns_count, divider=' ')
+        table = node.parse_table()
+        assert table
+
+        lst_of_dict = table.to_list_of_dict()
+        assert lst_of_dict == expected_result
+
+        tabular_txt = get_data_as_tabular(lst_of_dict)
+        assert tabular_txt == expected_result_as_tabular_text
+
+    @pytest.mark.parametrize(
+        "text,columns_count,custom_headers_data,expected_result,expected_result_as_tabular_text",
+        [
+            (
+                dedent("""
+                    LastWriteTime          Name
+                    9/1/2021 6:13:50 AM    reference
+                    10/5/2021 9:13:50 PM   dsc
+                    11/2/2021 11:58:45 PM  README.md
+                    12/16/2021 12:30:59 PM CONTRIBUTING.md
+                """).strip(),
+                2,
+                '---------------------- ---------------',
+                [
+                    {'col0': 'LastWriteTime', 'col1': 'Name'},
+                    {'col0': '9/1/2021 6:13:50 AM', 'col1': 'reference'},
+                    {'col0': '10/5/2021 9:13:50 PM', 'col1': 'dsc'},
+                    {'col0': '11/2/2021 11:58:45 PM', 'col1': 'README.md'},
+                    {'col0': '12/16/2021 12:30:59 PM', 'col1': 'CONTRIBUTING.md'}
+                ]
+                ,
+                dedent("""
+                    +------------------------+-----------------+
+                    | col0                   | col1            |
+                    +------------------------+-----------------+
+                    | LastWriteTime          | Name            |
+                    | 9/1/2021 6:13:50 AM    | reference       |
+                    | 10/5/2021 9:13:50 PM   | dsc             |
+                    | 11/2/2021 11:58:45 PM  | README.md       |
+                    | 12/16/2021 12:30:59 PM | CONTRIBUTING.md |
+                    +------------------------+-----------------+
+                """).strip()
+            ),
+            (
+                dedent("""
+                    fruits    meat      drinks
+                    orange    pork      water
+                    peach               pepsi soda
+                """).strip(),
+                3,
+                '--------- --------- -----------',
+                [
+                    {'col0': 'fruits', 'col1': 'meat', 'col2': 'drinks'},
+                    {'col0': 'orange', 'col1': 'pork', 'col2': 'water'},
+                    {'col0': 'peach', 'col1': '', 'col2': 'pepsi soda'}
+                ],
+                dedent("""
+                    +--------+------+------------+
+                    | col0   | col1 | col2       |
+                    +--------+------+------------+
+                    | fruits | meat | drinks     |
+                    | orange | pork | water      |
+                    | peach  |      | pepsi soda |
+                    +--------+------+------------+
+                """).strip()
+            ),
+        ]
+    )
+    def test_parse_table_for_blank_space_case(
+        self, text, columns_count, custom_headers_data,
+        expected_result, expected_result_as_tabular_text
+    ):
+        node = TabularTextPatternByVarColumns(text, columns_count=columns_count,
+                                              custom_headers_data=custom_headers_data)
+        table = node.parse_table()
+        assert table
 
         lst_of_dict = table.to_list_of_dict()
         assert lst_of_dict == expected_result
