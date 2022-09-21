@@ -499,6 +499,12 @@ class Misc:
         leading_spaces = match.group()
         return leading_spaces
 
+    @classmethod
+    def get_trailing_line(cls, line, start=None, end=None):
+        match = re.search('( +)?$', str(line)[start:end])
+        trailing_spaces = match.group()
+        return trailing_spaces
+
 
 class MiscOutput:
     @classmethod
