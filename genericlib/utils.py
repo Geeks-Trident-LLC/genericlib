@@ -493,6 +493,12 @@ class Misc:
         result = cls.get_list_of_lines(*lines)
         return tuple(result)
 
+    @classmethod
+    def get_leading_line(cls, line, start=None, end=None):
+        match = re.match('( +)?', str(line)[start:end])
+        leading_spaces = match.group()
+        return leading_spaces
+
 
 class MiscOutput:
     @classmethod
