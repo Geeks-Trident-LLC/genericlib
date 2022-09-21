@@ -769,14 +769,14 @@ class TestTabularTextPatternByVarColumns:
                 dedent("""
                     fruits    meat      drinks
                     orange    pork      water
-                    peach               coca
+                    peach               pepsi soda
                 """).strip(),
                 3,
-                r'(?P<fruits>[a-zA-Z]+) +(?P<meat> {10,}|[a-zA-Z]+) +(?P<drinks>[a-zA-Z]+)',
+                r'(?P<fruits>[a-zA-Z]+) (?P<meat>( {10,16})|( *[a-zA-Z]+ *)) (?P<drinks>[a-zA-Z0-9]+( +[a-zA-Z0-9]+){,1})',
                 [
                     {'fruits': 'fruits', 'meat': 'meat', 'drinks': 'drinks'},
                     {'fruits': 'orange', 'meat': 'pork', 'drinks': 'water'},
-                    {'fruits': 'peach', 'meat': '          ', 'drinks': 'coca'}
+                    {'fruits': 'peach', 'meat': '', 'drinks': 'pepsi soda'}
                 ],
             ),
         ]
@@ -792,7 +792,8 @@ class TestTabularTextPatternByVarColumns:
             expected_result = expected_results[index]
             match = re.match(pattern, line)
             if match:
-                result = match.groupdict()
+                lst_of_dict = MiscObject.cleanup_list_of_dict([match.groupdict()])
+                result = lst_of_dict.pop()
                 assert result == expected_result
             else:
                 assert False, 'Failed to match this line: %r' % line

@@ -3400,19 +3400,27 @@ class TabularTable(RuntimeException):
             return STRING.EMPTY
 
         lst = []
+        does_prev_col_has_empty_cell = False
+        is_divider = bool(self.divider.strip())
+        divider_pat = ' *%s *' % re.escape(self.divider)
+        divider_leading_pat = '%s *' % re.escape(self.divider)
+        divider_trailing_pat = ' *%s' % re.escape(self.divider)
         for column in self.columns:
+            has_empty_cell = does_prev_col_has_empty_cell or column.has_empty_cell
+            if is_divider:
+                lst and lst.append(divider_pat)
+            else:
+                sep_pat = PATTERN.SPACE if has_empty_cell else PATTERN.SPACES
+                lst and lst.append(sep_pat)
             col_pat = column.to_regex()
             lst.append(col_pat)
+            does_prev_col_has_empty_cell = column.has_empty_cell
 
-        sep = PATTERN.SPACES
-        if re.match(PATTERN.CHECK_SYMBOL, self.divider):
-            sep = ' *%s *' % re.escape(self.divider)
-
-        pattern = str.join(sep, lst)
-        if self.is_leading:
-            pattern = ' *%s' % pattern
-        if self.is_trailing:
-            pattern = '%s *' % pattern
+        self.is_start_with_divider and lst.insert(divider_leading_pat, NUMBER.ZERO)
+        self.is_leading and lst.insert(PATTERN.ZOSPACES, NUMBER.ZERO)
+        self.is_end_with_divider and lst.append(divider_trailing_pat)
+        self.is_trailing and lst.append(PATTERN.ZOSPACES)
+        pattern = Misc.join_string(*lst)
         return pattern
 
     def to_template_snippet(self):
@@ -3473,15 +3481,24 @@ class TabularColumn:
         return chk
 
     @property
-    def min_width(self):
+    def width(self):
         width = min(cell.width for cell in self.cells if cell.width)
         width = width or NUMBER.ONE
         return width
 
     @property
     def max_width(self):
-        width = max(cell.width for cell in self.cells if cell.width)
-        width = width or NUMBER.ONE
+        lst = []
+        for cell in self.cells:
+            leading = Misc.get_trailing_line(cell.line, end=cell.right)
+            trailing = Misc.get_leading_line(cell.line, start=cell.left)
+            leading_len, trailing_len = len(leading), len(trailing)
+            if cell.text:
+                width = leading_len + cell.width + trailing_len
+            else:
+                width = max(leading_len, trailing_len)
+            lst.append(width)
+        width = max(lst) if lst else NUMBER.TWO
         return width
 
     @property
@@ -3520,7 +3537,8 @@ class TabularColumn:
 
         if self.has_empty_cell:
             first, last = str.split(pattern, '>', maxsplit=1)
-            pattern = '%s> {%s,}|%s' % (first, self.min_width, last)
+            fmt = '%s>( {%s,%s})|( *%s *))'
+            pattern = fmt % (first, self.width, self.max_width, last[:-NUMBER.ONE])
         return pattern
 
     def to_template_snippet(self):
@@ -3541,6 +3559,6 @@ class TabularColumn:
                 tmpl_snippet = fmt % (tmpl_snippet[:-NUMBER.ONE], occurrence)
 
         if self.has_empty_cell:
-            optional_flag = 'or_at_least_%s_spaces' % self.min_width
+            optional_flag = 'or_at_least_%s_spaces' % self.width
             tmpl_snippet = '%s, %s)' % (tmpl_snippet[:-1], optional_flag)
         return tmpl_snippet
