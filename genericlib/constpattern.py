@@ -43,6 +43,9 @@ class PATTERN:
     SYMBOLS = '%s+' % SYMBOL
     SYMBOLS_OR_GROUP = '%s( +%s)*' % (SYMBOLS, SYMBOLS)
     SYMBOLS_GROUP = '%s( +%s)+' % (SYMBOLS, SYMBOLS)
+    CHECK_SYMBOL = '%s$' % SYMBOL
+    CHECK_SYMBOLS = '%s$' % SYMBOLS
+    CHECK_SYMBOLS_GROUP = ' *%s *$' % SYMBOLS_GROUP
 
     SPACE_SYMBOL = r'[ \x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]'
     MULTI_SPACE_SYMBOLS = '%s+' % SPACE_SYMBOL

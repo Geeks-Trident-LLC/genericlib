@@ -743,3 +743,56 @@ class TestTabularTextPatternByVarColumns:
 
         tabular_txt = get_data_as_tabular(lst_of_dict)
         assert tabular_txt == expected_result_as_tabular_text
+
+    @pytest.mark.parametrize(
+        "text,columns_count,expected_pattern,expected_results",
+        [
+            (
+                dedent("""
+                    LastWriteTime          Name
+                    9/1/2021 6:13:50 AM    reference
+                    10/5/2021 9:13:50 PM   dsc
+                    11/2/2021 11:58:45 PM  README.md
+                    12/16/2021 12:30:59 PM CONTRIBUTING.md
+                """).strip(),
+                2,
+                r'(?P<lastwritetime>[\x21-\x7e]+( +[\x21-\x7e]+){,2}) +(?P<name>[\x21-\x7e]+)',
+                [
+                    {'lastwritetime': 'LastWriteTime', 'name': 'Name'},
+                    {'lastwritetime': '9/1/2021 6:13:50 AM', 'name': 'reference'},
+                    {'lastwritetime': '10/5/2021 9:13:50 PM', 'name': 'dsc'},
+                    {'lastwritetime': '11/2/2021 11:58:45 PM', 'name': 'README.md'},
+                    {'lastwritetime': '12/16/2021 12:30:59 PM', 'name': 'CONTRIBUTING.md'}
+                ],
+            ),
+            (
+                dedent("""
+                    fruits    meat      drinks
+                    orange    pork      water
+                    peach               coca
+                """).strip(),
+                3,
+                r'(?P<fruits>[a-zA-Z]+) +(?P<meat> {10,}|[a-zA-Z]+) +(?P<drinks>[a-zA-Z]+)',
+                [
+                    {'fruits': 'fruits', 'meat': 'meat', 'drinks': 'drinks'},
+                    {'fruits': 'orange', 'meat': 'pork', 'drinks': 'water'},
+                    {'fruits': 'peach', 'meat': '          ', 'drinks': 'coca'}
+                ],
+            ),
+        ]
+    )
+    def test_to_regex(
+        self, text, columns_count, expected_pattern, expected_results
+    ):
+        node = TabularTextPatternByVarColumns(text, columns_count=columns_count, divider='  ')
+        pattern = node.to_regex()
+        assert pattern == expected_pattern
+
+        for index, line in enumerate(Misc.get_list_of_lines(text)):
+            expected_result = expected_results[index]
+            match = re.match(pattern, line)
+            if match:
+                result = match.groupdict()
+                assert result == expected_result
+            else:
+                assert False, 'Failed to match this line: %r' % line

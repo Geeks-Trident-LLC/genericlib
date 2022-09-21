@@ -2658,18 +2658,26 @@ class TabularTextPatternByVarColumns(RuntimeException):
         return self._is_trailing
 
     @property
+    def is_divider_a_symbol(self):
+        chk = bool(re.match(PATTERN.CHECK_SYMBOL, self.divider))
+        return chk
+
+    @property
     def is_start_with_divider(self):
         if self._is_start_with_divider is None:
-            count = 0
-            for line in self.lines:
-                if line.startswith(self.divider):
-                    count += 1
+            if self.is_divider_a_symbol:
+                count = 0
+                for line in self.lines:
+                    if line.strip().startswith(self.divider):
+                        count += 1
 
-            lines_count = len(self.lines)
-            if count:
-                # chk = count > lines_count / NUMBER.TWO
-                chk = op.gt(count, op.truediv(lines_count, NUMBER.TWO))
-                self._is_start_with_divider = chk
+                lines_count = len(self.lines)
+                if count:
+                    # chk = count > lines_count / NUMBER.TWO
+                    chk = op.gt(count, op.truediv(lines_count, NUMBER.TWO))
+                    self._is_start_with_divider = chk
+                else:
+                    self._is_start_with_divider = False
             else:
                 self._is_start_with_divider = False
         return self._is_start_with_divider
@@ -2677,16 +2685,19 @@ class TabularTextPatternByVarColumns(RuntimeException):
     @property
     def is_end_with_divider(self):
         if self._is_end_with_divider is None:
-            count = 0
-            for line in self.lines:
-                if line.strip().endswith(self.divider):
-                    count += 1
+            if self.is_divider_a_symbol:
+                count = 0
+                for line in self.lines:
+                    if line.strip().endswith(self.divider):
+                        count += 1
 
-            lines_count = len(self.lines)
-            if count:
-                # chk = count > lines_count / NUMBER.TWO
-                chk = op.gt(count, op.truediv(lines_count, NUMBER.TWO))
-                self._is_end_with_divider = chk
+                lines_count = len(self.lines)
+                if count:
+                    # chk = count > lines_count / NUMBER.TWO
+                    chk = op.gt(count, op.truediv(lines_count, NUMBER.TWO))
+                    self._is_end_with_divider = chk
+                else:
+                    self._is_end_with_divider = False
             else:
                 self._is_end_with_divider = False
         return self._is_end_with_divider
@@ -2819,7 +2830,10 @@ class TabularTextPatternByVarColumns(RuntimeException):
             header_names = self.parse_headers_to_variables()
             table = TabularTable(
                 *self.lines, ref_row=ref_row, divider=self.divider,
-                header_names=header_names
+                header_names=header_names,
+                is_leading=self.is_leading, is_trailing=self.is_trailing,
+                is_start_with_divider=self.is_start_with_divider,
+                is_end_with_divider=self.is_end_with_divider
             )
             return True, table
         else:
@@ -2851,6 +2865,15 @@ class TabularTextPatternByVarColumns(RuntimeException):
             return table
         else:
             self.raise_runtime_error(msg=err_msg)
+
+    def to_regex(self):
+        table = self.parse_table()
+        if not table:
+            msg = ('CANT build regex pattern because provided '
+                   'text might not be tabular text format')
+            self.raise_runtime_error(msg=msg)
+        pattern = table.to_regex()
+        return pattern
 
 
 class TabularCell(RuntimeException):
@@ -3260,7 +3283,10 @@ class TabularRow(RuntimeException):
 
 
 class TabularTable(RuntimeException):
-    def __init__(self, *lines, ref_row=None, divider='', header_names=None):
+    def __init__(self, *lines, ref_row=None, divider='',
+                 header_names=None, headers_data=None,
+                 is_leading=False, is_trailing=False,
+                 is_start_with_divider=False, is_end_with_divider=False):
         self.lines = Misc.get_list_of_lines(*lines)
         self.ref_row = ref_row
         self.divider = divider
@@ -3269,6 +3295,11 @@ class TabularTable(RuntimeException):
         self.columns = []
         self.header_columns = []
         self.header_names = header_names or []
+        self.headers_data = headers_data
+        self.is_leading = is_leading
+        self.is_trailing = is_trailing
+        self.is_start_with_divider = is_start_with_divider
+        self.is_end_with_divider = is_end_with_divider
 
         self.process()
 
@@ -3364,6 +3395,29 @@ class TabularTable(RuntimeException):
         self.do_cleaning_data()
         self.build_and_update_headers()
 
+    def to_regex(self):
+        if not self:
+            return STRING.EMPTY
+
+        lst = []
+        for column in self.columns:
+            col_pat = column.to_regex()
+            lst.append(col_pat)
+
+        sep = PATTERN.SPACES
+        if re.match(PATTERN.CHECK_SYMBOL, self.divider):
+            sep = ' *%s *' % re.escape(self.divider)
+
+        pattern = str.join(sep, lst)
+        if self.is_leading:
+            pattern = ' *%s' % pattern
+        if self.is_trailing:
+            pattern = '%s *' % pattern
+        return pattern
+
+    def to_template_snippet(self):
+        return ''
+
 
 class TabularColumn:
     def __init__(self, index=0, name='', left_column=None, right_column=None, is_last=False):
@@ -3420,18 +3474,14 @@ class TabularColumn:
 
     @property
     def min_width(self):
-        width = NUMBER.ONE
-        for cell in self.cells:
-            if cell.text:
-                width = min(width, cell.width)
+        width = min(cell.width for cell in self.cells if cell.width)
+        width = width or NUMBER.ONE
         return width
 
     @property
     def max_width(self):
-        width = NUMBER.ONE
-        for cell in self.cells:
-            if cell.text:
-                width = max(width, cell.width)
+        width = max(cell.width for cell in self.cells if cell.width)
+        width = width or NUMBER.ONE
         return width
 
     @property
@@ -3456,26 +3506,25 @@ class TabularColumn:
         self._alignment = tbl.get(key)
 
     def to_regex(self):
-        if self:
+        if not self:
             return STRING.EMPTY
 
         lst_of_txt = [cell.text for cell in self.cells if cell.text]
         node = TranslatedPattern.do_factory_create(*lst_of_txt)
         pattern = node.get_regex_pattern(var=self.name)
-
         if node.is_group() and not self.is_last:
             max_items_count = max(cell.items_count for cell in self.cells)
             occurrence = max_items_count - NUMBER.ONE
             if occurrence > NUMBER.ZERO:
-                pattern = '%s){,%s})' % (pattern[:-NUMBER.TWO], occurrence)
+                pattern = '%s{,%s})' % (pattern[:-NUMBER.TWO], occurrence)
 
         if self.has_empty_cell:
-            optional_pat = ' {%s,}' % self.min_width
-            pattern = '%s, %s)' % (pattern[:-NUMBER.ONE], optional_pat)
+            first, last = str.split(pattern, '>', maxsplit=1)
+            pattern = '%s> {%s,}|%s' % (first, self.min_width, last)
         return pattern
 
     def to_template_snippet(self):
-        if self:
+        if not self:
             return STRING.EMPTY
 
         lst_of_txt = [cell.text for cell in self.cells if cell.text]
