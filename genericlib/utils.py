@@ -505,6 +505,12 @@ class Misc:
         trailing_spaces = match.group()
         return trailing_spaces
 
+    @classmethod
+    def is_leading_line(cls, line, start=None, end=None):
+        leading_spaces = cls.get_leading_line(line, start=start, end=end)
+        chk = leading_spaces != STRING.EMPTY
+        return chk
+
 
 class MiscOutput:
     @classmethod
