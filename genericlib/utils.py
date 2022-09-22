@@ -507,8 +507,24 @@ class Misc:
 
     @classmethod
     def is_leading_line(cls, line, start=None, end=None):
+        if not Misc.is_string(line):
+            return False
+
         leading_spaces = cls.get_leading_line(line, start=start, end=end)
-        chk = leading_spaces != STRING.EMPTY
+        is_leading = leading_spaces != STRING.EMPTY
+        is_data_line = line.strip() != STRING.EMPTY
+        chk = is_data_line and is_leading
+        return chk
+
+    @classmethod
+    def is_trailing_line(cls, line, start=None, end=None):
+        if not Misc.is_string(line):
+            return False
+
+        trailing_spaces = cls.get_trailing_line(line, start=start, end=end)
+        is_trailing = trailing_spaces != STRING.EMPTY
+        is_data_line = line.strip() != STRING.EMPTY
+        chk = is_data_line and is_trailing
         return chk
 
 
