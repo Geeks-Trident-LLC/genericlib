@@ -436,7 +436,7 @@ class TestIterativeLinesPattern:
         assert tmpl_snippet == expected_template_snippet
 
         template = get_textfsm_template(tmpl_snippet)
-        template = re.sub(r'\d{4}-\d\d-\d\d', 'YYYY-mm-dd', template)
+        template = re.sub(r'date: \d{4}-\d\d-\d\d', 'date: YYYY-mm-dd', template)
         assert template == expected_template
 
         test_data = lst_of_text[0]

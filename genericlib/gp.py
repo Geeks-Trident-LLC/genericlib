@@ -2627,6 +2627,7 @@ class TabularTextPatternByVarColumns(RuntimeException):
         self.raw_headers_data = []
         self.header_names = header_names
         self.variables = []
+        self.prepare_headers_data()
 
     def __len__(self):
         return bool(self.columns_count)
@@ -2703,6 +2704,33 @@ class TabularTextPatternByVarColumns(RuntimeException):
     def raise_exception_if_columns_count_not_provided(self):
         if not self:
             self.raise_runtime_error(msg='columns_count CANT be zero')
+
+    def prepare_headers_data(self):
+        lst = self.raw_headers_data
+        data = self.headers_data
+        total_lines = len(self.lines)
+        if Misc.is_string(data):
+            pat = ' *[0-9]+([ ,]+[0-9]+)* *$'
+            if re.match(pat, data):
+                for index in re.split('[ ,]+', data):
+                    index = int(index)
+                    if index < total_lines:
+                        hdr_line = self.lines[index]
+                        hdr_line not in lst and lst.append(hdr_line)
+            else:
+                for sub_line in str.splitlines(data):
+                    for line in self.lines:
+                        sub_line in line and line not in lst and lst.append(line)
+
+        elif Misc.is_list(data):
+            for item in data:
+                is_number, index = Misc.try_to_get_number(item, return_type=int)
+                if is_number and index < total_lines:
+                    hdr_line = self.lines[index]
+                    hdr_line not in lst and lst.append(hdr_line)
+                else:
+                    for line in self.lines:
+                        item in line and line not in lst and lst.append(line)
 
     def parse_headers_to_variables(self):
         variables = []
@@ -2829,6 +2857,7 @@ class TabularTextPatternByVarColumns(RuntimeException):
             table = TabularTable(
                 *self.lines, ref_row=ref_row, divider=self.divider,
                 header_names=header_names,
+                raw_headers_data = self.raw_headers_data,
                 is_leading=self.is_leading, is_trailing=self.is_trailing,
                 is_start_with_divider=self.is_start_with_divider,
                 is_end_with_divider=self.is_end_with_divider
@@ -2872,6 +2901,15 @@ class TabularTextPatternByVarColumns(RuntimeException):
             self.raise_runtime_error(msg=msg)
         pattern = table.to_regex()
         return pattern
+
+    def to_template_snippet(self):
+        table = self.parse_table()
+        if not table:
+            msg = ('CANT build template snippet because provided '
+                   'text might not be tabular text format')
+            self.raise_runtime_error(msg=msg)
+        template_snippet = table.to_template_snippet()
+        return template_snippet
 
 
 class TabularCell(RuntimeException):
@@ -3279,7 +3317,7 @@ class TabularRow(RuntimeException):
 
 class TabularTable(RuntimeException):
     def __init__(self, *lines, ref_row=None, divider='',
-                 header_names=None, headers_data=None,
+                 header_names=None, raw_headers_data=None,
                  is_leading=False, is_trailing=False,
                  is_start_with_divider=False, is_end_with_divider=False):
         self.lines = Misc.get_list_of_lines(*lines)
@@ -3288,9 +3326,10 @@ class TabularTable(RuntimeException):
 
         self.rows = []
         self.columns = []
+        self.header_lines = []
         self.header_columns = []
         self.header_names = header_names or []
-        self.headers_data = headers_data
+        self.raw_headers_data = raw_headers_data or []
         self.is_leading = is_leading
         self.is_trailing = is_trailing
         self.is_start_with_divider = is_start_with_divider
@@ -3367,7 +3406,7 @@ class TabularTable(RuntimeException):
         if ref_line in self.lines:
             row_pos = self.lines.index(ref_line)
             self.rows = self.rows[row_pos + NUMBER.ONE:]
-
+            self.header_lines = self.lines[:row_pos + NUMBER.ONE]
             for col in self.columns:
                 hdr_col = TabularColumn()
                 hdr_col.cells = col.cells[:row_pos + NUMBER.ONE]
@@ -3418,8 +3457,80 @@ class TabularTable(RuntimeException):
         pattern = Misc.join_string(*lst)
         return pattern
 
+    def get_header_lines_snippet(self):
+        headers_lines = self.raw_headers_data if self.raw_headers_data else self.header_lines
+
+        lst = []
+        for line in Misc.get_list_of_lines(*headers_lines):
+            is_line_of_symbols = bool(re.match(PATTERN.CHECK_SYMBOLS_GROUP, line))
+            is_header_line = Misc.is_data_line(line) and not is_line_of_symbols
+            is_header_line and lst.append(line)
+
+        snippet = Misc.join_string(*lst, sep=STRING.NEWLINE)
+        return snippet
+
     def to_template_snippet(self):
-        return ''
+        if not self:
+            return STRING.EMPTY
+
+        lst = []
+        lst_of_column_status = []
+        does_prev_col_has_empty_cell = False
+        is_divider = bool(self.divider.strip())
+        divider_snippet = 'zospaces()%szospaces()' % re.escape(self.divider)
+        divider_leading_snippet = '%szospaces()' % re.escape(self.divider)
+        divider_trailing_snippet = 'zospaces()%s' % re.escape(self.divider)
+
+        for column in self.columns:
+            has_empty_cell = does_prev_col_has_empty_cell or column.has_empty_cell
+            lst_of_column_status.append(column.has_empty_cell)
+
+            if is_divider:
+                lst and lst.append(divider_snippet)
+            else:
+                sep_snippet = STRING.SPACE_CHAR if has_empty_cell else STRING.DOUBLE_SPACES
+                lst and lst.append(sep_snippet)
+
+            col_snippet = column.to_template_snippet()
+            lst.append(col_snippet)
+            does_prev_col_has_empty_cell = column.has_empty_cell
+
+        other_lst = lst.copy()
+
+        for col_status in lst_of_column_status[::-NUMBER.ONE]:
+            if not col_status:
+                break
+            other_lst and other_lst.pop()
+            other_lst and other_lst.pop()
+
+        pre_leading_data = 'start(space) ' if self.is_leading else 'start() '
+        post_trailing_data = ' end(space) -> record' if self.is_trailing else ' end() -> record'
+
+        self.is_start_with_divider and lst.insert(NUMBER.ZERO, divider_leading_snippet)
+        self.is_start_with_divider and other_lst and other_lst.insert(NUMBER.ZERO, divider_leading_snippet)
+        lst.insert(NUMBER.ZERO, pre_leading_data)
+        other_lst and other_lst.insert(NUMBER.ZERO, pre_leading_data)
+
+        self.is_end_with_divider and lst.append(divider_trailing_snippet)
+        self.is_end_with_divider and other_lst and other_lst.append(divider_trailing_snippet)
+
+        lst.append(post_trailing_data)
+        other_lst and other_lst.append(post_trailing_data)
+
+        lst_of_snippet = []
+
+        headers_snippet = self.get_header_lines_snippet()
+        main_snippet = Misc.join_string(*lst)
+        subsidiary_snippet = Misc.join_string(*other_lst)
+
+        headers_snippet and lst_of_snippet.append(headers_snippet)
+        main_snippet and lst_of_snippet.append(main_snippet)
+        if subsidiary_snippet and subsidiary_snippet not in lst_of_snippet:
+            lst_of_snippet.append(subsidiary_snippet)
+
+        template_snippet = Misc.join_string(*lst_of_snippet, sep=STRING.NEWLINE)
+
+        return template_snippet
 
 
 class TabularColumn:
@@ -3554,6 +3665,6 @@ class TabularColumn:
                 tmpl_snippet = fmt % (tmpl_snippet[:-NUMBER.ONE], occurrence)
 
         if self.has_empty_cell:
-            optional_flag = 'or_at_least_%s_spaces' % self.width
+            optional_flag = 'or_either_repeating_%s_%s_spaces' % (self.width, self.max_width)
             tmpl_snippet = '%s, %s)' % (tmpl_snippet[:-1], optional_flag)
         return tmpl_snippet
