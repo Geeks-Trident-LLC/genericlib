@@ -1387,7 +1387,7 @@ class DiffLinePattern(RuntimeException):
 
     @property
     def is_trailing(self):
-        chk = any(line.endswith(STRING.SPACE_CHAR) for line in self.raw_lines)
+        chk = any(Misc.is_trailing_line(line) for line in self.raw_lines)
         return chk
 
     def reset(self):
@@ -2406,9 +2406,9 @@ class TabularTextPattern(RuntimeException):
     def is_trailing(self):
         if self._is_trailing is None:
             for line in self.lines:
-                if line.strip() and line.startswith(STRING.SPACE_CHAR):
-                    self._is_trailing = True
-                    return self._is_trailing
+                self._is_trailing = Misc.is_trailing_line(line)
+                if self._is_trailing:
+                    break
         return self._is_trailing
 
     def prepare_columns_width(self):
@@ -2635,26 +2635,24 @@ class TabularTextPatternByVarColumns(RuntimeException):
     def is_leading(self):
         if not self.total_lines:
             return False
+
         if self._is_leading is None:
             for line in self.lines:
-                if line.strip() and line.startswith(STRING.SPACE_CHAR):
-                    self._is_leading = True
-                    return self._is_leading
-            else:
-                self._is_leading = False
+                self._is_leading = Misc.is_leading_line(line)
+                if self._is_leading:
+                    break
         return self._is_leading
 
     @property
     def is_trailing(self):
         if not self.total_lines:
             return False
+
         if self._is_trailing is None:
             for line in self.lines:
-                if line.strip() and line.startswith(STRING.SPACE_CHAR):
-                    self._is_trailing = True
-                    return self._is_trailing
-            else:
-                self._is_trailing = False
+                self._is_trailing = Misc.is_trailing_line(line)
+                if self._is_trailing:
+                    break
         return self._is_trailing
 
     @property
