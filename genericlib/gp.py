@@ -58,8 +58,8 @@ class LData(RuntimeException):
 
     @property
     def leading(self):
-        match = re.match(PATTERN.SPACES, self.raw_data)
-        return match.group() if match else STRING.EMPTY
+        leading_spaces = Misc.get_leading_line(self.raw_data)
+        return leading_spaces
 
     @property
     def trailing(self):
@@ -1382,7 +1382,7 @@ class DiffLinePattern(RuntimeException):
 
     @property
     def is_leading(self):
-        chk = any(line.startswith(STRING.SPACE_CHAR) for line in self.raw_lines)
+        chk = any(Misc.is_leading_line(line) for line in self.raw_lines)
         return chk
 
     @property
@@ -2397,9 +2397,9 @@ class TabularTextPattern(RuntimeException):
     def is_leading(self):
         if self._is_leading is None:
             for line in self.lines:
-                if line.strip() and line.startswith(STRING.SPACE_CHAR):
-                    self._is_leading = True
-                    return self._is_leading
+                self._is_leading = Misc.is_leading_line(line)
+                if self._is_leading:
+                    break
         return self._is_leading
 
     @property
@@ -2913,11 +2913,8 @@ class TabularCell(RuntimeException):
     @property
     def leading(self):
         if self._leading is None:
-            if self.is_empty:
-                self._leading = STRING.EMPTY
-            else:
-                lst = re.findall(PATTERN.SPACESATSOS, self.data)
-                self._leading = lst[NUMBER.ZERO] if lst else STRING.EMPTY
+            leading_spaces = Misc.get_leading_line(self.data)
+            self._leading = leading_spaces
         return self._leading or STRING.EMPTY
 
     @property
