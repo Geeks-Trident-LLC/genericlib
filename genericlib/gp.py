@@ -29,10 +29,12 @@ def get_textfsm_template(template_snippet, author='', email='',
 
 
 def verify(template_snippet, test_data,
-           expected_rows_count=None, expected_result=None):
+           expected_rows_count=None, expected_result=None,
+           ignore_space=True):
     builder = TemplateBuilder(user_data=template_snippet, test_data=test_data)
     is_verified = builder.verify(expected_rows_count=expected_rows_count,
-                                 expected_result=expected_result)
+                                 expected_result=expected_result,
+                                 ignore_space=ignore_space)
     return is_verified
 
 

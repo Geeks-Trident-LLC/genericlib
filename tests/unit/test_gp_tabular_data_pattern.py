@@ -860,8 +860,8 @@ class TestTabularTextPatternByVarColumns:
                       ^${fruits} ${meat} ${drinks}$$ -> Record
                 """).strip(),
                 [
-                    {'fruits': 'orange', 'meat': '   pork     ', 'drinks': 'water'},
-                    {'fruits': 'peach', 'meat': '             ', 'drinks': 'pepsi soda'}
+                    {'fruits': 'orange', 'meat': 'pork', 'drinks': 'water'},
+                    {'fruits': 'peach', 'meat': '', 'drinks': 'pepsi soda'}
                 ]
             ),
         ]
