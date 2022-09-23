@@ -2859,7 +2859,7 @@ class TabularTextPatternByVarColumns(RuntimeException):
             table = TabularTable(
                 *self.lines, ref_row=ref_row, divider=self.divider,
                 header_names=header_names,
-                raw_headers_data = self.raw_headers_data,
+                raw_headers_data=self.raw_headers_data,
                 is_leading=self.is_leading, is_trailing=self.is_trailing,
                 is_start_with_divider=self.is_start_with_divider,
                 is_end_with_divider=self.is_end_with_divider
@@ -3301,14 +3301,16 @@ class TabularRow(RuntimeException):
 
     @classmethod
     def create_ref_row(cls, line, pattern, case='', columns_count=-1):
-        tbl = dict(
-            findall=cls.do_creating_ref_row_by_findall,
-            split=cls.do_creating_ref_row_by_splitting,
-            finditer=cls.do_creating_ref_row_by_finditer
-        )
-        if case in tbl:
-            method = tbl.get(case)
-            ref_row = method(line, pattern, columns_count=columns_count)
+        args = (line, pattern)
+        kwargs = dict(columns_count=columns_count)
+        if case == 'findall':
+            ref_row = cls.do_creating_ref_row_by_findall(*args, **kwargs)
+            return ref_row
+        elif case == 'finditer':
+            ref_row = cls.do_creating_ref_row_by_finditer(*args, **kwargs)
+            return ref_row
+        elif case == 'split':
+            ref_row = cls.do_creating_ref_row_by_splitting(*args, **kwargs)
             return ref_row
         else:
             RuntimeException.do_raise_runtime_error(
