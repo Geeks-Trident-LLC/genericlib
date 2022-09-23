@@ -3478,12 +3478,17 @@ class TabularTable(RuntimeException):
             return STRING.EMPTY
 
         lst = []
+        other_lst = []
         lst_of_column_status = []
+        lst_of_snippet = []
         does_prev_col_has_empty_cell = False
         is_divider = bool(self.divider.strip())
         divider_snippet = 'zospaces()%szospaces()' % re.escape(self.divider)
         divider_leading_snippet = '%szospaces()' % re.escape(self.divider)
         divider_trailing_snippet = 'zospaces()%s' % re.escape(self.divider)
+
+        pre_leading_data = 'start(space) ' if self.is_leading else 'start() '
+        post_trailing_data = ' end(space) -> record' if self.is_trailing else ' end() -> record'
 
         for column in self.columns:
             has_empty_cell = does_prev_col_has_empty_cell or column.has_empty_cell
@@ -3491,46 +3496,47 @@ class TabularTable(RuntimeException):
 
             if is_divider:
                 lst and lst.append(divider_snippet)
+                other_lst and other_lst.append(divider_snippet)
             else:
                 sep_snippet = STRING.SPACE_CHAR if has_empty_cell else STRING.DOUBLE_SPACES
                 lst and lst.append(sep_snippet)
+                other_lst and other_lst.append(sep_snippet)
 
             col_snippet = column.to_template_snippet()
             lst.append(col_snippet)
+            other_lst.append(col_snippet)
             does_prev_col_has_empty_cell = column.has_empty_cell
 
-        other_lst = lst.copy()
-
-        for col_status in lst_of_column_status[::-NUMBER.ONE]:
-            if not col_status:
-                break
-            other_lst and other_lst.pop()
-            other_lst and other_lst.pop()
-
-        pre_leading_data = 'start(space) ' if self.is_leading else 'start() '
-        post_trailing_data = ' end(space) -> record' if self.is_trailing else ' end() -> record'
-
         self.is_start_with_divider and lst.insert(NUMBER.ZERO, divider_leading_snippet)
-        self.is_start_with_divider and other_lst and other_lst.insert(NUMBER.ZERO, divider_leading_snippet)
         lst.insert(NUMBER.ZERO, pre_leading_data)
-        other_lst and other_lst.insert(NUMBER.ZERO, pre_leading_data)
-
         self.is_end_with_divider and lst.append(divider_trailing_snippet)
-        self.is_end_with_divider and other_lst and other_lst.append(divider_trailing_snippet)
-
         lst.append(post_trailing_data)
-        other_lst and other_lst.append(post_trailing_data)
-
-        lst_of_snippet = []
 
         headers_snippet = self.get_header_lines_snippet()
         main_snippet = Misc.join_string(*lst)
-        subsidiary_snippet = Misc.join_string(*other_lst)
 
         headers_snippet and lst_of_snippet.append(headers_snippet)
         main_snippet and lst_of_snippet.append(main_snippet)
-        if subsidiary_snippet and subsidiary_snippet not in lst_of_snippet:
-            lst_of_snippet.append(subsidiary_snippet)
+
+        index = NUMBER.ONE
+        for col_status in lst_of_column_status[::-NUMBER.ONE][:-NUMBER.ONE]:
+            subsidiary_lst = other_lst[:-index]
+            if not col_status or not subsidiary_lst:
+                break
+
+            last_item = subsidiary_lst[-NUMBER.ONE]
+            if not re.match(r'\w+[(][^)]*[)]$', last_item):
+                subsidiary_lst.pop()
+                index += NUMBER.ONE
+
+            self.is_start_with_divider and subsidiary_lst.insert(NUMBER.ZERO, divider_leading_snippet)
+            subsidiary_lst.insert(NUMBER.ZERO, pre_leading_data)
+            self.is_end_with_divider and subsidiary_lst.append(divider_trailing_snippet)
+            subsidiary_lst.append(post_trailing_data)
+            subsidiary_snippet = Misc.join_string(*subsidiary_lst)
+            if subsidiary_snippet and subsidiary_snippet not in lst_of_snippet:
+                lst_of_snippet.append(subsidiary_snippet)
+            index += NUMBER.ONE
 
         template_snippet = Misc.join_string(*lst_of_snippet, sep=STRING.NEWLINE)
 
