@@ -10,17 +10,17 @@ from .conststruct import SLICE
 
 
 class Wildcard:
-    def __init__(self, data, is_prefix=True, is_postfix=True,
+    def __init__(self, data, is_leading=False, is_trailing=False,
                  ignore_case=True, relax=False, used_whitespace=False,
-                 used_sol_eol=True):
+                 from_start_to_end=True):
         self.data = str(data)
-        self.is_prefix = is_prefix
-        self.is_postfix = is_postfix
+        self.is_leading = is_leading
+        self.is_trailing = is_trailing
         self.ignore_case = ignore_case
         self.is_multiline = bool(re.search(PATTERN.CRNL, self.data))
         self.relax = relax
         self.used_whitespace = used_whitespace
-        self.used_sol_eof = used_sol_eol
+        self.from_start_to_end = from_start_to_end
 
         self.ws_placeholder = '__placeholder_whitespace_pat__'
         self.multi_ws_placeholder = '__placeholder_whitespaces_pat__'
@@ -59,10 +59,10 @@ class Wildcard:
             method = self.parse_multiline if self.is_multiline else self.parse_line
             pattern = method(self.data)     # noqa
 
-            if self.used_sol_eof and pattern[SLICE.GET_FIRST] != SYMBOL.CARET:
+            if self.from_start_to_end and pattern[SLICE.GET_FIRST] != SYMBOL.CARET:
                 pattern = '^%s' % pattern
 
-            if self.used_sol_eof and pattern[SLICE.GET_LAST] != SYMBOL.DOLLAR_SIGN:
+            if self.from_start_to_end and pattern[SLICE.GET_LAST] != SYMBOL.DOLLAR_SIGN:
                 pattern = '%s$' % pattern
 
             if self.ignore_case:
@@ -494,9 +494,9 @@ class Wildcard:
 
         pattern = self.parse_round_bracket(line)
 
-        if is_started_space or self.is_prefix:
+        if is_started_space or self.is_leading:
             pattern = '%s*%s' % (self.ws_pattern, pattern)
-        if is_ended_space or self.is_postfix:
+        if is_ended_space or self.is_trailing:
             pattern = '%s%s*' % (pattern, self.ws_pattern)
 
         pattern = self.replace_posix_char_class(pattern)

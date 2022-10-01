@@ -41,7 +41,7 @@ class TestWildcard:
         ]
     )
     def test_wildcard(self, data, is_prefix, is_postfix, ignore_case, expected_result):
-        node = Wildcard(data, is_prefix=is_prefix, is_postfix=is_postfix,
+        node = Wildcard(data, is_leading=is_prefix, is_trailing=is_postfix,
                         ignore_case=ignore_case)
         pattern = node.pattern
         assert pattern == expected_result
@@ -149,7 +149,7 @@ class TestWildcard:
         ]
     )
     def test_wildcard_for_posix_case(self, data, expected_pattern, matched_results):
-        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)
         pattern = node.pattern
         assert pattern == expected_pattern
         for matched_result in matched_results:
@@ -648,7 +648,7 @@ class TestWildcard:
     )
     def test_wildcard_for_expansion_case(self, data, expected_pattern,
                                          matched_results, not_matched_results):
-        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)
         pattern = node.pattern
         assert pattern == expected_pattern
         for matched_result in matched_results:
@@ -676,7 +676,7 @@ class TestWildcard:
         ]
     )
     def test_wildcard_for_expansion_unsupported_case(self, data, expected_failure):
-        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)
         pattern = node.pattern
         assert pattern == expected_failure
 
@@ -695,7 +695,7 @@ class TestWildcard:
         ]
     )
     def test_wildcard_for_unrecognized_expansion_case(self, data, expected_result):
-        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)
         pattern = node.pattern
         assert pattern == expected_result
 
@@ -717,7 +717,7 @@ class TestWildcard:
     )
     def test_wildcard_posix_character_class(self, data, expected_pattern,
                                             matched_results, not_matched_results):
-        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)
         pattern = node.pattern
         assert pattern == expected_pattern
 
@@ -743,7 +743,7 @@ class TestWildcard:
     )
     def test_wildcard_word_bound_case(self, data, expected_pattern,
                                       matched_results, not_matched_results):
-        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)
         pattern = node.pattern
         assert pattern == expected_pattern
 
@@ -769,7 +769,7 @@ class TestWildcard:
     )
     def test_wildcard_word_bound_case(self, data, expected_pattern,
                                       matched_results, not_matched_results):
-        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)
         pattern = node.pattern
         assert pattern == expected_pattern
 
@@ -831,7 +831,7 @@ class TestWildcard:
     )
     def test_wildcard_round_bracket_case(self, data, expected_pattern,
                                          matched_results, not_matched_results):
-        node = Wildcard(data, is_prefix=False, is_postfix=False, ignore_case=False)
+        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)
         pattern = node.pattern
         assert pattern == expected_pattern
 
