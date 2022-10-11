@@ -116,10 +116,13 @@ class TranslatedPattern(RuntimeException):
             for pat in self.defined_patterns:
                 is_matched = is_matched or self.check_matching(pat)
             if is_matched:
+                is_multi_spaces = self.is_group_with_multi_spaces()
                 if self.is_plural():
-                    self._pattern = self.defined_patterns[-NUMBER.ONE]
+                    index = NUMBER.TWO if is_multi_spaces else NUMBER.ONE
+                    self._pattern = self.defined_patterns[-index]
                 else:
-                    self._pattern = self.defined_patterns[NUMBER.ZERO]
+                    index = NUMBER.ONE if is_multi_spaces else NUMBER.ZERO
+                    self._pattern = self.defined_patterns[index]
             else:
                 self._pattern = STRING.EMPTY
         else:
@@ -196,6 +199,15 @@ class TranslatedPattern(RuntimeException):
         chk = chk or self.is_mixed_words()
         chk = chk or self.is_non_whitespaces_group()
         return chk
+
+    def is_group_with_multi_spaces(self):
+        if not self.is_group():
+            return False
+
+        for data in self.lst_of_all_data:
+            if STRING.DOUBLE_SPACES in data.strip():
+                return True
+        return False
 
     def is_subset_of(self, other):
         fmt = 'Need to implement subset verification for (%s, %s)'
@@ -756,9 +768,14 @@ class TranslatedSymbolsPattern(TranslatedPattern):
 
 class TranslatedSymbolsGroupPattern(TranslatedPattern):
     def __init__(self, data, *other):
+        defined_patterns = [
+            PATTERN.SYMBOLS_OR_GROUP,
+            PATTERN.SYMBOLS_OR_FLEX_GROUP,
+            PATTERN.SYMBOLS_FLEX_GROUP,
+            PATTERN.SYMBOLS_GROUP
+        ]
         super().__init__(data, *other, name=TEXT.SYMBOLS_GROUP,
-                         defined_patterns=[PATTERN.SYMBOLS_OR_GROUP,
-                                           PATTERN.SYMBOLS_GROUP])
+                         defined_patterns=defined_patterns)
 
     def is_subset_of(self, other):
         chk = other.is_symbols_group() or other.is_mixed_word()
@@ -875,8 +892,14 @@ class TranslatedWordPattern(TranslatedPattern):
 
 class TranslatedWordsPattern(TranslatedPattern):
     def __init__(self, data, *other):
+        defined_patterns = [
+            PATTERN.WORD_OR_WORDS,
+            PATTERN.WORD_OR_FLEX_WORDS,
+            PATTERN.FLEX_WORDS,
+            PATTERN.WORDS
+        ]
         super().__init__(data, *other, name=TEXT.WORDS,
-                         defined_patterns=[PATTERN.WORD_OR_WORDS, PATTERN.WORDS])
+                         defined_patterns=defined_patterns)
 
     def is_subset_of(self, other):
         chk = other.is_words() or other.is_mixed_words() or other.is_non_whitespaces_group()
@@ -948,9 +971,14 @@ class TranslatedMixedWordPattern(TranslatedPattern):
 
 class TranslatedMixedWordsPattern(TranslatedPattern):
     def __init__(self, data, *other):
+        defined_patterns = [
+            PATTERN.MIXED_WORD_OR_WORDS,
+            PATTERN.MIXED_WORD_OR_FLEX_WORDS,
+            PATTERN.MIXED_FLEX_WORDS,
+            PATTERN.MIXED_WORDS
+        ]
         super().__init__(data, *other, name=TEXT.MIXED_WORDS,
-                         defined_patterns=[PATTERN.MIXED_WORD_OR_WORDS,
-                                           PATTERN.MIXED_WORDS])
+                         defined_patterns=defined_patterns)
 
     def is_subset_of(self, other):
         chk = other.is_mixed_words() or other.is_non_whitespaces_group()
@@ -1060,9 +1088,14 @@ class TranslatedNonWhitespacesPattern(TranslatedPattern):
 
 class TranslatedNonWhitespacesGroupPattern(TranslatedPattern):
     def __init__(self, data, *other):
+        defined_patterns = [
+            PATTERN.NON_WHITESPACES_OR_GROUP,
+            PATTERN.NON_WHITESPACES_OR_FLEX_GROUP,
+            PATTERN.NON_WHITESPACES_FLEX_GROUP,
+            PATTERN.NON_WHITESPACES_GROUP
+        ]
         super().__init__(data, *other, name=TEXT.NON_WHITESPACES_GROUP,
-                         defined_patterns=[PATTERN.NON_WHITESPACES_OR_GROUP,
-                                           PATTERN.NON_WHITESPACES_GROUP])
+                         defined_patterns=defined_patterns)
 
     def is_subset_of(self, other):
         chk = other.is_non_whitespaces_group()
