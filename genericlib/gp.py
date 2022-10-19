@@ -2398,124 +2398,45 @@ class CategoryLinesPattern(RuntimeException):
 
 
 class TabularTextPattern(RuntimeException):
-    def __init__(self, *lines, col_widths_as_ref='', separator_as_ref='',
-                 symbols_group_as_ref=False, lines_as_col_names='',
-                 skipped_symbol_line=True):
+    def __init__(self, *lines, divider='', columns_count=0, col_widths=None,
+                 header_names=None, headers_data=None, custom_headers_data='',
+                 starting_from=None, ending_to=None):
         self.lines = Misc.get_list_of_lines(*lines)
-        self.kwargs = DotObject(
-            col_widths_as_ref=col_widths_as_ref,
-            separator_as_ref=str(separator_as_ref),
-            symbols_group_as_ref=str(symbols_group_as_ref),
-            lines_as_col_names=lines_as_col_names,
-            skipped_symbol_line=skipped_symbol_line
+        self.kwargs = dict(
+            divider=divider,
+            columns_count=columns_count,
+            col_widths=col_widths,
+            header_names=header_names,
+            headers_data=headers_data,
+            custom_headers_data=custom_headers_data
         )
-        self.columns_widths = []
-        self.columns_widths_snippet = STRING.EMPTY
-        self.sep_snippet = STRING.EMPTY
-        self.symbols_group_snippet = STRING.EMPTY
-        self._is_leading = None
-        self._is_trailing = None
+
+        self.starting_from = starting_from
+        self.ending_to = ending_to
+        self.parser = None
         self.process()
 
     def __len__(self):
-        chk = bool(self.columns_widths_snippet or
-                   self.sep_snippet or
-                   self.symbols_group_snippet)
+        chk = bool(self.parser)
         return chk
 
-    @property
-    def longest_line_length(self):
-        max_len = max(len(line) for line in self.lines)
-        return max_len
-
-    @property
-    def is_leading(self):
-        if self._is_leading is None:
-            for line in self.lines:
-                self._is_leading = Misc.is_leading_line(line)
-                if self._is_leading:
-                    break
-        return self._is_leading
-
-    @property
-    def is_trailing(self):
-        if self._is_trailing is None:
-            for line in self.lines:
-                self._is_trailing = Misc.is_trailing_line(line)
-                if self._is_trailing:
-                    break
-        return self._is_trailing
-
-    def prepare_columns_width(self):
-        error_msg = 'col_widths_as_ref MUST BE string/list datatype of group of digit(s)'
-        data = self.kwargs.col_widths_as_ref
-        if not data:
-            return
-
-        if Misc.is_string(data) or Misc.is_list(data):
-            if Misc.is_string(data):
-                pat = '(?: *, *)|(?: +)'
-                lst = [item or '0' for item in re.split(pat, str.strip(data))]
-            else:
-                lst = [str(item) for item in data]
-
-            chk = all(str(item).isdigit() for item in lst)
-            if chk:
-                self.columns_widths = [int(item) for item in lst[:-1]]
-                self.columns_widths.append(0)
-            else:
-                self.raise_runtime_error(msg=error_msg)
-        else:
-            self.raise_runtime_error(msg=error_msg)
-
-    def generate_columns_width_snippet(self):
-        self.prepare_columns_width()
-        if not self.columns_widths:
-            return False
-
-        result = []
-
-        for item in self.columns_widths:
-            pass
-
-        return True
-
-    def generate_separator_snippet(self):
-        is_empty = self.kwargs.separator_as_ref == STRING.EMPTY
-        if is_empty:
-            return False
-
-        return True
-
-    def generate_symbols_group_snippet(self):
-        is_empty = self.kwargs.symbols_group_as_ref == STRING.EMPTY
-        if is_empty:
-            return False
-
-        return True
-
     def process(self):
-        is_generated = self.generate_columns_width_snippet()
-        is_generated = is_generated and self.generate_symbols_group_snippet()
-        is_generated and self.generate_separator_snippet()
-
-    def raise_exception_if_not_ready(self):
-        if not self:
-            self.raise_runtime_error(msg='text is not tabular data')
+        lines = self.lines[self.starting_from:self.ending_to]
+        is_col_widths = bool(self.kwargs.get('col_widths'))
+        cls = TabularTextPatternByFixedColumns if is_col_widths else TabularTextPatternByVarColumns
+        self.parser = cls(*lines, **self.kwargs)
 
     def to_regex(self):
-        self.raise_exception_if_not_ready()
-        
-        return ''
+        pattern = self.parser.to_regex() if self.parser else STRING.EMPTY
+        return pattern
 
     def to_template_snippet(self):
-        self.raise_exception_if_not_ready()
-        
-        return ''
+        tmpl_snippet = self.parser.to_template_snippet() if self.parser else STRING.EMPTY
+        return tmpl_snippet
 
 
 class TabularTextPatternByFixedColumns(RuntimeException):
-    def __init__(self, *lines, col_widths=None, header_names=None, headers_data=None):
+    def __init__(self, *lines, col_widths=None, header_names=None, headers_data=None, **kwargs):
         self.lines = Misc.get_list_of_lines(*lines)
         self.col_widths = col_widths
         self.columns_count = len(col_widths) if Misc.is_list(col_widths) else NUMBER.ZERO
@@ -2524,6 +2445,7 @@ class TabularTextPatternByFixedColumns(RuntimeException):
         self.raw_headers_data = []
         self.header_names = header_names
         self.variables = []
+        self.kwargs = kwargs
         self.parse_headers()
 
     def __len__(self):
@@ -2646,7 +2568,8 @@ class TabularTextPatternByFixedColumns(RuntimeException):
 
 class TabularTextPatternByVarColumns(RuntimeException):
     def __init__(self, *lines, divider='', columns_count=0,
-                 header_names=None, headers_data=None, custom_headers_data=''):
+                 header_names=None, headers_data=None, custom_headers_data='',
+                 **kwargs):
         self._is_leading = None
         self._is_trailing = None
         self._is_start_with_divider = None
@@ -2662,6 +2585,9 @@ class TabularTextPatternByVarColumns(RuntimeException):
         self.raw_headers_data = []
         self.header_names = header_names
         self.variables = []
+
+        self.kwargs = kwargs
+
         self.prepare_headers_data()
 
     def __len__(self):
@@ -3487,8 +3413,8 @@ class TabularTable(RuntimeException):
             lst.append(col_pat)
             does_prev_col_has_empty_cell = column.has_empty_cell
 
-        self.is_start_with_divider and lst.insert(divider_leading_pat, NUMBER.ZERO)
-        self.is_leading and lst.insert(PATTERN.ZOSPACES, NUMBER.ZERO)
+        self.is_start_with_divider and lst.insert(NUMBER.ZERO, divider_leading_pat)
+        self.is_leading and lst.insert(NUMBER.ZERO, PATTERN.ZOSPACES)
         self.is_end_with_divider and lst.append(divider_trailing_pat)
         self.is_trailing and lst.append(PATTERN.ZOSPACES)
         pattern = Misc.join_string(*lst)
