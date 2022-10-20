@@ -12,6 +12,8 @@ from genericlib import PATTERN
 from genericlib import TEXT
 from genericlib import SYMBOL
 
+from genericlib import Wildcard
+
 from genericlib import Misc
 from genericlib import MiscFunction
 from genericlib import DotObject
@@ -2400,7 +2402,8 @@ class CategoryLinesPattern(RuntimeException):
 class TabularTextPattern(RuntimeException):
     def __init__(self, *lines, divider='', columns_count=0, col_widths=None,
                  header_names=None, headers_data=None, custom_headers_data='',
-                 starting_from=None, ending_to=None):
+                 starting_from=None, ending_to=None,
+                 excluding_from=None, excluding_to=None):
         self.lines = Misc.get_list_of_lines(*lines)
         self.kwargs = dict(
             divider=divider,
@@ -2413,6 +2416,8 @@ class TabularTextPattern(RuntimeException):
 
         self.starting_from = starting_from
         self.ending_to = ending_to
+        self.excluding_from = excluding_from
+        self.excluding_to = excluding_to
         self.parser = None
         self.process()
 
@@ -2420,8 +2425,44 @@ class TabularTextPattern(RuntimeException):
         chk = bool(self.parser)
         return chk
 
+    def get_line_position_by(self, item):
+        if item is None:
+            return None
+
+        pat1 = r'(?i)^\s+--regex\s+'
+        pat2 = r'(?i)^\s+--wildcard\s+'
+
+        if Misc.is_string(item):
+            pattern = TextPattern(item)
+            if re.search(pat1, item):
+                pattern = re.sub(pat1, STRING.EMPTY, item)
+            elif re.search(pat2, item):
+                txt = re.sub(pat2, STRING.EMPTY, item)
+                pattern = Wildcard(txt).pattern
+            for index, line in enumerate(self.lines):
+                if re.search(pattern, line, re.I):
+                    return index
+        else:
+            is_number, index = Misc.try_to_get_number(item, return_type=int)
+            total_lines_count = len(self.lines)
+            if is_number:
+                return None if index >= total_lines_count - NUMBER.ONE else index
+
+        return None
+
     def process(self):
-        lines = self.lines[self.starting_from:self.ending_to]
+        index_a = self.get_line_position_by(self.starting_from)
+        if index_a is None:
+            index_a = self.get_line_position_by(self.excluding_from)
+            if index_a is not None:
+                index_a = index_a + NUMBER.ONE
+        index_b = self.get_line_position_by(self.ending_to)
+        if index_b is None:
+            index_b = self.get_line_position_by(self.excluding_to)
+            if index_b is not None:
+                index_b = index_b - NUMBER.ONE
+
+        lines = self.lines[index_a:index_b]
         is_col_widths = bool(self.kwargs.get('col_widths'))
         cls = TabularTextPatternByFixedColumns if is_col_widths else TabularTextPatternByVarColumns
         self.parser = cls(*lines, **self.kwargs)
