@@ -2806,15 +2806,13 @@ class TabularTextPatternByVarColumns(RuntimeException):
         return ref_row
 
     def find_ref_row_by_space_divider(self, spaces=' ', custom_line=''):
+        gap = STRING.EMPTY if spaces == STRING.SPACE_CHAR else STRING.SPACE_CHAR
         repetition = self.columns_count - NUMBER.ONE
         kwargs = dict(
             p=PATTERN.NON_WHITESPACES_OR_PHRASE,
-            rep=repetition,
+            rep=repetition, gap=gap
         )
-        fmt1 = ' *%(p)s( +%(p)s){%(rep)s} *$'
-        fmt2 = ' *%(p)s(  +%(p)s){%(rep)s} *$'
-        fmt = fmt1 if spaces == STRING.SPACE_CHAR else fmt2
-        pat = fmt % kwargs
+        pat = ' *%(p)s(%(gap)s +%(p)s){%(rep)s} *$' % kwargs
 
         if custom_line:
             found_line = custom_line
@@ -2824,11 +2822,26 @@ class TabularTextPatternByVarColumns(RuntimeException):
                 return None
             found_line = found_lines[NUMBER.ZERO]
 
-        pattern = ' *%s  +' % PATTERN.NON_WHITESPACES_OR_PHRASE
+        lst = []
+
+        fmt1 = '(?P<%(key)s>%(p)s%(gap)s +)'
+        fmt2 = '(?P<%(key)s> *%(p)s%(gap)s +)'
+        fmt3 = '(?P<%(key)s>%(p)s *)$'
+
+        for index in range(self.columns_count):
+            key = 'v%03d' % index
+            kwargs.update(key=key)
+            fmt = fmt1 if index else fmt2
+            lst.append(fmt % kwargs)
+        else:
+            lst[-NUMBER.ONE] = fmt3 % kwargs
+
+        pattern = str.join(STRING.EMPTY, lst)
+
         ref_row = TabularRow.create_ref_row(
             found_line, pattern,
             columns_count=self.columns_count,
-            case='finditer'
+            case='variable'
         )
         return ref_row
 
@@ -3278,23 +3291,38 @@ class TabularRow(RuntimeException):
         ref_row = cls.do_creating_ref_row(line, pattern, lst, aligned=False)
         return ref_row
 
-    @classmethod
-    def do_creating_ref_row_by_finditer(cls, line, pattern, columns_count=1):
-        lst = []
-        item = None
-        for item in re.finditer(pattern, line):
-            txt = item.group()
-            lst.append(txt)
-        else:
-            if item:
-                post_txt = line[item.end():]
-                post_txt.strip() and lst.append(post_txt)
+    # @classmethod
+    # def do_creating_ref_row_by_finditer(cls, line, pattern, columns_count=1):
+    #     lst = []
+    #     item = None
+    #     for item in re.finditer(pattern, line):
+    #         txt = item.group()
+    #         lst.append(txt)
+    #     else:
+    #         if item:
+    #             post_txt = line[item.end():]
+    #             post_txt.strip() and lst.append(post_txt)
+    #
+    #     if len(lst) > columns_count:
+    #         index = columns_count - NUMBER.ONE
+    #         last_sub_lst = lst[index:]
+    #         lst = lst[:index]
+    #         lst.append(Misc.join_string(*last_sub_lst))
+    #
+    #     ref_row = cls.do_creating_ref_row(line, pattern, lst)
+    #     return ref_row
 
-        if len(lst) > columns_count:
-            index = columns_count - NUMBER.ONE
-            last_sub_lst = lst[index:]
-            lst = lst[:index]
-            lst.append(Misc.join_string(*last_sub_lst))
+    @classmethod
+    def do_creating_ref_row_by_variable(cls, line, pattern):
+        lst = []
+        match = re.match(pattern, line)
+        result = match.groupdict()
+        for i in range(256):
+            key = 'v%03d' % i
+            if key in result:
+                lst.append(result.get(key))
+            else:
+                break
 
         ref_row = cls.do_creating_ref_row(line, pattern, lst)
         return ref_row
@@ -3306,8 +3334,11 @@ class TabularRow(RuntimeException):
         if case == 'findall':
             ref_row = cls.do_creating_ref_row_by_findall(*args, **kwargs)
             return ref_row
-        elif case == 'finditer':
-            ref_row = cls.do_creating_ref_row_by_finditer(*args, **kwargs)
+        # elif case == 'finditer':
+        #     ref_row = cls.do_creating_ref_row_by_finditer(*args, **kwargs)
+        #     return ref_row
+        elif case == 'variable':
+            ref_row = cls.do_creating_ref_row_by_variable(*args)
             return ref_row
         elif case == 'split':
             ref_row = cls.do_creating_ref_row_by_splitting(*args, **kwargs)
