@@ -619,7 +619,7 @@ class MiscObject:
         return new_instance
 
     @classmethod
-    def cleanup_list_of_dict(cls, lst_of_dict):
+    def cleanup_list_of_dict(cls, lst_of_dict, chars=None):
         if not Misc.is_list(lst_of_dict):
             return lst_of_dict
         lst = []
@@ -628,7 +628,7 @@ class MiscObject:
                 new_node = dict()
                 for key, val in node.items():
                     if Misc.is_string(val):
-                        new_node[key] = str.strip(val)
+                        new_node[key] = str.strip(val, chars)
                     else:
                         new_node[key] = cls.copy(val)
                 lst.append(new_node)
