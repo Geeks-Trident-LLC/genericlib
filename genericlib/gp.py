@@ -2403,7 +2403,8 @@ class TabularTextPattern(RuntimeException):
     def __init__(self, *lines, divider='', columns_count=0, col_widths=None,
                  header_names=None, headers_data=None, custom_headers_data='',
                  starting_from=None, ending_to=None,
-                 excluding_from=None, excluding_to=None):
+                 excluding_from=None, excluding_to=None,
+                 is_headers_row=False):
         self.lines = Misc.get_list_of_lines(*lines)
         self.kwargs = dict(
             divider=divider,
@@ -2411,7 +2412,8 @@ class TabularTextPattern(RuntimeException):
             col_widths=col_widths,
             header_names=header_names,
             headers_data=headers_data,
-            custom_headers_data=custom_headers_data
+            custom_headers_data=custom_headers_data,
+            is_headers_row=is_headers_row
         )
 
         self.starting_from = starting_from
@@ -2477,7 +2479,7 @@ class TabularTextPattern(RuntimeException):
 
 
 class TabularTextPatternByFixedColumns(RuntimeException):
-    def __init__(self, *lines, col_widths=None, header_names=None, headers_data=None, **kwargs):
+    def __init__(self, *lines, col_widths=None, header_names=None, headers_data=None, is_headers_row=False, **kwargs):
         self.lines = Misc.get_list_of_lines(*lines)
         self.col_widths = col_widths
         self.columns_count = len(col_widths) if Misc.is_list(col_widths) else NUMBER.ZERO
@@ -2486,6 +2488,7 @@ class TabularTextPatternByFixedColumns(RuntimeException):
         self.raw_headers_data = []
         self.header_names = header_names
         self.variables = []
+        self.is_headers_row = is_headers_row
         self.kwargs = kwargs
         self.parse_headers()
 
@@ -2610,7 +2613,7 @@ class TabularTextPatternByFixedColumns(RuntimeException):
 class TabularTextPatternByVarColumns(RuntimeException):
     def __init__(self, *lines, divider='', columns_count=0,
                  header_names=None, headers_data=None, custom_headers_data='',
-                 **kwargs):
+                 is_headers_row=False, **kwargs):
         self._is_leading = None
         self._is_trailing = None
         self._is_start_with_divider = None
@@ -2625,6 +2628,7 @@ class TabularTextPatternByVarColumns(RuntimeException):
         self.custom_headers_data = custom_headers_data
         self.raw_headers_data = []
         self.header_names = header_names
+        self.is_headers_row = is_headers_row
         self.variables = []
 
         self.kwargs = kwargs
@@ -3354,7 +3358,8 @@ class TabularTable(RuntimeException):
     def __init__(self, *lines, ref_row=None, divider='',
                  header_names=None, raw_headers_data=None,
                  is_leading=False, is_trailing=False,
-                 is_start_with_divider=False, is_end_with_divider=False):
+                 is_start_with_divider=False, is_end_with_divider=False,
+                 is_headers_row=False):
         self.lines = Misc.get_list_of_lines(*lines)
         self.ref_row = ref_row
         self.divider = divider
@@ -3369,6 +3374,7 @@ class TabularTable(RuntimeException):
         self.is_trailing = is_trailing
         self.is_start_with_divider = is_start_with_divider
         self.is_end_with_divider = is_end_with_divider
+        self.is_headers_row = is_headers_row
 
         self.process()
 
@@ -3437,24 +3443,29 @@ class TabularTable(RuntimeException):
         if not self.ref_row:
             return
 
-        ref_line = self.ref_row.line
-        if ref_line in self.lines:
-            row_pos = self.lines.index(ref_line)
-            self.rows = self.rows[row_pos + NUMBER.ONE:]
-            self.header_lines = self.lines[:row_pos + NUMBER.ONE]
-            for col in self.columns:
-                hdr_col = TabularColumn()
-                hdr_col.cells = col.cells[:row_pos + NUMBER.ONE]
-                self.header_columns.append(hdr_col)
-                col.cells = col.cells[row_pos + NUMBER.ONE:]
+        if self.is_headers_row:
+            ref_line = self.ref_row.line
+            if ref_line in self.lines:
+                row_pos = self.lines.index(ref_line)
+                self.rows = self.rows[row_pos + NUMBER.ONE:]
+                self.header_lines = self.lines[:row_pos + NUMBER.ONE]
+                for col in self.columns:
+                    hdr_col = TabularColumn()
+                    hdr_col.cells = col.cells[:row_pos + NUMBER.ONE]
+                    self.header_columns.append(hdr_col)
+                    col.cells = col.cells[row_pos + NUMBER.ONE:]
 
     def build_and_update_headers(self):
-        if not self.header_names:
+        if self.is_headers_row and not self.header_names:
             repl_char = STRING.UNDERSCORE_CHAR
+            pat = r'[0-9 \x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+'
             for index, hdr_col in enumerate(self.header_columns):
                 col_name = str.join(repl_char, [cell.text for cell in hdr_col.cells])
-                col_name = re.sub(PATTERN.MULTI_SPACE_SYMBOLS, repl_char, col_name)
+                col_name = re.sub(pat, repl_char, col_name)
                 col_name = col_name.strip(repl_char).lower()
+                col_name = col_name or 'col%s' % index
+                if col_name in self.header_names:
+                    col_name = '%s%s' % (col_name, index)
                 self.header_names.append(col_name)
                 self.columns[index].name = col_name
 
@@ -3546,7 +3557,7 @@ class TabularTable(RuntimeException):
         headers_snippet = self.get_header_lines_snippet()
         main_snippet = Misc.join_string(*lst)
 
-        headers_snippet and lst_of_snippet.append(headers_snippet)
+        self.is_headers_row and headers_snippet and lst_of_snippet.append(headers_snippet)
         main_snippet and lst_of_snippet.append(main_snippet)
 
         index = NUMBER.ONE
