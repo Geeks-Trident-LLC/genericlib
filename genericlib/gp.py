@@ -16,7 +16,6 @@ from genericlib import Wildcard
 
 from genericlib import Misc
 from genericlib import MiscFunction
-from genericlib import DotObject
 
 from regexpro import TextPattern
 from templatepro import TemplateBuilder
@@ -2931,6 +2930,237 @@ class TabularTextPatternByVarColumns(RuntimeException):
         return template_snippet
 
 
+class TabularTable(RuntimeException):
+    def __init__(self, *lines, ref_row=None, divider='',
+                 header_names=None, raw_headers_data=None,
+                 is_leading=False, is_trailing=False,
+                 is_start_with_divider=False, is_end_with_divider=False,
+                 is_headers_row=False):
+        self.lines = Misc.get_list_of_lines(*lines)
+        self.ref_row = ref_row
+        self.divider = divider
+
+        self.rows = []
+        self.columns = []
+        self.header_lines = []
+        self.header_columns = []
+        self.header_names = header_names or []
+        self.raw_headers_data = raw_headers_data or []
+        self.is_leading = is_leading
+        self.is_trailing = is_trailing
+        self.is_start_with_divider = is_start_with_divider
+        self.is_end_with_divider = is_end_with_divider
+        self.is_headers_row = is_headers_row
+
+        self.process()
+
+    def __len__(self):
+        chk = bool(self.rows) and bool(self.columns)
+        return chk
+
+    def __repr__(self):
+        fmt = '%s(rows_count=%s, columns_count=%s)'
+        cls_name = Misc.get_instance_class_name(self)
+        result = fmt % (cls_name, len(self.rows), len(self.columns))
+        return result
+
+    @property
+    def rows_count(self):
+        total = len(self.rows)
+        return total
+
+    @property
+    def columns_count(self):
+        total = len(self.columns)
+        return total
+
+    def add_data_to_rows(self):
+        self.rows.clear()
+        for line in self.lines:
+            row = TabularRow(line, ref_row=self.ref_row)
+            self.rows.append(row)
+
+    def add_data_to_columns(self):
+        self.columns.clear()
+        is_created = False
+
+        for row in self.rows:
+            prev_column = None
+            for index, cell in enumerate(row.cells):
+                new_col = TabularColumn(index=index)
+                column = self.columns[index] if is_created else new_col
+                not is_created and self.columns.append(column)
+                column.left_column = prev_column
+                column.append_cell(cell)
+
+                if prev_column:
+                    prev_column.right_column = column
+
+                prev_column = column
+            is_created = True
+        for col in self.columns:
+            col.analyze_and_update_alignment()
+
+    def to_list_of_dict(self):
+        lst_of_dict = []
+        divider = self.divider
+        for row_index, row in enumerate(self.rows):
+            if row.is_group_of_symbols:
+                continue
+            dict_obj = dict()
+            lst_of_dict.append(dict_obj)
+            for col in self.columns:
+                txt = col.cells[row_index].data.strip()
+                txt = txt.strip(divider).strip() if divider else txt
+                dict_obj[col.name] = txt
+        return lst_of_dict
+
+    def do_cleaning_data(self):
+        if not self.ref_row:
+            return
+
+        if self.is_headers_row:
+            ref_line = self.ref_row.line
+            if ref_line in self.lines:
+                row_pos = self.lines.index(ref_line)
+                self.rows = self.rows[row_pos + NUMBER.ONE:]
+                self.header_lines = self.lines[:row_pos + NUMBER.ONE]
+                for col in self.columns:
+                    hdr_col = TabularColumn()
+                    hdr_col.cells = col.cells[:row_pos + NUMBER.ONE]
+                    self.header_columns.append(hdr_col)
+                    col.cells = col.cells[row_pos + NUMBER.ONE:]
+
+    def build_and_update_headers(self):
+        if self.is_headers_row and not self.header_names:
+            repl_char = STRING.UNDERSCORE_CHAR
+            pat = r'[0-9 \x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+'
+            for index, hdr_col in enumerate(self.header_columns):
+                col_name = str.join(repl_char, [cell.text for cell in hdr_col.cells])
+                col_name = re.sub(pat, repl_char, col_name)
+                col_name = col_name.strip(repl_char).lower()
+                col_name = col_name or 'col%s' % index
+                if col_name in self.header_names:
+                    col_name = '%s%s' % (col_name, index)
+                self.header_names.append(col_name)
+                self.columns[index].name = col_name
+
+    def process(self):
+        self.add_data_to_rows()
+        self.add_data_to_columns()
+        self.do_cleaning_data()
+        self.build_and_update_headers()
+
+    def to_regex(self):
+        if not self:
+            return STRING.EMPTY
+
+        lst = []
+        does_prev_col_has_empty_cell = False
+        is_divider = bool(self.divider.strip())
+        divider_pat = ' *%s *' % re.escape(self.divider)
+        divider_leading_pat = '%s *' % re.escape(self.divider)
+        divider_trailing_pat = ' *%s' % re.escape(self.divider)
+        for column in self.columns:
+            has_empty_cell = does_prev_col_has_empty_cell or column.has_empty_cell
+            if is_divider:
+                lst and lst.append(divider_pat)
+            else:
+                sep_pat = PATTERN.SPACE if has_empty_cell else PATTERN.SPACES
+                lst and lst.append(sep_pat)
+            col_pat = column.to_regex()
+            lst.append(col_pat)
+            does_prev_col_has_empty_cell = column.has_empty_cell
+
+        self.is_start_with_divider and lst.insert(NUMBER.ZERO, divider_leading_pat)
+        self.is_leading and lst.insert(NUMBER.ZERO, PATTERN.ZOSPACES)
+        self.is_end_with_divider and lst.append(divider_trailing_pat)
+        self.is_trailing and lst.append(PATTERN.ZOSPACES)
+        pattern = Misc.join_string(*lst)
+        return pattern
+
+    def get_header_lines_snippet(self):
+        headers_lines = self.raw_headers_data if self.raw_headers_data else self.header_lines
+
+        lst = []
+        for line in Misc.get_list_of_lines(*headers_lines):
+            is_line_of_symbols = bool(re.match(PATTERN.CHECK_SYMBOLS_GROUP, line))
+            is_header_line = Misc.is_data_line(line) and not is_line_of_symbols
+            is_header_line and lst.append(line)
+
+        snippet = Misc.join_string(*lst, sep=STRING.NEWLINE)
+        return snippet
+
+    def to_template_snippet(self):
+        if not self:
+            return STRING.EMPTY
+
+        lst = []
+        other_lst = []
+        lst_of_column_status = []
+        lst_of_snippet = []
+        does_prev_col_has_empty_cell = False
+        is_divider = bool(self.divider.strip())
+        divider_snippet = 'zospaces()%szospaces()' % re.escape(self.divider)
+        divider_leading_snippet = '%szospaces()' % re.escape(self.divider)
+        divider_trailing_snippet = 'zospaces()%s' % re.escape(self.divider)
+
+        pre_leading_data = 'start(space) ' if self.is_leading else 'start() '
+        post_trailing_data = ' end(space) -> record' if self.is_trailing else ' end() -> record'
+
+        for column in self.columns:
+            has_empty_cell = does_prev_col_has_empty_cell or column.has_empty_cell
+            lst_of_column_status.append(column.has_empty_cell)
+
+            if is_divider:
+                lst and lst.append(divider_snippet)
+                other_lst and other_lst.append(divider_snippet)
+            else:
+                sep_snippet = STRING.SPACE_CHAR if has_empty_cell else STRING.DOUBLE_SPACES
+                lst and lst.append(sep_snippet)
+                other_lst and other_lst.append(sep_snippet)
+
+            col_snippet = column.to_template_snippet()
+            lst.append(col_snippet)
+            other_lst.append(col_snippet)
+            does_prev_col_has_empty_cell = column.has_empty_cell
+
+        self.is_start_with_divider and lst.insert(NUMBER.ZERO, divider_leading_snippet)
+        lst.insert(NUMBER.ZERO, pre_leading_data)
+        self.is_end_with_divider and lst.append(divider_trailing_snippet)
+        lst.append(post_trailing_data)
+
+        headers_snippet = self.get_header_lines_snippet()
+        main_snippet = Misc.join_string(*lst)
+
+        self.is_headers_row and headers_snippet and lst_of_snippet.append(headers_snippet)
+        main_snippet and lst_of_snippet.append(main_snippet)
+
+        index = NUMBER.ONE
+        for col_status in lst_of_column_status[::-NUMBER.ONE][:-NUMBER.ONE]:
+            subsidiary_lst = other_lst[:-index]
+            if not col_status or not subsidiary_lst:
+                break
+
+            last_item = subsidiary_lst[-NUMBER.ONE]
+            if not re.match(r'\w+[(][^)]*[)]$', last_item):
+                subsidiary_lst.pop()
+                index += NUMBER.ONE
+
+            self.is_start_with_divider and subsidiary_lst.insert(NUMBER.ZERO, divider_leading_snippet)
+            subsidiary_lst.insert(NUMBER.ZERO, pre_leading_data)
+            self.is_end_with_divider and subsidiary_lst.append(divider_trailing_snippet)
+            subsidiary_lst.append(post_trailing_data)
+            subsidiary_snippet = Misc.join_string(*subsidiary_lst)
+            if subsidiary_snippet and subsidiary_snippet not in lst_of_snippet:
+                lst_of_snippet.append(subsidiary_snippet)
+            index += NUMBER.ONE
+
+        template_snippet = Misc.join_string(*lst_of_snippet, sep=STRING.NEWLINE)
+
+        return template_snippet
+
+
 class TabularCell(RuntimeException):
     def __init__(self, line, left_pos, right_pos, ref_cell=None):
         self.args = (line, left_pos, right_pos, ref_cell)
@@ -3352,237 +3582,6 @@ class TabularRow(RuntimeException):
                 obj=Misc.join_string(cls.__name__, 'RTError'),
                 msg='Unsupported %r case create_ref_row' % case
             )
-
-
-class TabularTable(RuntimeException):
-    def __init__(self, *lines, ref_row=None, divider='',
-                 header_names=None, raw_headers_data=None,
-                 is_leading=False, is_trailing=False,
-                 is_start_with_divider=False, is_end_with_divider=False,
-                 is_headers_row=False):
-        self.lines = Misc.get_list_of_lines(*lines)
-        self.ref_row = ref_row
-        self.divider = divider
-
-        self.rows = []
-        self.columns = []
-        self.header_lines = []
-        self.header_columns = []
-        self.header_names = header_names or []
-        self.raw_headers_data = raw_headers_data or []
-        self.is_leading = is_leading
-        self.is_trailing = is_trailing
-        self.is_start_with_divider = is_start_with_divider
-        self.is_end_with_divider = is_end_with_divider
-        self.is_headers_row = is_headers_row
-
-        self.process()
-
-    def __len__(self):
-        chk = bool(self.rows) and bool(self.columns)
-        return chk
-
-    def __repr__(self):
-        fmt = '%s(rows_count=%s, columns_count=%s)'
-        cls_name = Misc.get_instance_class_name(self)
-        result = fmt % (cls_name, len(self.rows), len(self.columns))
-        return result
-
-    @property
-    def rows_count(self):
-        total = len(self.rows)
-        return total
-
-    @property
-    def columns_count(self):
-        total = len(self.columns)
-        return total
-
-    def add_data_to_rows(self):
-        self.rows.clear()
-        for line in self.lines:
-            row = TabularRow(line, ref_row=self.ref_row)
-            self.rows.append(row)
-
-    def add_data_to_columns(self):
-        self.columns.clear()
-        is_created = False
-
-        for row in self.rows:
-            prev_column = None
-            for index, cell in enumerate(row.cells):
-                new_col = TabularColumn(index=index)
-                column = self.columns[index] if is_created else new_col
-                not is_created and self.columns.append(column)
-                column.left_column = prev_column
-                column.append_cell(cell)
-
-                if prev_column:
-                    prev_column.right_column = column
-
-                prev_column = column
-            is_created = True
-        for col in self.columns:
-            col.analyze_and_update_alignment()
-
-    def to_list_of_dict(self):
-        lst_of_dict = []
-        divider = self.divider
-        for row_index, row in enumerate(self.rows):
-            if row.is_group_of_symbols:
-                continue
-            dict_obj = dict()
-            lst_of_dict.append(dict_obj)
-            for col in self.columns:
-                txt = col.cells[row_index].data.strip()
-                txt = txt.strip(divider).strip() if divider else txt
-                dict_obj[col.name] = txt
-        return lst_of_dict
-
-    def do_cleaning_data(self):
-        if not self.ref_row:
-            return
-
-        if self.is_headers_row:
-            ref_line = self.ref_row.line
-            if ref_line in self.lines:
-                row_pos = self.lines.index(ref_line)
-                self.rows = self.rows[row_pos + NUMBER.ONE:]
-                self.header_lines = self.lines[:row_pos + NUMBER.ONE]
-                for col in self.columns:
-                    hdr_col = TabularColumn()
-                    hdr_col.cells = col.cells[:row_pos + NUMBER.ONE]
-                    self.header_columns.append(hdr_col)
-                    col.cells = col.cells[row_pos + NUMBER.ONE:]
-
-    def build_and_update_headers(self):
-        if self.is_headers_row and not self.header_names:
-            repl_char = STRING.UNDERSCORE_CHAR
-            pat = r'[0-9 \x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+'
-            for index, hdr_col in enumerate(self.header_columns):
-                col_name = str.join(repl_char, [cell.text for cell in hdr_col.cells])
-                col_name = re.sub(pat, repl_char, col_name)
-                col_name = col_name.strip(repl_char).lower()
-                col_name = col_name or 'col%s' % index
-                if col_name in self.header_names:
-                    col_name = '%s%s' % (col_name, index)
-                self.header_names.append(col_name)
-                self.columns[index].name = col_name
-
-    def process(self):
-        self.add_data_to_rows()
-        self.add_data_to_columns()
-        self.do_cleaning_data()
-        self.build_and_update_headers()
-
-    def to_regex(self):
-        if not self:
-            return STRING.EMPTY
-
-        lst = []
-        does_prev_col_has_empty_cell = False
-        is_divider = bool(self.divider.strip())
-        divider_pat = ' *%s *' % re.escape(self.divider)
-        divider_leading_pat = '%s *' % re.escape(self.divider)
-        divider_trailing_pat = ' *%s' % re.escape(self.divider)
-        for column in self.columns:
-            has_empty_cell = does_prev_col_has_empty_cell or column.has_empty_cell
-            if is_divider:
-                lst and lst.append(divider_pat)
-            else:
-                sep_pat = PATTERN.SPACE if has_empty_cell else PATTERN.SPACES
-                lst and lst.append(sep_pat)
-            col_pat = column.to_regex()
-            lst.append(col_pat)
-            does_prev_col_has_empty_cell = column.has_empty_cell
-
-        self.is_start_with_divider and lst.insert(NUMBER.ZERO, divider_leading_pat)
-        self.is_leading and lst.insert(NUMBER.ZERO, PATTERN.ZOSPACES)
-        self.is_end_with_divider and lst.append(divider_trailing_pat)
-        self.is_trailing and lst.append(PATTERN.ZOSPACES)
-        pattern = Misc.join_string(*lst)
-        return pattern
-
-    def get_header_lines_snippet(self):
-        headers_lines = self.raw_headers_data if self.raw_headers_data else self.header_lines
-
-        lst = []
-        for line in Misc.get_list_of_lines(*headers_lines):
-            is_line_of_symbols = bool(re.match(PATTERN.CHECK_SYMBOLS_GROUP, line))
-            is_header_line = Misc.is_data_line(line) and not is_line_of_symbols
-            is_header_line and lst.append(line)
-
-        snippet = Misc.join_string(*lst, sep=STRING.NEWLINE)
-        return snippet
-
-    def to_template_snippet(self):
-        if not self:
-            return STRING.EMPTY
-
-        lst = []
-        other_lst = []
-        lst_of_column_status = []
-        lst_of_snippet = []
-        does_prev_col_has_empty_cell = False
-        is_divider = bool(self.divider.strip())
-        divider_snippet = 'zospaces()%szospaces()' % re.escape(self.divider)
-        divider_leading_snippet = '%szospaces()' % re.escape(self.divider)
-        divider_trailing_snippet = 'zospaces()%s' % re.escape(self.divider)
-
-        pre_leading_data = 'start(space) ' if self.is_leading else 'start() '
-        post_trailing_data = ' end(space) -> record' if self.is_trailing else ' end() -> record'
-
-        for column in self.columns:
-            has_empty_cell = does_prev_col_has_empty_cell or column.has_empty_cell
-            lst_of_column_status.append(column.has_empty_cell)
-
-            if is_divider:
-                lst and lst.append(divider_snippet)
-                other_lst and other_lst.append(divider_snippet)
-            else:
-                sep_snippet = STRING.SPACE_CHAR if has_empty_cell else STRING.DOUBLE_SPACES
-                lst and lst.append(sep_snippet)
-                other_lst and other_lst.append(sep_snippet)
-
-            col_snippet = column.to_template_snippet()
-            lst.append(col_snippet)
-            other_lst.append(col_snippet)
-            does_prev_col_has_empty_cell = column.has_empty_cell
-
-        self.is_start_with_divider and lst.insert(NUMBER.ZERO, divider_leading_snippet)
-        lst.insert(NUMBER.ZERO, pre_leading_data)
-        self.is_end_with_divider and lst.append(divider_trailing_snippet)
-        lst.append(post_trailing_data)
-
-        headers_snippet = self.get_header_lines_snippet()
-        main_snippet = Misc.join_string(*lst)
-
-        self.is_headers_row and headers_snippet and lst_of_snippet.append(headers_snippet)
-        main_snippet and lst_of_snippet.append(main_snippet)
-
-        index = NUMBER.ONE
-        for col_status in lst_of_column_status[::-NUMBER.ONE][:-NUMBER.ONE]:
-            subsidiary_lst = other_lst[:-index]
-            if not col_status or not subsidiary_lst:
-                break
-
-            last_item = subsidiary_lst[-NUMBER.ONE]
-            if not re.match(r'\w+[(][^)]*[)]$', last_item):
-                subsidiary_lst.pop()
-                index += NUMBER.ONE
-
-            self.is_start_with_divider and subsidiary_lst.insert(NUMBER.ZERO, divider_leading_snippet)
-            subsidiary_lst.insert(NUMBER.ZERO, pre_leading_data)
-            self.is_end_with_divider and subsidiary_lst.append(divider_trailing_snippet)
-            subsidiary_lst.append(post_trailing_data)
-            subsidiary_snippet = Misc.join_string(*subsidiary_lst)
-            if subsidiary_snippet and subsidiary_snippet not in lst_of_snippet:
-                lst_of_snippet.append(subsidiary_snippet)
-            index += NUMBER.ONE
-
-        template_snippet = Misc.join_string(*lst_of_snippet, sep=STRING.NEWLINE)
-
-        return template_snippet
 
 
 class TabularColumn:
