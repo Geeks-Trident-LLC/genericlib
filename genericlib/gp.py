@@ -2403,12 +2403,12 @@ class TabularTextPattern(RuntimeException):
                  header_names=None, headers_data=None, custom_headers_data='',
                  starting_from=None, ending_to=None,
                  excluding_from=None, excluding_to=None,
-                 is_headers_row=False):
+                 is_headers_row=True):
         self.lines = Misc.get_list_of_lines(*lines)
         self.kwargs = dict(
             divider=divider,
             columns_count=columns_count,
-            col_widths=col_widths,
+            col_widths=col_widths or [],
             header_names=header_names,
             headers_data=headers_data,
             custom_headers_data=custom_headers_data,
@@ -2419,11 +2419,12 @@ class TabularTextPattern(RuntimeException):
         self.ending_to = ending_to
         self.excluding_from = excluding_from
         self.excluding_to = excluding_to
-        self.parser = None
+        self.tabular_parser = None
+        self.prepare_col_widths()
         self.process()
 
     def __len__(self):
-        chk = bool(self.parser)
+        chk = bool(self.tabular_parser)
         return chk
 
     def get_line_position_by(self, item):
@@ -2451,6 +2452,34 @@ class TabularTextPattern(RuntimeException):
 
         return None
 
+    def prepare_col_widths(self):
+        col_widths = self.kwargs.get('col_widths')
+        if not col_widths:
+            return
+
+        fmt = 'Expecting list of integer or string of integers, but got %r'
+        lst = []
+        if Misc.is_string(col_widths) or Misc.is_list(col_widths):
+            if Misc.is_string(col_widths):
+                col_widths = str.strip(col_widths)
+                widths = re.split(r'[ ,]+', col_widths.strip())
+            else:
+                widths = col_widths[:]
+
+            for index, width_ in enumerate(widths):
+                is_number, width = Misc.try_to_get_number(width_, return_type=int)
+                if is_number:
+                    lst.append(width)
+                elif index == len(widths) - NUMBER.ONE:
+                    lst.append(STRING.EMPTY)
+                else:
+                    self.raise_runtime_error(msg=fmt % col_widths)
+
+            self.kwargs.update(col_widths=lst[:])
+            self.kwargs.update(columns_count=len(lst))
+        else:
+            self.raise_runtime_error(msg=fmt % col_widths)
+
     def process(self):
         index_a = self.get_line_position_by(self.starting_from)
         if index_a is None:
@@ -2464,21 +2493,19 @@ class TabularTextPattern(RuntimeException):
                 index_b = index_b - NUMBER.ONE
 
         lines = self.lines[index_a:index_b]
-        is_col_widths = bool(self.kwargs.get('col_widths'))
-        cls = TabularTextPatternByFixedColumns if is_col_widths else TabularTextPatternByVarColumns
-        self.parser = cls(*lines, **self.kwargs)
+        self.tabular_parser = TabularTextPatternByVarColumns(*lines, **self.kwargs)
 
     def to_regex(self):
-        pattern = self.parser.to_regex() if self.parser else STRING.EMPTY
+        pattern = self.tabular_parser.to_regex() if self else STRING.EMPTY
         return pattern
 
     def to_template_snippet(self):
-        tmpl_snippet = self.parser.to_template_snippet() if self.parser else STRING.EMPTY
+        tmpl_snippet = self.tabular_parser.to_template_snippet() if self else STRING.EMPTY
         return tmpl_snippet
 
 
 class TabularTextPatternByFixedColumns(RuntimeException):
-    def __init__(self, *lines, col_widths=None, header_names=None, headers_data=None, is_headers_row=False, **kwargs):
+    def __init__(self, *lines, col_widths=None, header_names=None, headers_data=None, is_headers_row=True, **kwargs):
         self.lines = Misc.get_list_of_lines(*lines)
         self.col_widths = col_widths
         self.columns_count = len(col_widths) if Misc.is_list(col_widths) else NUMBER.ZERO
@@ -2610,9 +2637,9 @@ class TabularTextPatternByFixedColumns(RuntimeException):
 
 
 class TabularTextPatternByVarColumns(RuntimeException):
-    def __init__(self, *lines, divider='', columns_count=0,
+    def __init__(self, *lines, divider='', columns_count=0, col_widths=None,
                  header_names=None, headers_data=None, custom_headers_data='',
-                 is_headers_row=False, **kwargs):
+                 is_headers_row=True, **kwargs):
         self._is_leading = None
         self._is_trailing = None
         self._is_start_with_divider = None
@@ -2621,6 +2648,7 @@ class TabularTextPatternByVarColumns(RuntimeException):
         self.lines = Misc.get_list_of_lines(*lines)
         self.total_lines = len(self.lines)
         self.divider = divider
+        self.col_widths = col_widths or []
         self.columns_count = columns_count
         self.raise_exception_if_columns_count_not_provided()
         self.headers_data = headers_data
@@ -2860,8 +2888,33 @@ class TabularTextPatternByVarColumns(RuntimeException):
         ref_row = self.find_ref_row_by_symbols_divider(custom_line=self.custom_headers_data)
         return ref_row
 
-    def try_to_get_table_by_divider(self, case):
+    def find_ref_row_by_col_widths(self, custom_line=''):
+        lst = []
+        for index, width in enumerate(self.col_widths):
+            if index < self.columns_count - NUMBER.ONE:
+                lst.append('(?P<v%03d>.{%s})' % (index, width))
+            else:
+                lst.append('(?P<v%03d>.*)' % index)
+
+        pattern = Misc.join_string(*lst)
+
+        if custom_line:
+            found_line = custom_line
+        else:
+            found_lines = [line for line in self.lines if re.match(pattern, line)]
+            if not found_lines:
+                return None
+            found_line = found_lines[NUMBER.ZERO]
+        ref_row = TabularRow.create_ref_row(
+            found_line, pattern,
+            columns_count=self.columns_count,
+            case='variable'
+        )
+        return ref_row
+
+    def try_to_get_table_by(self, case):
         methods = dict(
+            col_widths=self.find_ref_row_by_col_widths,
             symbols=self.find_ref_row_by_symbols_divider,
             separator=self.find_ref_row_by_separator_divider,
             multi_spaces=self.find_ref_row_by_multi_spaces_divider,
@@ -2878,7 +2931,8 @@ class TabularTextPatternByVarColumns(RuntimeException):
                 raw_headers_data=self.raw_headers_data,
                 is_leading=self.is_leading, is_trailing=self.is_trailing,
                 is_start_with_divider=self.is_start_with_divider,
-                is_end_with_divider=self.is_end_with_divider
+                is_end_with_divider=self.is_end_with_divider,
+                is_headers_row=self.is_headers_row
             )
             return True, table
         else:
@@ -2886,7 +2940,10 @@ class TabularTextPatternByVarColumns(RuntimeException):
 
     def parse_table(self):
         case, err_msg = STRING.EMPTY, STRING.EMPTY
-        if re.match('%s$' % PATTERN.SYMBOL, self.divider.strip()):
+        if self.col_widths:
+            case = 'col_widths'
+            err_msg = 'Failed to parse tabular text by column widths'
+        elif re.match('%s$' % PATTERN.SYMBOL, self.divider.strip()):
             case = 'separator'
             err_msg = 'Failed to parse tabular text by %r divider' % self.divider
         elif self.custom_headers_data:
@@ -2905,7 +2962,7 @@ class TabularTextPatternByVarColumns(RuntimeException):
             msg = 'Unsupported divider %r' % self.divider
             self.raise_runtime_error(msg=msg)
 
-        is_parsed, table = self.try_to_get_table_by_divider(case)
+        is_parsed, table = self.try_to_get_table_by(case)
         if is_parsed:
             return table
         else:
@@ -2931,14 +2988,15 @@ class TabularTextPatternByVarColumns(RuntimeException):
 
 
 class TabularTable(RuntimeException):
-    def __init__(self, *lines, ref_row=None, divider='',
+    def __init__(self, *lines, ref_row=None, divider='', col_widths=None,
                  header_names=None, raw_headers_data=None,
                  is_leading=False, is_trailing=False,
                  is_start_with_divider=False, is_end_with_divider=False,
-                 is_headers_row=False):
+                 is_headers_row=True):
         self.lines = Misc.get_list_of_lines(*lines)
         self.ref_row = ref_row
         self.divider = divider
+        self.col_widths = col_widths
 
         self.rows = []
         self.columns = []
