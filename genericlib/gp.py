@@ -2504,138 +2504,6 @@ class TabularTextPattern(RuntimeException):
         return tmpl_snippet
 
 
-class TabularTextPatternByFixedColumns(RuntimeException):
-    def __init__(self, *lines, col_widths=None, header_names=None, headers_data=None, is_headers_row=True, **kwargs):
-        self.lines = Misc.get_list_of_lines(*lines)
-        self.col_widths = col_widths
-        self.columns_count = len(col_widths) if Misc.is_list(col_widths) else NUMBER.ZERO
-        self.raise_exception_if_columns_widths_not_provided()
-        self.headers_data = headers_data
-        self.raw_headers_data = []
-        self.header_names = header_names
-        self.variables = []
-        self.is_headers_row = is_headers_row
-        self.kwargs = kwargs
-        self.parse_headers()
-
-    def __len__(self):
-        return bool(self.columns_count)
-
-    def get_default_variables(self):
-        var_names = ['col%s' % i for i in range(self.columns_count)]
-        return var_names
-
-    def parse_headers_by_ref_data(self, reference_data):
-        variables = []
-        if not reference_data:
-            return variables
-
-        pat = '[0-9]+( *, *[0-9]+ *)*$'
-        headers_lines = []
-        if Misc.is_string(reference_data):
-            if re.match(pat, reference_data):
-                for i in str.split(reference_data, STRING.COMMA_CHAR):
-                    index = int(i)
-                    headers_lines.append(self.lines[index])
-            else:
-                headers_lines.extend(Misc.get_list_of_lines(reference_data))
-        elif Misc.is_list(reference_data):
-            for line in reference_data:
-                is_number, pos = Misc.try_to_get_number(line, return_type=int)
-                if is_number:
-                    headers_lines.append(self.lines[pos])
-                else:
-                    headers_lines.append(line)
-        else:
-            variables = self.get_default_variables()
-            return variables
-
-        self.raw_headers_data.extend(headers_lines)
-
-        pat = self.build_pattern()
-
-        keys = self.get_default_variables()
-        vals = [STRING.EMPTY] * self.columns_count
-        tbl = OrderedDict(zip(keys, vals))
-        for line in headers_lines:
-            match = re.match(pat, line)
-            if match:
-                for key, val in match.groupdict().items():
-                    val = val.strip()
-                    prev_val = tbl.get(key)
-                    tbl[key] = '%s %s' % (prev_val, val) if prev_val else val
-
-        headers = list(tbl.values())
-        variables = self.parse_headers_to_variables(headers)
-        return variables
-
-    def parse_headers_to_variables(self, header_names):
-        variables = []
-        if not header_names:
-            return variables
-
-        if Misc.is_string(header_names):
-            header_names = re.split('[ ,]+', header_names.strip())
-
-        if Misc.is_list(header_names) and len(header_names) == self.columns_count:
-            repl = STRING.UNDERSCORE_CHAR
-            for i, hdr in enumerate(header_names):
-                new_hdr = re.sub(PATTERN.MULTI_SPACE_SYMBOLS, repl, hdr.strip())
-                new_hdr = new_hdr if new_hdr == repl else new_hdr.rstrip(repl)
-                if new_hdr in variables:
-                    variables.append('%s%s' % (new_hdr, i))
-                else:
-                    variables.append(new_hdr)
-        else:
-            variables = self.get_default_variables()
-
-        return variables
-
-    def parse_headers(self):
-        if self.header_names or self.headers_data:
-            if self.header_names:
-                self.variables = self.parse_headers_to_variables(self.header_names)
-            else:
-                self.variables = self.parse_headers_by_ref_data(self.headers_data)
-        else:
-            self.variables = self.get_default_variables()
-
-    def build_pattern(self, is_default=True):
-        lst = []
-        for i in range(self.columns_count):
-            col_width = int(self.col_widths[i])
-            var_name = 'col%s' % i if is_default else self.variables[i]
-            if i < self.columns_count - NUMBER.ONE:
-                pat = '(?P<%s>.{%s})' % (var_name, col_width)
-            else:
-                pat = '(?P<%s>.*)' % var_name
-            lst.append(pat)
-        pattern = str.join(STRING.EMPTY, lst)
-        return pattern
-
-    def raise_exception_if_columns_widths_not_provided(self):
-        if not self:
-            self.raise_runtime_error(msg='col_widths MUST be provided')
-
-    def to_regex(self):
-        pattern = self.build_pattern(is_default=False)
-        return pattern
-
-    def to_template_snippet(self):
-        lst = []
-        for i, var_name in enumerate(self.variables):
-            if i < self.columns_count - NUMBER.ONE:
-                width = self.col_widths[i]
-                sub_snippet = 'anything(var_%s, repetition_%s)' % (var_name, width)
-                lst.append(sub_snippet)
-            else:
-                sub_snippet = 'something(var_%s)' % var_name
-                lst.append(sub_snippet)
-        snippet = '%s -> record' % str.join(STRING.EMPTY, lst)
-        tmpl_snippet = str.join(STRING.NEWLINE, self.raw_headers_data + [snippet])
-        return tmpl_snippet
-
-
 class TabularTextPatternByVarColumns(RuntimeException):
     def __init__(self, *lines, divider='', columns_count=0, col_widths=None,
                  header_names=None, headers_data=None, custom_headers_data='',
@@ -3583,27 +3451,6 @@ class TabularRow(RuntimeException):
         ref_row = cls.do_creating_ref_row(line, pattern, lst, aligned=False)
         return ref_row
 
-    # @classmethod
-    # def do_creating_ref_row_by_finditer(cls, line, pattern, columns_count=1):
-    #     lst = []
-    #     item = None
-    #     for item in re.finditer(pattern, line):
-    #         txt = item.group()
-    #         lst.append(txt)
-    #     else:
-    #         if item:
-    #             post_txt = line[item.end():]
-    #             post_txt.strip() and lst.append(post_txt)
-    #
-    #     if len(lst) > columns_count:
-    #         index = columns_count - NUMBER.ONE
-    #         last_sub_lst = lst[index:]
-    #         lst = lst[:index]
-    #         lst.append(Misc.join_string(*last_sub_lst))
-    #
-    #     ref_row = cls.do_creating_ref_row(line, pattern, lst)
-    #     return ref_row
-
     @classmethod
     def do_creating_ref_row_by_variable(cls, line, pattern):
         lst = []
@@ -3626,9 +3473,6 @@ class TabularRow(RuntimeException):
         if case == 'findall':
             ref_row = cls.do_creating_ref_row_by_findall(*args, **kwargs)
             return ref_row
-        # elif case == 'finditer':
-        #     ref_row = cls.do_creating_ref_row_by_finditer(*args, **kwargs)
-        #     return ref_row
         elif case == 'variable':
             ref_row = cls.do_creating_ref_row_by_variable(*args)
             return ref_row
