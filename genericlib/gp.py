@@ -1,5 +1,4 @@
 import re
-from collections import OrderedDict
 from itertools import combinations
 
 import operator as op
@@ -2958,18 +2957,23 @@ class TabularTable(RuntimeException):
                     col.cells = col.cells[row_pos + NUMBER.ONE:]
 
     def build_and_update_headers(self):
-        if self.is_headers_row and not self.header_names:
-            repl_char = STRING.UNDERSCORE_CHAR
-            pat = r'[0-9 \x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+'
-            for index, hdr_col in enumerate(self.header_columns):
-                col_name = str.join(repl_char, [cell.text for cell in hdr_col.cells])
-                col_name = re.sub(pat, repl_char, col_name)
-                col_name = col_name.strip(repl_char).lower()
-                col_name = col_name or 'col%s' % index
-                if col_name in self.header_names:
-                    col_name = '%s%s' % (col_name, index)
-                self.header_names.append(col_name)
-                self.columns[index].name = col_name
+        if self.is_headers_row:
+            if not self.header_names:
+                repl_char = STRING.UNDERSCORE_CHAR
+                pat = r'[0-9 \x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+'
+                for index, hdr_col in enumerate(self.header_columns):
+                    col_name = str.join(repl_char, [cell.text for cell in hdr_col.cells])
+                    col_name = re.sub(pat, repl_char, col_name)
+                    col_name = col_name.strip(repl_char).lower()
+                    col_name = col_name or 'col%s' % index
+                    if col_name in self.header_names:
+                        col_name = '%s%s' % (col_name, index)
+                    self.header_names.append(col_name)
+                    self.columns[index].name = col_name
+        else:
+            if self.header_names and len(self.header_names) == self.columns_count:
+                for index, col_name in enumerate(self.header_names):
+                    self.columns[index].name = col_name
 
     def process(self):
         self.add_data_to_rows()
