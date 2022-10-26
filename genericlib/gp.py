@@ -2419,6 +2419,12 @@ class TabularTextPattern(RuntimeException):
         self.excluding_from = excluding_from
         self.excluding_to = excluding_to
         self.tabular_parser = None
+
+        self.index_a = None
+        self.index_b = None
+        self.is_excluding_from = False
+        self.is_excluding_to = False
+
         self.prepare_col_widths()
         self.process()
 
@@ -2451,6 +2457,29 @@ class TabularTextPattern(RuntimeException):
 
         return None
 
+    def get_fixed_line_snippet(self, line='', index=None):
+        if index is not None:
+            line = self.lines[index]
+
+        if not line:
+            return STRING.EMPTY
+
+        lst = []
+        for item in re.findall(PATTERN.NON_WHITESPACES, line.strip()):
+            if re.search(PATTERN.DIGIT, item):
+                tp_obj = TranslatedPattern.do_factory_create(item)
+                item_snippet = tp_obj.get_template_snippet()
+                lst.append(item_snippet)
+            else:
+                lst.append(item)
+        snippet = Misc.join_string(*lst, sep=STRING.DOUBLE_SPACES)
+        is_leading = Misc.is_leading_line(line)
+        is_trailing = Misc.is_trailing_line(line)
+        snippet = 'start(%s) %s' % ('space' if is_leading else '', snippet)
+        snippet = '%s end(%s)' % (snippet, 'space' if is_trailing else '')
+
+        return snippet
+
     def prepare_col_widths(self):
         col_widths = self.kwargs.get('col_widths')
         if not col_widths:
@@ -2481,14 +2510,21 @@ class TabularTextPattern(RuntimeException):
 
     def process(self):
         index_a = self.get_line_position_by(self.starting_from)
+        self.index_a = index_a
         if index_a is None:
             index_a = self.get_line_position_by(self.excluding_from)
             if index_a is not None:
+                self.index_a = index_a
+                self.is_excluding_from = True
                 index_a = index_a + NUMBER.ONE
+
         index_b = self.get_line_position_by(self.ending_to)
+        self.index_b = index_b
         if index_b is None:
             index_b = self.get_line_position_by(self.excluding_to)
             if index_b is not None:
+                self.index_b = index_b
+                self.is_excluding_to = True
                 index_b = index_b - NUMBER.ONE
 
         lines = self.lines[index_a:index_b]
@@ -2500,6 +2536,20 @@ class TabularTextPattern(RuntimeException):
 
     def to_template_snippet(self):
         tmpl_snippet = self.tabular_parser.to_template_snippet() if self else STRING.EMPTY
+
+        if self.index_a is not None:
+            line_snippet = self.get_fixed_line_snippet(index=self.index_a)
+            if line_snippet:
+                addition = STRING.EMPTY if self.is_excluding_from else 'Continue '
+                fmt = '{} -> {}Table\nTable\n{}'
+                tmpl_snippet = fmt.format(line_snippet, addition, tmpl_snippet)
+
+        if self.index_b is not None:
+            line_snippet = self.get_fixed_line_snippet(index=self.index_b)
+            if line_snippet:
+                fmt = '{}\n{} -> EOF'
+                tmpl_snippet = fmt.format(tmpl_snippet, line_snippet)
+
         return tmpl_snippet
 
 
