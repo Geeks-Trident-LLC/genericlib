@@ -30,6 +30,8 @@ from .utils import print_data_as_tabular
 
 from .config import version
 
+from .robotframeworklib import RFFile
+
 __all__ = [
     'DictObject',
     'DotObject',
@@ -49,6 +51,7 @@ __all__ = [
     'TEXT',
 
     'File',
+    'RFFile',
 
     'Wildcard',
 
@@ -67,5 +70,5 @@ __all__ = [
 
     'substitute_variable',
 
-    'version'
+    'version',
 ]
