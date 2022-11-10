@@ -1,3 +1,4 @@
+import csv
 import re
 import os
 import filecmp
@@ -10,6 +11,7 @@ from pathlib import WindowsPath
 from datetime import datetime
 
 import yaml
+import json
 
 from genericlib import Text
 from genericlib import DotObject
@@ -600,3 +602,113 @@ class File:
 
         new_filename = str(file_obj)
         return new_filename
+
+    @classmethod
+    def build_open_file_kwargs_from(cls, kwargs):
+        file_kwargs = dict(mode='r', buffering=-1,
+                           encoding=None, errors=None,
+                           newline=None, closefd=True,
+                           opener=None)
+        if isinstance(kwargs, dict):
+            for key in file_kwargs:
+                if key in kwargs:
+                    file_kwargs[key] = kwargs.pop(key)
+        return file_kwargs
+
+    @classmethod
+    def load_text(cls, filename, **kwargs):
+        """
+        Load text file and return content of file as text.
+        Parameters:
+          filename (str): file name
+          kwargs (dict): full open document, check this link
+            + https://docs.python.org/3/library/functions.html#open
+        Returns:
+          str: content of file.
+        Robot Framework Usage:
+        # import library snippet in settings section: Library   genericlib.RFFile
+        ${result}=   rf generic lib file load text   filename.txt
+        # or
+        ${result}=   rf generic lib file load text   filename.txt   mode=r   encoding=utf-8   errors=strict
+        """
+        file_kwargs = cls.build_open_file_kwargs_from(kwargs)
+        with open(filename, **file_kwargs) as stream:
+            content = stream.read()
+            if isinstance(content, str):
+                return content
+            else:
+                encoding = file_kwargs.get('encoding') or 'utf-8'
+                errors = file_kwargs.get('errors') or 'strict'
+                content = content.decode(encoding=encoding, errors=errors)
+                return content
+
+    rf_generic_lib_file_load_text = load_text
+
+    @classmethod
+    def load_json(cls, filename, **kwargs):
+        """
+        Load JSON file and return JSON object.
+        Parameters:
+          filename (str): file name
+          kwargs (dict): full open document, check these links
+            + https://docs.python.org/3/library/json.html#module-json
+            + https://docs.python.org/3/library/functions.html#open
+        Returns:
+          object: json object.
+        Robot Framework Usage:
+        # import library snippet in settings section: Library   genericlib.RFFile
+        ${result}=   rf generic lib file load json   filename.json
+        """
+        file_kwargs = cls.build_open_file_kwargs_from(kwargs)
+        json_content = cls.load_text(filename, **file_kwargs)
+        json_obj = json.loads(json_content, **kwargs)
+        return json_obj
+
+    rf_generic_lib_file_load_json = load_json
+
+    @classmethod
+    def load_yaml(cls, filename, **kwargs):
+        """
+        Load YAML file and return YAML object.
+        Parameters:
+          filename (str): file name
+          kwargs (dict): full open document, check this link
+            + https://docs.python.org/3/library/functions.html#open
+        Returns:
+          object: yaml object.
+        Robot Framework Usage:
+        # import library snippet in settings section: Library   genericlib.RFFile
+        ${result}=   rf generic lib file load yaml   filename.yaml
+        """
+        yaml_content = cls.load_text(filename, **kwargs)
+        yaml_obj = yaml.safe_load(yaml_content)
+        return yaml_obj
+
+    rf_generic_lib_file_load_yaml = load_yaml
+
+    @classmethod
+    def load_csv(cls, filename, **kwargs):
+        """
+        Load CSV file and return list of dictionary.
+        Parameters:
+          filename (str): file name
+          kwargs (dict): full open document,
+            check these links
+              + https://docs.python.org/3/library/csv.html#module-csv
+              + https://docs.python.org/3/library/functions.html#open
+        Returns:
+          list: list of dictionary.
+        Robot Framework Usage:
+        # import library snippet in settings section: Library   genericlib.RFFile
+        ${result}=   rf generic lib file load csv   filename.csv
+        """
+        lst = []
+        file_kwargs = cls.build_open_file_kwargs_from(kwargs)
+        csv_content = cls.load_text(filename, **file_kwargs)
+        stream = csv.StringIO(csv_content)
+        rows = csv.DictReader(stream, **kwargs)
+        for row in rows:
+            lst.append(row)
+        return lst
+
+    rf_generic_lib_file_load_csv = load_csv
