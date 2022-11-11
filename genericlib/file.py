@@ -604,6 +604,24 @@ class File:
         return new_filename
 
     @classmethod
+    def get_extension(cls, filename):
+        """
+        Return the file extension
+        Parameters:
+          filename (str): file name
+        Returns:
+          str: the file extension.
+        Robot Framework Usage:
+        # import library snippet in settings section: Library   genericlib.RFFile
+        ${result}=   rf generic lib file get extension   filename.txt
+        """
+        file_obj = Path(filename)
+        extension = file_obj.suffix[1:]
+        return extension
+
+    rf_generic_lib_file_get_extension = get_extension
+
+    @classmethod
     def build_open_file_kwargs_from(cls, kwargs):
         file_kwargs = dict(mode='r', buffering=-1,
                            encoding=None, errors=None,
