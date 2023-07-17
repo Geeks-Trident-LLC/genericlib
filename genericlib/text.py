@@ -1,5 +1,6 @@
 # from time import time
 from .constant import STRING
+import re
 
 
 class BaseText(str):
@@ -77,3 +78,25 @@ def get_generic_error_msg(instance, fmt, *other):
     new_fmt = '%%s - %s' % fmt
     err_msg = new_fmt % tuple(args)
     return err_msg
+
+
+def get_whitespace_chars(k=8, to_list=True):
+    lst = [chr(i) for i in range(pow(2, k)) if re.search(r"\s", chr(i))]
+    return frozenset(lst) if to_list else str.join('', lst)
+
+
+ASCII_WHITESPACE_CHARS = get_whitespace_chars(k=8, to_list=True)
+ASCII_WHITESPACE_STRING = get_whitespace_chars(k=8, to_list=False)
+WHITESPACE_CHARS = get_whitespace_chars(k=16, to_list=True)
+WHITESPACE_STRING = get_whitespace_chars(k=16, to_list=False)
+
+
+def get_non_whitespace_chars(k=8, to_list=True):
+    lst = [chr(i) for i in range(pow(2, k)) if not re.search(r"\s", chr(i))]
+    return frozenset(lst) if to_list else str.join('', lst)
+
+
+ASCII_NON_WHITESPACE_CHARS = get_non_whitespace_chars(k=8, to_list=True)
+ASCII_NON_WHITESPACE_STRING = get_non_whitespace_chars(k=8, to_list=False)
+NON_WHITESPACE_CHARS = get_non_whitespace_chars(k=16, to_list=True)
+NON_WHITESPACE_STRING = get_non_whitespace_chars(k=16, to_list=False)
