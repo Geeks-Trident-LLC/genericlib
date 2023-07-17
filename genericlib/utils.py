@@ -495,13 +495,13 @@ class Misc:
 
     @classmethod
     def get_leading_line(cls, line, start=None, end=None):
-        match = re.match('([ \t\v]+)?', str(line)[start:end])
+        match = re.match(r'([^\S\r\n]+)?', str(line)[start:end])
         leading_spaces = match.group()
         return leading_spaces
 
     @classmethod
     def get_trailing_line(cls, line, start=None, end=None):
-        match = re.search('([ \t\v]+)?$', str(line)[start:end])
+        match = re.search(r'([^\S\r\n]+)?$', str(line)[start:end])
         trailing_spaces = match.group()
         return trailing_spaces
 

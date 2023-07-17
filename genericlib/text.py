@@ -2,6 +2,8 @@
 from .constant import STRING
 import re
 
+from .exceptions import LineArgumentError
+
 
 class BaseText(str):
     def __new__(cls, *args, **kwargs):
@@ -70,6 +72,66 @@ class Text(BaseText):
             else:
                 result = '<{0}/>'.format(tag)
         return result
+
+
+class Line(BaseText):
+    def __init__(self, data):
+        type(self).is_line(data, on_failure=True)
+        lines = str(data).splitlines(keepends=True)
+        self.__line = lines[0] if lines else ''
+        self.__data = re.match(r"([^\r\n]+)?", self.__line)
+        self.__joiner = re.search(r"([\r\n]+)?$", self.__line)
+        super().__init__(self.__data)
+
+    @property
+    def joiner(self):
+        return self.__joiner
+
+    @property
+    def raw_data(self):
+        return self.__line
+
+    @property
+    def clean_line(self):
+        return self.strip()
+
+    @property
+    def is_empty(self):
+        return self == ""
+
+    @property
+    def is_optional_empty(self):
+        return bool(re.match(r"\s+$", self))
+
+    @property
+    def leading(self):
+        leading_chars = re.match(r'(\s+)?', self).group()
+        return leading_chars
+
+    @property
+    def trailing(self):
+        trailing_chars = re.search(r'(\s+)?$', self).group()
+        return trailing_chars
+
+    @property
+    def is_leading(self):
+        return len(self.leading) > 0
+
+    @property
+    def is_trailing(self):
+        return len(self.trailing) > 0
+
+    @classmethod
+    def is_line(cls, data, on_failure=False):
+        lines = str(data).splitlines(keepends=True)
+        if len(lines) == 1:
+            return True
+
+        if on_failure:
+            error = "data argument is multi-lines.  MUST be a single line."
+            raise LineArgumentError(error)
+        else:
+            return False
 
 
 def get_generic_error_msg(instance, fmt, *other):
