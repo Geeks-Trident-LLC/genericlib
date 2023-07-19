@@ -1,6 +1,7 @@
 # from time import time
 from .constant import STRING
 import re
+import string
 
 from .exceptions import LineArgumentError
 
@@ -74,14 +75,22 @@ class Text(BaseText):
         return result
 
 
-class Line(BaseText):
-    def __init__(self, data):
-        type(self).is_line(data, on_failure=True)
-        lines = str(data).splitlines(keepends=True)
-        self.__line = lines[0] if lines else ''
-        self.__data = re.match(r"([^\r\n]+)?", self.__line)
-        self.__joiner = re.search(r"([\r\n]+)?$", self.__line)
-        super().__init__(self.__data)
+class BaseLine(str):
+    def __new__(cls, data, *args):
+        new_base_line_obj = str.__new__(cls, data)
+        lines = new_base_line_obj.splitlines(keepends=True)
+        if len(lines) == 1:
+            __line = lines[0] if lines else ''
+            cls.__raw_data = __line
+            cls.__data = re.match(r"([^\r\n]+)?", __line)
+            cls.__joiner = re.search(r"([\r\n]+)?$", __line)
+            return new_base_line_obj
+        else:
+            error = "data argument is multi-lines.  MUST be a single line."
+            raise LineArgumentError(error)
+
+
+class Line(BaseLine):
 
     @property
     def joiner(self):
@@ -89,7 +98,7 @@ class Line(BaseText):
 
     @property
     def raw_data(self):
-        return self.__line
+        return self.__raw_data
 
     @property
     def clean_line(self):
@@ -133,6 +142,141 @@ class Line(BaseText):
         else:
             return False
 
+    def convert_to_regex_pattern(self):
+        result = []
+        punct_pat = BaseMatchedObject.punctuation_pattern
+        pat = f'({punct_pat}+ +)\\1+'
+        other_pat = r'\s+'
+        if re.search(pat, self):
+            items = self.do_finditer_split(self, pattern=pat)
+            for item in items:
+                if isinstance(item, (PreMatchedObject, PostMatchedObject)):
+                    lst = self.do_finditer_split(item.data, pattern=other_pat)
+                    result.extend(lst)
+                else:
+                    result.append(item)
+        else:
+            result = self.do_finditer_split(self, pattern=other_pat)
+        text_pattern = ''.join(elmt.to_pattern() for elmt in result)
+        return text_pattern
+
+    def do_finditer_split(self, data, pattern=r'\s+'):  # noqa
+        result = []
+        start = 0
+        match = None
+        for match in re.finditer(pattern, data):
+            pre_obj = PreMatchedObject(match, start)
+            not pre_obj.is_empty and result.append(pre_obj)
+
+            matched_obj = MatchedObject(match)
+            result.append(matched_obj)
+            start = match.end()
+
+        if match is not None:
+            post_obj = PostMatchedObject(match, start)
+            not post_obj.is_empty and result.append(post_obj)
+        else:
+            result.append(BaseMatchedObject(data))
+        return result
+
+
+class BaseMatchedObject:
+
+    punctuation_pattern = r'[!\"#$%&\'()*+,./:;<=>?@\[\\\]\^_`{|}~-]'
+    repeated_punctuation_pattern = f'({punctuation_pattern}+?)\\1+'
+    repeated_punctuations_space_pattern = f'({punctuation_pattern}+ +)\\1+'
+    default_separator = ''
+    user_separator = ''
+
+    def __init__(self, match):
+        self.match = None if isinstance(match, str) else match
+        self.data = match if isinstance(match, str) else ''
+
+    @property
+    def is_empty(self):
+        return self.data == ''
+
+    def change_separator(self, separator=' ', user_pattern=''):
+        self.user_separator = user_pattern
+        self.default_separator = separator
+
+    def to_pattern(self):
+        result = dict()
+        result.update(self.get_whitespace_pattern())
+        result.update(self.get_repeated_puncts_space_pattern())
+        result.update(self.get_repeated_puncts_pattern())
+        result.update(self.get_text_pattern())
+        pattern = [key for key, value in result.items() if value][0]
+        return pattern
+
+    def get_whitespace_pattern(self):
+        if not re.match(r'\s+$', self.data):
+            return {'': False}
+
+        if self.user_separator:
+            return self.user_separator, True
+
+        total = len(self.data)
+        is_space = self.data[0] == ' ' and len(set(self.data)) == 1
+        if self.default_separator:
+            pattern = self.default_separator
+        else:
+            pattern = ' ' if is_space else r'\s'
+        pattern = f'{pattern}+' if total > 1 else pattern
+
+        return {pattern: True}
+
+    def get_text_pattern(self):
+        pattern = do_soft_regex_escape(self.data)
+        return {pattern: True}
+
+    def get_repeated_puncts_pattern(self):
+        if not re.match(f'{self.punctuation_pattern}+$', self.data):
+            return {'': False}
+        else:
+            match = re.match(self.repeated_punctuation_pattern, self.data)
+            if match:
+                pre_puncts = do_soft_regex_escape(self.data[0:match.start()])
+                post_puncts = do_soft_regex_escape(self.data[match.end():])
+                found = match.groups()[0]
+                s = set(found)
+                pat = s.pop() if len(s) == 1 else found
+                fmt = '%s{2,}' if len(s) == 1 else '(%s){2,}'
+
+                pattern = pre_puncts + fmt % do_soft_regex_escape(pat) + post_puncts
+                return {pattern: True}
+            else:
+                pattern = do_soft_regex_escape(self.data)
+                return {pattern: True}
+
+    def get_repeated_puncts_space_pattern(self):
+        match = re.match(f'{self.repeated_punctuations_space_pattern}$', self.data)
+        if not match:
+            return {'': False}
+        found = match.groups()[0]
+        puncts_pat = do_soft_regex_escape(found.strip())
+        space_pat = ' +' if '  ' in found else ' '
+        pattern = '(%s%s){2,}' % (puncts_pat, space_pat)
+        return {pattern: True}
+
+
+class MatchedObject(BaseMatchedObject):
+    def __init__(self, match):
+        super().__init__(match)
+        self.data = match.group()
+
+
+class PreMatchedObject(BaseMatchedObject):
+    def __init__(self, match, start):
+        super().__init__(match)
+        self.data = match.string[start: match.start()]
+
+
+class PostMatchedObject(BaseMatchedObject):
+    def __init__(self, match, start):
+        super().__init__(match)
+        self.data = match.string[start:]
+
 
 def get_generic_error_msg(instance, fmt, *other):
     args = ['%sError' % instance.__class__.__name__]
@@ -162,3 +306,21 @@ ASCII_NON_WHITESPACE_CHARS = get_non_whitespace_chars(k=8, to_list=True)
 ASCII_NON_WHITESPACE_STRING = get_non_whitespace_chars(k=8, to_list=False)
 NON_WHITESPACE_CHARS = get_non_whitespace_chars(k=16, to_list=True)
 NON_WHITESPACE_STRING = get_non_whitespace_chars(k=16, to_list=False)
+
+
+def do_soft_regex_escape(pattern):
+    """Escape special characters in a string.  This method will help
+    consistency pattern during invoking re.escape on different Python version.
+    """
+    chk1 = f'{string.punctuation} '
+    chk2 = '^$.?*+|{}[]()'
+    result = []
+    for char in pattern:
+        escape_char = re.escape(char)
+        if char in chk1:
+            result.append(escape_char if char in chk2 else char)
+        else:
+            result.append(escape_char)
+    new_pattern = ''.join(result)
+    re.compile(new_pattern)
+    return new_pattern
