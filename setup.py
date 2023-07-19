@@ -3,10 +3,10 @@ from setuptools import setup, find_packages
 
 setup(
     name='genericlib',
-    version='0.3.4',
+    version='0.4.0',
     license='Geeks Trident License',
     license_files=['LICENSE'],
-    description='Describe-Get-System',
+    description='Generic Library',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
     author='Tuyen Mathew Duong',
