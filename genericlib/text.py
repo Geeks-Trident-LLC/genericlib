@@ -74,6 +74,24 @@ class Text(BaseText):
                 result = '<{0}/>'.format(tag)
         return result
 
+    def do_finditer_split(self, pattern):
+        result = []
+        start = 0
+        m = None
+        for m in re.finditer(pattern, self):
+            pre_match = self[start:m.start()]
+            match = m.group()
+            result.append(pre_match)
+            result.append(match)
+            start = m.end()
+
+        if m:
+            post_match = self[m.end()]
+            result.append(post_match)
+        else:
+            result.append(str(self))
+        return result
+
 
 class BaseLine(str):
     def __new__(cls, data, *args):
