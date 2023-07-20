@@ -173,8 +173,10 @@ class Line(BaseLine):
                     result.extend(lst)
                 else:
                     result.append(item)
-        else:
+        elif re.search(other_pat, self):
             result = self.do_finditer_split(self, pattern=other_pat)
+        else:
+            result = [BaseMatchedObject(self)]
         text_pattern = ''.join(elmt.to_pattern() for elmt in result)
         return text_pattern
 
@@ -252,20 +254,21 @@ class BaseMatchedObject:
         if not re.match(f'{self.punctuation_pattern}+$', self.data):
             return {'': False}
         else:
-            match = re.match(self.repeated_punctuation_pattern, self.data)
-            if match:
-                pre_puncts = do_soft_regex_escape(self.data[0:match.start()])
-                post_puncts = do_soft_regex_escape(self.data[match.end():])
-                found = match.groups()[0]
-                s = set(found)
-                pat = s.pop() if len(s) == 1 else found
-                fmt = '%s{2,}' if len(s) == 1 else '(%s){2,}'
-
-                pattern = pre_puncts + fmt % do_soft_regex_escape(pat) + post_puncts
-                return {pattern: True}
+            start, m, pattern = 0, None, ''
+            for m in re.finditer(self.repeated_punctuation_pattern, self.data):
+                pattern += do_soft_regex_escape(self.data[start:m.start()])
+                found = m.group()
+                repeated = str.join('', dict(zip(found, found)))
+                fmt = '%s{2,}' if len(repeated) == 1 else '(%s){2,}'
+                pattern += fmt % do_soft_regex_escape(repeated)
+                start = m.end()
             else:
-                pattern = do_soft_regex_escape(self.data)
-                return {pattern: True}
+                if m:
+                    pattern += do_soft_regex_escape(self.data[m.end()])
+                    return {pattern: True}
+                else:
+                    pattern = do_soft_regex_escape(self.data)
+                    return {pattern: True}
 
     def get_repeated_puncts_space_pattern(self):
         match = re.match(f'{self.repeated_punctuations_space_pattern}$', self.data)
