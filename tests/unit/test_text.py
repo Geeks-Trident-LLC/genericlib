@@ -2,6 +2,8 @@ import pytest
 from genericlib import Text
 from genericlib import DotObject
 
+from genericlib.text import BaseMatchedObject
+
 
 class FooException(Exception):
     """Foo Exception"""
@@ -76,4 +78,24 @@ class TestText:
     )
     def test_wrap_html(self, tag, data, attributes, expected_result):
         result = Text.wrap_html(tag, data, *attributes)
+        assert result == expected_result
+
+
+class TestBaseMatchedObject:
+    @pytest.mark.parametrize(
+        'data,expected_result',
+        [
+            (' ', ' '),
+            ('  ', ' +'),
+            (' \t ', r'\s+'),
+            ('abc xyz', 'abc xyz'),
+            ('+++', r'\+{2,}'),
+            ('+------------+', r'\+-{2,}\+'),
+            ('+-----_-_-_-_-_-+', r'\+-{2,}(_-){2,}\+'),
+            ('. . . . . . . . ', r'(\. ){2,}'),
+        ]
+    )
+    def test_wrap_html(self, data, expected_result):
+        node = BaseMatchedObject(data)
+        result = node.to_pattern()
         assert result == expected_result

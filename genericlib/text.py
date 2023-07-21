@@ -264,7 +264,7 @@ class BaseMatchedObject:
                 start = m.end()
             else:
                 if m:
-                    pattern += do_soft_regex_escape(self.data[m.end()])
+                    pattern += do_soft_regex_escape(self.data[m.end():])
                     return {pattern: True}
                 else:
                     pattern = do_soft_regex_escape(self.data)
