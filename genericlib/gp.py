@@ -65,8 +65,8 @@ class LData(RuntimeException):
 
     @property
     def trailing(self):
-        match = re.search(PATTERN.SPACESATEOS, self.raw_data)
-        return match.group() if match else STRING.EMPTY
+        trailing_spaces = Misc.get_trailing_line(self.raw_data)
+        return trailing_spaces
 
     @property
     def is_leading(self):
