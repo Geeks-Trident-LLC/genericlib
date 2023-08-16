@@ -1,0 +1,161 @@
+import pytest           # noqa
+
+from genericlib.gp import TranslatedDigitPattern
+from genericlib.gp import TranslatedDigitsPattern
+
+from genericlib.gp import TranslatedLetterPattern
+from genericlib.gp import TranslatedLettersPattern
+
+from genericlib.gp import TranslatedAlphabetNumericPattern
+
+from genericlib.gp import TranslatedWordPattern
+from genericlib.gp import TranslatedWordsPattern
+from genericlib.gp import TranslatedMixedWordPattern
+from genericlib.gp import TranslatedMixedWordsPattern
+
+
+class TestTranslatedWordPattern:
+    """Test class for TranslatedWordPattern."""
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern",
+        [
+            ('', ''),
+            ('1', '[a-zA-Z0-9]+'),
+            ('ab', '[a-zA-Z0-9]+'),
+        ]
+    )
+    def test_word_pattern(self, data, expected_pattern):
+        node = TranslatedWordPattern(data)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "data,other,expected_pattern",
+        [
+            ('a', TranslatedLetterPattern('a'), '[a-zA-Z0-9]+'),
+            ('a', TranslatedLettersPattern('ab'), '[a-zA-Z0-9]+'),
+            ('a', TranslatedDigitPattern('1'), '[a-zA-Z0-9]+'),
+            ('a', TranslatedDigitsPattern('4'), '[a-zA-Z0-9]+'),
+            ('a', TranslatedAlphabetNumericPattern('4'), '[a-zA-Z0-9]+'),
+        ]
+    )
+    def test_recommend_pattern(self, data, other, expected_pattern):
+        node = TranslatedWordPattern(data)
+        recommended_pat_obj = node.recommend(other)
+        recommended_pat = recommended_pat_obj.pattern
+
+        assert recommended_pat == expected_pattern
+
+
+class TestTranslatedWordsPattern:
+    """Test class for TranslatedWordsPattern."""
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern",
+        [
+            ('', ''),
+            ('ab xy', '[a-zA-Z0-9]+( [a-zA-Z0-9]+)+'),
+            ('1 2', '[a-zA-Z0-9]+( [a-zA-Z0-9]+)+'),
+            ('ab xy', '[a-zA-Z0-9]+( [a-zA-Z0-9]+)+'),
+        ]
+    )
+    def test_words_pattern(self, data, expected_pattern):
+        node = TranslatedWordsPattern(data)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "data,other,expected_pattern",
+        [
+            ('a b', TranslatedLetterPattern('a'), '[a-zA-Z0-9]+( [a-zA-Z0-9]+)*'),
+            ('a b', TranslatedLettersPattern('ab'), '[a-zA-Z0-9]+( [a-zA-Z0-9]+)*'),
+            ('a b', TranslatedDigitPattern('1'), '[a-zA-Z0-9]+( [a-zA-Z0-9]+)*'),
+            ('a b', TranslatedDigitsPattern('4'), '[a-zA-Z0-9]+( [a-zA-Z0-9]+)*'),
+            ('a b', TranslatedAlphabetNumericPattern('4'), '[a-zA-Z0-9]+( [a-zA-Z0-9]+)*'),
+            ('a b', TranslatedWordPattern('4'), '[a-zA-Z0-9]+( [a-zA-Z0-9]+)*'),
+            ('a b', TranslatedWordsPattern('ab xy'), '[a-zA-Z0-9]+( [a-zA-Z0-9]+)+'),
+        ]
+    )
+    def test_recommend_pattern(self, data, other, expected_pattern):
+        node = TranslatedWordsPattern(data)
+        recommended_pat_obj = node.recommend(other)
+        recommended_pat = recommended_pat_obj.pattern
+
+        assert recommended_pat == expected_pattern
+
+
+class TestTranslatedMixedWordPattern:
+    """Test class for TranslatedMixedWordPattern."""
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern",
+        [
+            ('', ''),
+            ('ab xy', ''),
+            ('1', '[\\x21-\\x7e]+'),
+            ('abc', '[\\x21-\\x7e]+'),
+            ('192.168.0.1', '[\\x21-\\x7e]+'),
+            ('a::b', '[\\x21-\\x7e]+'),
+        ]
+    )
+    def test_mixed_word_pattern(self, data, expected_pattern):
+        node = TranslatedMixedWordPattern(data)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "data,other,expected_pattern",
+        [
+            ('a', TranslatedLetterPattern('a'), '[\\x21-\\x7e]+'),
+            ('a', TranslatedLettersPattern('ab'), '[\\x21-\\x7e]+'),
+            ('a', TranslatedDigitPattern('1'), '[\\x21-\\x7e]+'),
+            ('a', TranslatedDigitsPattern('4'), '[\\x21-\\x7e]+'),
+            ('a', TranslatedAlphabetNumericPattern('4'), '[\\x21-\\x7e]+'),
+            ('a', TranslatedWordPattern('4'), '[\\x21-\\x7e]+'),
+        ]
+    )
+    def test_recommend_pattern(self, data, other, expected_pattern):
+        node = TranslatedMixedWordPattern(data)
+        recommended_pat_obj = node.recommend(other)
+        recommended_pat = recommended_pat_obj.pattern
+
+        assert recommended_pat == expected_pattern
+
+
+class TestTranslatedMixedWordsPattern:
+    """Test class for TranslatedMixedWordsPattern."""
+
+    @pytest.mark.parametrize(
+        "data,expected_pattern",
+        [
+            ('', ''),
+            ('ab xy', '[\\x21-\\x7e]+( [\\x21-\\x7e]+)+'),
+            ('1', '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('abc', '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('192.168.0.1', '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('a::b', '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+        ]
+    )
+    def test_mixed_words_pattern(self, data, expected_pattern):
+        node = TranslatedMixedWordsPattern(data)
+        pattern = node.pattern
+        assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "data,other,expected_pattern",
+        [
+            ('a b', TranslatedLetterPattern('a'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('a b', TranslatedLettersPattern('ab'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('a b', TranslatedDigitPattern('1'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('a b', TranslatedDigitsPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('a b', TranslatedAlphabetNumericPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+            ('a b', TranslatedWordPattern('4'), '[\\x21-\\x7e]+( [\\x21-\\x7e]+)*'),
+        ]
+    )
+    def test_recommend_pattern(self, data, other, expected_pattern):
+        node = TranslatedMixedWordsPattern(data)
+        recommended_pat_obj = node.recommend(other)
+        recommended_pat = recommended_pat_obj.pattern
+
+        assert recommended_pat == expected_pattern
