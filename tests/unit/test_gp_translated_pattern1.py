@@ -18,7 +18,7 @@ class TestTranslatedDigitPattern:
     @pytest.mark.parametrize(
         "data,expected_pattern",
         [
-            ('5', '[0-9]'),
+            ('5', r'\d'),
             ('', ''),
             ('123', ''),
         ]
@@ -31,9 +31,9 @@ class TestTranslatedDigitPattern:
     @pytest.mark.parametrize(
         "data,other,expected_pattern",
         [
-            ('5', TranslatedDigitPattern('4'), '[0-9]'),
-            ('5', TranslatedDigitsPattern('44'), '[0-9]+'),
-            ('5', TranslatedNumberPattern('4.4'), '[0-9]*[.]?[0-9]+'),
+            ('5', TranslatedDigitPattern('4'), r'\d'),
+            ('5', TranslatedDigitsPattern('44'), r'\d+'),
+            ('5', TranslatedNumberPattern('4.4'), r'\d*[.]?\d+'),
             ('5', TranslatedMixedNumberPattern('4.4'),  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
         ]
     )
@@ -53,8 +53,8 @@ class TestTranslatedDigitsPattern:
         "data,expected_pattern",
         [
             ('', ''),
-            ('5', '[0-9]+'),
-            ('123', '[0-9]+'),
+            ('5', r'\d+'),
+            ('123', r'\d+'),
         ]
     )
     def test_digits_pattern(self, data, expected_pattern):
@@ -65,9 +65,9 @@ class TestTranslatedDigitsPattern:
     @pytest.mark.parametrize(
         "data,other,expected_pattern",
         [
-            ('5', TranslatedDigitPattern('4'), '[0-9]+'),
-            ('5', TranslatedDigitsPattern('44'), '[0-9]+'),
-            ('5', TranslatedNumberPattern('4.4'), '[0-9]*[.]?[0-9]+'),
+            ('5', TranslatedDigitPattern('4'), r'\d+'),
+            ('5', TranslatedDigitsPattern('44'), r'\d+'),
+            ('5', TranslatedNumberPattern('4.4'), r'\d*[.]?\d+'),
             ('5', TranslatedMixedNumberPattern('4.4'),  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
         ]
     )
@@ -87,9 +87,9 @@ class TestTranslatedNumberPattern:
         "data,expected_pattern",
         [
             ('', ''),
-            ('5', '[0-9]*[.]?[0-9]+'),
-            ('.5', '[0-9]*[.]?[0-9]+'),
-            ('0.5', '[0-9]*[.]?[0-9]+'),
+            ('5', r'\d*[.]?\d+'),
+            ('.5', r'\d*[.]?\d+'),
+            ('0.5', r'\d*[.]?\d+'),
             ('-0.5', ''),
         ]
     )
@@ -101,9 +101,9 @@ class TestTranslatedNumberPattern:
     @pytest.mark.parametrize(
         "data,other,expected_pattern",
         [
-            ('5.1', TranslatedDigitPattern('4'), '[0-9]*[.]?[0-9]+'),
-            ('5.1', TranslatedDigitsPattern('44'), '[0-9]*[.]?[0-9]+'),
-            ('5.1', TranslatedNumberPattern('4.4'), '[0-9]*[.]?[0-9]+'),
+            ('5.1', TranslatedDigitPattern('4'), r'\d*[.]?\d+'),
+            ('5.1', TranslatedDigitsPattern('44'), r'\d*[.]?\d+'),
+            ('5.1', TranslatedNumberPattern('4.4'), r'\d*[.]?\d+'),
             ('5.1', TranslatedMixedNumberPattern('4.4'),  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
         ]
     )

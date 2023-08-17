@@ -47,8 +47,8 @@ class TestDiffLinePattern:
         "line_a,line_b,expected_pattern",
         [
             ('a', '@', r'(?P<v0>[\x21-\x7e])'),
-            ('a b', '@', r'(?P<v0>[\x21-\x7e]+( +[\x21-\x7e]+)*)'),
-            ('a b', 'x', r'(?P<v0>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*)'),
+            ('a b', '@', '(?P<v0>\\S+( +\\S+)*)'),
+            ('a b', 'x','(?P<v0>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)*)'),
             (
                 'line one is a first line',
                 'line ore is a second line',
@@ -72,7 +72,7 @@ class TestDiffLinePattern:
             (
                 'this line one is a first line',
                 'line ore is a second bad line',
-                '(?P<v0>[a-zA-Z]+)?( +)?line +(?P<v1>[a-zA-Z]+) +is +a +(?P<v2>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*) +line'
+                '(?P<v0>[a-zA-Z]+)?( +)?line +(?P<v1>[a-zA-Z]+) +is +a +(?P<v2>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)*) +line'    # noqa
             ),
         ]
     )
@@ -90,7 +90,7 @@ class TestDiffLinePattern:
                     'this is a pen',
                     'this is the yellow pen',
                  ),
-                'this +is +(?P<v0>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*) +pen'
+                'this +is +(?P<v0>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)*) +pen'
             ),
             (
                 (
@@ -98,7 +98,7 @@ class TestDiffLinePattern:
                     'this is the yellow pen',
                     'this is the good yellow pen',
                 ),
-                'this +is +(?P<v0>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)*) +pen'
+                'this +is +(?P<v0>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)*) +pen'
             ),
             (
                 (
@@ -107,7 +107,7 @@ class TestDiffLinePattern:
                     'this is the good yellow pen',
                     'that is a pencil'
                 ),
-                '(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+)'
+                '(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)+)'
             ),
             (
                 (
@@ -116,7 +116,7 @@ class TestDiffLinePattern:
                     'this is the good yellow pen',
                     'that is a pencil'
                 ),
-                ' *(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+)'
+                ' *(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)+)'
             ),
             (
                 (
@@ -125,7 +125,7 @@ class TestDiffLinePattern:
                     'this is the good yellow pen  ',
                     ' that is a pencil'
                 ),
-                ' *(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+) *'
+                ' *(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)+) *'
             ),
             (
                 (
@@ -134,7 +134,7 @@ class TestDiffLinePattern:
                     '  this is the good yellow pen ',
                     '    that is a pencil'
                 ),
-                ' +(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+) *'
+                ' +(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)+) *'
             ),
             (
                 (
@@ -143,7 +143,7 @@ class TestDiffLinePattern:
                     '  this is the good yellow pen ',
                     '    that is a pencil          '
                 ),
-                ' +(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+) +'
+                ' +(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)+) +'
             ),
         ]
     )
@@ -161,19 +161,19 @@ class TestCategoryLinePattern:
             (
                 'fruits: orange, peach',
                 1,
-                r'fruits: *(?P<fruits>[\x21-\x7e]+( [\x21-\x7e]+)+)',
+                'fruits: *(?P<fruits>[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( [\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+)',  # noqa
                 {'fruits': 'orange, peach'}
             ),
             (
                 'total   fruits: orange, peach',
                 1,
-                r'total +fruits: *(?P<total_fruits>[\x21-\x7e]+( [\x21-\x7e]+)+)',
+                'total +fruits: *(?P<total_fruits>[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( [\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+)',     # noqa
                 {'total_fruits': 'orange, peach'}
             ),
             (
                 'total fruit(s): orange, peach',
                 1,
-                r'total fruit\(s\): *(?P<total_fruit_s>[\x21-\x7e]+( [\x21-\x7e]+)+)',
+                'total fruit\\(s\\): *(?P<total_fruit_s>[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( [\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+)',   # noqa
                 {'total_fruit_s': 'orange, peach'}
             ),
             (
@@ -209,25 +209,25 @@ class TestCategoryLinePattern:
             (
                 'fruits: orange, peach  meat:   drinks: water',
                 3,
-                r'fruits: *(?P<fruits>[\x21-\x7e]+( [\x21-\x7e]+)+) +meat: *(?P<meat>.*|) +drinks: *(?P<drinks>[a-zA-Z]+)',    # noqa
+                'fruits: *(?P<fruits>[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( [\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+) +meat: *(?P<meat>.*|) +drinks: *(?P<drinks>[a-zA-Z]+)',    # noqa
                 {'fruits': 'orange, peach', 'meat': '', 'drinks': 'water'}
             ),
             (
                 'time: 08:30:00 P.M.',
                 1,
-                r'time: *(?P<time>[\x21-\x7e]+( [\x21-\x7e]+)+)',
+                'time: *(?P<time>[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( [\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+)',
                 {'time': '08:30:00 P.M.'}
             ),
             (
                 'time: 08:30:00 P.M.  mac_addr: 11:22:33:44:55:66',
                 2,
-                r'time: *(?P<time>[\x21-\x7e]+( [\x21-\x7e]+)+) +mac_addr: *(?P<mac_addr>[\x21-\x7e]+)',
+                'time: *(?P<time>[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( [\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+) +mac_addr: *(?P<mac_addr>[+\\(\\[\\$-]?(\\d+([,:/-]\\d+)*)?[.]?\\d+[\\]\\)%a-zA-Z]*)',     # noqa
                 {'time': '08:30:00 P.M.', 'mac_addr': '11:22:33:44:55:66'}
             ),
             (
                 'time: 08:30:00 P.M.   ipv6: ::1234, 2000::ab, 2000::   mac_addr: 11:22:33:44:55:66',
                 3,
-                r'time: *(?P<time>[\x21-\x7e]+( [\x21-\x7e]+)+) +ipv6: *(?P<ipv6>[\x21-\x7e]+( [\x21-\x7e]+)+) +mac_addr: *(?P<mac_addr>[\x21-\x7e]+)',   # noqa
+                'time: *(?P<time>[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( [\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+) +ipv6: *(?P<ipv6>[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( [\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+) +mac_addr: *(?P<mac_addr>[+\\(\\[\\$-]?(\\d+([,:/-]\\d+)*)?[.]?\\d+[\\]\\)%a-zA-Z]*)',   # noqa
                 {'time': '08:30:00 P.M.', 'ipv6': '::1234, 2000::ab, 2000::', 'mac_addr': '11:22:33:44:55:66'}
             ),
         ]
@@ -249,13 +249,13 @@ class TestCategoryLinePattern:
             (
                 'fruits:  orange, peach',
                 1,
-                r'fruits:  mixed_words(var_fruits)',
+                r'fruits:  mixed_phrase(var_fruits)',
                 dedent(r"""
                     ################################################################################
                     # Template is generated by template Pro Edition
                     # Created date: YYYY-mm-dd
                     ################################################################################
-                    Value fruits ([\x21-\x7e]+( [\x21-\x7e]+)*)
+                    Value fruits ([\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)+)
 
                     Start
                       ^fruits: +${fruits}
@@ -265,13 +265,13 @@ class TestCategoryLinePattern:
             (
                 'total fruit(s): orange, peach',
                 1,
-                r'total fruit(s): mixed_words(var_total_fruit_s)',
+                r'total fruit(s): mixed_phrase(var_total_fruit_s)',
                 dedent(r"""
                     ################################################################################
                     # Template is generated by template Pro Edition
                     # Created date: YYYY-mm-dd
                     ################################################################################
-                    Value total_fruit_s ([\x21-\x7e]+( [\x21-\x7e]+)*)
+                    Value total_fruit_s ([\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)+)
 
                     Start
                       ^total fruit\(s\): ${total_fruit_s}
@@ -352,13 +352,13 @@ class TestCategoryLinePattern:
             (
                 'time: 08:30:00 P.M.',
                 1,
-                r'time: mixed_words(var_time)',
+                r'time: mixed_phrase(var_time)',
                 dedent(r"""
                     ################################################################################
                     # Template is generated by template Pro Edition
                     # Created date: YYYY-mm-dd
                     ################################################################################
-                    Value time ([\x21-\x7e]+( [\x21-\x7e]+)*)
+                    Value time ([\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)+)
 
                     Start
                       ^time: ${time}
@@ -368,14 +368,14 @@ class TestCategoryLinePattern:
             (
                 'time: 08:30:00 P.M.   mac_addr: 11:22:33:44:55:66',
                 2,
-                r'time: mixed_words(var_time)  mac_addr: mixed_word(var_mac_addr)',
+                r'time: mixed_phrase(var_time)  mac_addr: mixed_number(var_mac_addr)',
                 dedent(r"""
                     ################################################################################
                     # Template is generated by template Pro Edition
                     # Created date: YYYY-mm-dd
                     ################################################################################
-                    Value time ([\x21-\x7e]+( [\x21-\x7e]+)*)
-                    Value mac_addr ([\x21-\x7e]+)
+                    Value time ([\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)+)
+                    Value mac_addr ([+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*)
 
                     Start
                       ^time: ${time} +mac_addr: ${mac_addr}
@@ -385,15 +385,15 @@ class TestCategoryLinePattern:
             (
                 'time: 08:30:00 P.M.   ipv6: ::1234, 2000::ab, 2000::   mac_addr: 11:22:33:44:55:66',
                 3,
-                r'time: mixed_words(var_time)  ipv6: mixed_words(var_ipv6)  mac_addr: mixed_word(var_mac_addr)',
+                r'time: mixed_phrase(var_time)  ipv6: mixed_phrase(var_ipv6)  mac_addr: mixed_number(var_mac_addr)',
                 dedent(r"""
                     ################################################################################
                     # Template is generated by template Pro Edition
                     # Created date: YYYY-mm-dd
                     ################################################################################
-                    Value time ([\x21-\x7e]+( [\x21-\x7e]+)*)
-                    Value ipv6 ([\x21-\x7e]+( [\x21-\x7e]+)*)
-                    Value mac_addr ([\x21-\x7e]+)
+                    Value time ([\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)+)
+                    Value ipv6 ([\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)+)
+                    Value mac_addr ([+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*)
                     
                     Start
                       ^time: ${time} +ipv6: ${ipv6} +mac_addr: ${mac_addr}

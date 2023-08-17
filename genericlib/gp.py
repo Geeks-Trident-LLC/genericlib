@@ -223,9 +223,9 @@ class TranslatedPattern(RuntimeException):
 
     def is_group(self):
         chk = self.is_symbols_group()
-        chk = chk or self.is_words()
-        chk = chk or self.is_mixed_words()
-        chk = chk or self.is_non_whitespaces_group()
+        chk |= self.is_words()
+        chk |= self.is_mixed_words()
+        chk |= self.is_non_whitespaces_group()
         return chk
 
     def is_group_with_multi_spaces(self):
@@ -236,6 +236,36 @@ class TranslatedPattern(RuntimeException):
             if STRING.DOUBLE_SPACES in data.strip():
                 return True
         return False
+
+    def is_numeric(self):
+        chk = True
+        for data in self.lst_of_all_data:
+            chk &= data.isnumeric()
+        return chk
+
+    def is_alphabet(self):
+        chk = True
+        for data in self.lst_of_all_data:
+            chk &= data.isalpha()
+        return chk
+
+    def is_not_alphabet(self):
+        chk = True
+        for data in self.lst_of_all_data:
+            chk &= not data.isalpha()
+        return chk
+
+    def is_punctuation(self):
+        chk = True
+        for data in self.lst_of_all_data:
+            chk &= data.isprintable() and not data.isalnum()
+        return chk
+
+    def is_printable(self):
+        chk = True
+        for data in self.lst_of_all_data:
+            chk &= data.isprintable()
+        return chk
 
     def is_subset_of(self, other):
         fmt = 'Need to implement subset verification for (%s, %s)'
@@ -409,12 +439,12 @@ class TranslatedDigitPattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_digit() or other.is_digits()
-        chk = chk or other.is_number() or other.is_mixed_number()
-        chk = chk or other.is_alphabet_numeric() or other.is_graph()
-        chk = chk or other.is_word() or other.is_mixed_word()
-        chk = chk or other.is_words() or other.is_mixed_words()
-        chk = chk or other.is_non_whitespace() or other.is_non_whitespaces()
-        chk = chk or other.is_non_whitespaces_group()
+        chk |= other.is_number() or other.is_mixed_number()
+        chk |= other.is_alphabet_numeric() or other.is_graph()
+        chk |= other.is_word() or other.is_mixed_word()
+        chk |= other.is_words() or other.is_mixed_words()
+        chk |= other.is_non_whitespace() or other.is_non_whitespaces()
+        chk |= other.is_non_whitespaces_group()
         return chk
 
     def is_superset_of(self, other):
@@ -439,11 +469,11 @@ class TranslatedDigitPattern(TranslatedPattern):
             elif case2:
                 return TranslatedWordPattern(self.data, other.data)
             elif case3:
-                return TranslatedGraphPattern(self.data, other.data)
+                return TranslatedNonWhitespacePattern(self.data, other.data)
             elif case4:
-                return TranslatedMixedWordPattern(self.data, other.data)
+                return TranslatedNonWhitespacesPattern(self.data, other.data)
             elif case5:
-                return TranslatedMixedWordsPattern(self.data, other.data)
+                return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             else:
                 self.raise_recommend_exception(other)
 
@@ -456,10 +486,10 @@ class TranslatedDigitsPattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_digits()
-        chk = chk or other.is_number() or other.is_mixed_number()
-        chk = chk or other.is_word() or other.is_mixed_word()
-        chk = chk or other.is_words() or other.is_mixed_words()
-        chk = chk or other.is_non_whitespaces() or other.is_non_whitespaces_group()
+        chk |= other.is_number() or other.is_mixed_number()
+        chk |= other.is_word() or other.is_mixed_word()
+        chk |= other.is_words() or other.is_mixed_words()
+        chk |= other.is_non_whitespaces() or other.is_non_whitespaces_group()
 
         return chk
 
@@ -482,9 +512,9 @@ class TranslatedDigitsPattern(TranslatedPattern):
             if case1:
                 return TranslatedWordPattern(self.data, other.data)
             elif case2:
-                return TranslatedMixedWordPattern(self.data, other.data)
+                return TranslatedNonWhitespacesPattern(self.data, other.data)
             elif case3:
-                return TranslatedMixedWordsPattern(self.data, other.data)
+                return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             elif case4:
                 return TranslatedNonWhitespacesPattern(self.data, other.data)
             else:
@@ -498,8 +528,8 @@ class TranslatedNumberPattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_number() or other.is_mixed_number()
-        chk = chk or other.is_mixed_word() or other.is_mixed_words()
-        chk = chk or other.is_non_whitespaces() or other.is_non_whitespaces_group()
+        chk |= other.is_mixed_word() or other.is_mixed_words()
+        chk |= other.is_non_whitespaces() or other.is_non_whitespaces_group()
 
         return chk
 
@@ -517,11 +547,10 @@ class TranslatedNumberPattern(TranslatedPattern):
                 return self.get_new_superset(other)
         else:
             case1 = other.is_letter() or other.is_letters()
-            case1 = case1 or other.is_alphabet_numeric() or other.is_graph()
-            case1 = case1 or other.is_symbol() or other.is_symbols() or other.is_word()
+            case1 |= other.is_alphabet_numeric() or other.is_graph() or other.is_word()
 
             case2 = other.is_words() or other.is_symbols_group()
-            case3 = other.is_non_whitespace()
+            case3 = other.is_symbol() or other.is_symbols() or other.is_non_whitespace()
 
             if case1:
                 return TranslatedMixedWordPattern(self.data, other.data)
@@ -540,7 +569,7 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_mixed_number() or other.is_mixed_word() or other.is_mixed_words()
-        chk = chk or other.is_non_whitespaces() or other.is_non_whitespaces_group()
+        chk |= other.is_non_whitespaces() or other.is_non_whitespaces_group()
 
         return chk
 
@@ -559,11 +588,11 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
         else:
             case1 = other.is_letter() or other.is_letters()
             case1 |= other.is_alphabet_numeric() or other.is_graph()
-            case1 |= other.is_symbol() or other.is_symbols()
             case1 |= other.is_word()
 
-            case2 = other.is_words() or other.is_symbols_group()
-            case3 = other.is_non_whitespace()
+            case2 = other.is_words()
+            case3 = other.is_symbol() or other.is_symbols() or other.is_non_whitespace()
+            case4 = other.is_symbols_group()
 
             if case1:
                 return TranslatedMixedWordPattern(self.data, other.data)
@@ -571,6 +600,8 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
                 return TranslatedMixedWordsPattern(self.data, other.data)
             elif case3:
                 return TranslatedNonWhitespacesPattern(self.data, other.data)
+            elif case4:
+                return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             else:
                 self.raise_recommend_exception(other)
 
@@ -582,11 +613,11 @@ class TranslatedLetterPattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_letter() or other.is_letters()
-        chk = chk or other.is_alphabet_numeric() or other.is_graph()
-        chk = chk or other.is_word() or other.is_words()
-        chk = chk or other.is_mixed_word() or other.is_mixed_words()
-        chk = chk or other.is_non_whitespace() or other.is_non_whitespaces()
-        chk = chk or other.is_non_whitespaces_group()
+        chk |= other.is_alphabet_numeric() or other.is_graph()
+        chk |= other.is_word() or other.is_words()
+        chk |= other.is_mixed_word() or other.is_mixed_words()
+        chk |= other.is_non_whitespace() or other.is_non_whitespaces()
+        chk |= other.is_non_whitespaces_group()
 
         return chk
 
@@ -602,9 +633,10 @@ class TranslatedLetterPattern(TranslatedPattern):
         else:
             case1 = other.is_digit()
             case2 = other.is_digits()
-            case3 = other.is_symbols() or other.is_number() or other.is_mixed_number()
+            case3 = other.is_number() or other.is_mixed_number()
             case4 = other.is_symbol()
-            case5 = other.is_symbols_group()
+            case5 = other.is_symbols()
+            case6 = other.is_symbols_group()
 
             if case1:
                 return TranslatedAlphabetNumericPattern(self.data, other.data)
@@ -615,7 +647,9 @@ class TranslatedLetterPattern(TranslatedPattern):
             elif case4:
                 return TranslatedGraphPattern(self.data, other.data)
             elif case5:
-                return TranslatedMixedWordsPattern(self.data, other.data)
+                return TranslatedNonWhitespacesPattern(self.data, other.data)
+            elif case6:
+                return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             else:
                 self.raise_recommend_exception(other)
 
@@ -627,8 +661,8 @@ class TranslatedLettersPattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_letters() or other.is_word() or other.is_words()
-        chk = chk or other.is_mixed_word() or other.is_mixed_words()
-        chk = chk or other.is_non_whitespaces() or other.is_non_whitespaces_group()
+        chk |= other.is_mixed_word() or other.is_mixed_words()
+        chk |= other.is_non_whitespaces() or other.is_non_whitespaces_group()
 
         return chk
 
@@ -647,19 +681,17 @@ class TranslatedLettersPattern(TranslatedPattern):
         else:
             case1 = other.is_digit() or other.is_digits()
 
-            case2 = other.is_number() or other.is_mixed_number()
-            case2 = case2 or other.is_alphabet_numeric()
-            case2 = case2 or other.is_symbol() or other.is_symbols()
+            case2 = other.is_number() or other.is_mixed_number() or other.is_alphabet_numeric()
 
             case3 = other.is_symbols_group()
-            case4 = other.is_non_whitespace()
+            case4 = other.is_symbol() or other.is_symbols() or other.is_non_whitespace()
 
             if case1:
                 return TranslatedWordPattern(self.data, other.data)
             elif case2:
                 return TranslatedMixedWordPattern(self.data, other.data)
             elif case3:
-                return TranslatedMixedWordsPattern(self.data, other.data)
+                return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             elif case4:
                 return TranslatedNonWhitespacesPattern(self.data, other.data)
             else:
@@ -673,9 +705,9 @@ class TranslatedAlphabetNumericPattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_alphabet_numeric() or other.is_word() or other.is_words()
-        chk = chk or other.is_mixed_word() or other.is_mixed_words()
-        chk = chk or other.is_non_whitespace() or other.is_non_whitespaces()
-        chk = chk or other.is_non_whitespaces_group()
+        chk |= other.is_mixed_word() or other.is_mixed_words()
+        chk |= other.is_non_whitespace() or other.is_non_whitespaces()
+        chk |= other.is_non_whitespaces_group()
 
         return chk
 
@@ -694,15 +726,20 @@ class TranslatedAlphabetNumericPattern(TranslatedPattern):
         else:
             case1 = other.is_digits()
             case2 = other.is_number() or other.is_mixed_number()
-            case2 = case2 or other.is_symbol() or other.is_symbols()
-            case3 = other.is_symbols_group()
+            case3 = other.is_symbol()
+            case4 = other.is_symbols()
+            case5 = other.is_symbols_group()
 
             if case1:
                 return TranslatedWordPattern(self.data, other.data)
             elif case2:
                 return TranslatedMixedWordPattern(self.data, other.data)
             elif case3:
-                return TranslatedMixedWordsPattern(self.data, other.data)
+                return TranslatedNonWhitespacePattern(self.data, other.data)
+            elif case4:
+                return TranslatedNonWhitespacesPattern(self.data, other.data)
+            elif case5:
+                return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             else:
                 self.raise_recommend_exception(other)
 
@@ -714,10 +751,10 @@ class TranslatedSymbolPattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_symbol() or other.is_graph()
-        chk = chk or other.is_symbols() or other.is_symbols_group()
-        chk = chk or other.is_mixed_word() or other.is_mixed_words()
-        chk = chk or other.is_non_whitespace() or other.is_non_whitespaces()
-        chk = chk or other.is_non_whitespaces_group()
+        chk |= other.is_symbols() or other.is_symbols_group()
+        chk |= other.is_mixed_word() or other.is_mixed_words()
+        chk |= other.is_non_whitespace() or other.is_non_whitespaces()
+        chk |= other.is_non_whitespaces_group()
 
         return chk
 
@@ -735,17 +772,16 @@ class TranslatedSymbolPattern(TranslatedPattern):
             case1 = other.is_letter() or other.is_digit() or other.is_alphabet_numeric()
 
             case2 = other.is_letters() or other.is_digits()
-            case2 = case2 or other.is_number() or other.is_mixed_number()
-            case2 = case2 or other.is_word()
+            case2 |= other.is_number() or other.is_mixed_number() or other.is_word()
 
             case3 = other.is_words()
 
             if case1:
                 return TranslatedGraphPattern(self.data)
             elif case2:
-                return TranslatedMixedWordPattern(self.data, other.data)
+                return TranslatedNonWhitespacesPattern(self.data, other.data)
             elif case3:
-                return TranslatedMixedWordsPattern(self.data, other.data)
+                return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             else:
                 self.raise_recommend_exception(other)
 
@@ -757,8 +793,8 @@ class TranslatedSymbolsPattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_symbols() or other.is_symbols_group()
-        chk = chk or other.is_mixed_word() or other.is_mixed_words()
-        chk = chk or other.is_non_whitespaces() or other.is_non_whitespaces_group()
+        chk |= other.is_mixed_word() or other.is_mixed_words()
+        chk |= other.is_non_whitespaces() or other.is_non_whitespaces_group()
 
         return chk
 
@@ -776,20 +812,17 @@ class TranslatedSymbolsPattern(TranslatedPattern):
                 return self.get_new_superset(other)
         else:
             case1 = other.is_letter() or other.is_digit()
-            case1 = case1 or other.is_alphabet_numeric() or other.is_graph()
-            case1 = case1 or other.is_letters() or other.is_digits()
-            case1 = case1 or other.is_number() or other.is_mixed_number()
-            case1 = case1 or other.is_word()
+            case1 |= other.is_alphabet_numeric() or other.is_graph()
+            case1 |= other.is_letters() or other.is_digits()
+            case1 |= other.is_number() or other.is_mixed_number()
+            case1 |= other.is_word() or other.is_non_whitespace()
 
             case2 = other.is_words()
-            case3 = other.is_non_whitespace()
 
             if case1:
-                return TranslatedMixedWordPattern(self.data, other.data)
-            elif case2:
-                return TranslatedMixedWordsPattern(self.data, other.data)
-            elif case3:
                 return TranslatedNonWhitespacesPattern(self.data, other.data)
+            elif case2:
+                return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             else:
                 self.raise_recommend_exception(other)
 
@@ -810,7 +843,7 @@ class TranslatedSymbolsGroupPattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_symbols_group() or other.is_mixed_word()
-        chk = chk or other.is_mixed_words() or other.is_non_whitespaces_group()
+        chk |= other.is_mixed_words() or other.is_non_whitespaces_group()
 
         return chk
 
@@ -828,16 +861,14 @@ class TranslatedSymbolsGroupPattern(TranslatedPattern):
                 return self.get_new_superset(other)
         else:
             case1 = other.is_letter() or other.is_digit()
-            case1 = case1 or other.is_alphabet_numeric() or other.is_graph()
-            case1 = case1 or other.is_letters() or other.is_digits()
-            case1 = case1 or other.is_number() or other.is_mixed_number()
-            case1 = case1 or other.is_word() or other.is_words()
+            case1 |= other.is_alphabet_numeric() or other.is_graph()
+            case1 |= other.is_letters() or other.is_digits()
+            case1 |= other.is_number() or other.is_mixed_number()
+            case1 |= other.is_word() or other.is_words()
 
             case2 = other.is_non_whitespace() or other.is_non_whitespaces()
 
-            if case1:
-                return TranslatedMixedWordsPattern(self.data, other.data)
-            elif case2:
+            if case1 or case2:
                 return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             else:
                 self.raise_recommend_exception(other)
@@ -850,14 +881,14 @@ class TranslatedGraphPattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_mixed_word() or other.is_mixed_words()
-        chk = chk or other.is_non_whitespace() or other.is_non_whitespaces()
-        chk = chk or other.is_non_whitespaces_group()
+        chk |= other.is_non_whitespace() or other.is_non_whitespaces()
+        chk |= other.is_non_whitespaces_group()
 
         return chk
 
     def is_superset_of(self, other):
         chk = other.is_letter() or other.is_digit()
-        chk = chk or other.is_alphabet_numeric() or other.is_symbol()
+        chk |= other.is_alphabet_numeric() or other.is_symbol()
 
         return chk
 
@@ -870,8 +901,7 @@ class TranslatedGraphPattern(TranslatedPattern):
                 return self.get_new_superset(other)
         else:
             case1 = other.is_letters() or other.is_digits()
-            case1 = case1 or other.is_number() or other.is_mixed_number()
-            case1 = case1 or other.is_word()
+            case1 |= other.is_number() or other.is_mixed_number() or other.is_word()
 
             case2 = other.is_words()
 
@@ -890,15 +920,14 @@ class TranslatedWordPattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_word() or other.is_words()
-        chk = chk or other.is_mixed_word() or other.is_mixed_words()
-        chk = chk or other.is_non_whitespaces() or other.is_non_whitespaces_group()
+        chk |= other.is_mixed_word() or other.is_mixed_words()
+        chk |= other.is_non_whitespaces() or other.is_non_whitespaces_group()
 
         return chk
 
     def is_superset_of(self, other):
         chk = other.is_letter() or other.is_letters()
-        chk = chk or other.is_digit() or other.is_digits()
-        chk = chk or other.is_alphabet_numeric()
+        chk |= other.is_alphabet_numeric() and other.is_alphabet()
 
         return chk
 
@@ -911,12 +940,15 @@ class TranslatedWordPattern(TranslatedPattern):
                 return self.get_new_superset(other)
         else:
             case1 = other.is_number() or other.is_mixed_number()
-            case2 = other.is_non_whitespace()
+            case1 |= other.is_digit() or other.is_digits()
+            case1 |= other.is_non_whitespace() or other.is_symbol() or other.is_symbols()
+            case1 |= other.is_alphabet_numeric() and other.is_numeric()
+            case2 = other.is_symbols_group()
 
             if case1:
-                return TranslatedMixedWordPattern(self.data, other.data)
-            elif case2:
                 return TranslatedNonWhitespacesPattern(self.data, other.data)
+            elif case2:
+                return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             else:
                 self.raise_recommend_exception(other)
 
@@ -940,9 +972,8 @@ class TranslatedWordsPattern(TranslatedPattern):
         return chk
 
     def is_superset_of(self, other):
-        chk = other.is_letter() or other.is_letters()
-        chk = chk or other.is_digit() or other.is_digits()
-        chk = chk or other.is_alphabet_numeric() or other.is_word()
+        chk = other.is_letter() or other.is_letters() or other.is_word()
+        chk |= other.is_alphabet_numeric() and other.is_alphabet()
 
         return chk
 
@@ -954,12 +985,13 @@ class TranslatedWordsPattern(TranslatedPattern):
             else:
                 return self.get_new_superset(other)
         else:
-            case1 = other.is_number() or other.is_mixed_number()
-            case2 = other.is_non_whitespace() or other.is_non_whitespaces()
+            case1 = other.is_digit() or other.is_digits()
+            case1 |= other.is_number() or other.is_mixed_number()
+            case1 |= other.is_non_whitespace() or other.is_non_whitespaces()
+            case1 |= other.is_symbol() or other.is_symbols() or other.is_symbols_group()
+            case1 |= other.is_alphabet_numeric() and other.is_numeric()
 
             if case1:
-                return TranslatedMixedWordsPattern(self.data, other.data)
-            elif case2:
                 return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             else:
                 self.raise_recommend_exception(other)
@@ -972,14 +1004,14 @@ class TranslatedMixedWordPattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_mixed_word() or other.is_mixed_words()
-        chk = chk or other.is_non_whitespaces() or other.is_non_whitespaces_group()
+        chk |= other.is_non_whitespaces() or other.is_non_whitespaces_group()
 
         return chk
 
     def is_superset_of(self, other):
         chk = other.is_letter() or other.is_letters()
-        chk = chk or other.is_digit() or other.is_digits()
-        chk = chk or other.is_alphabet_numeric() or other.is_word()
+        chk |= other.is_digit() or other.is_digits()
+        chk |= other.is_alphabet_numeric() or other.is_word()
 
         return chk
 
@@ -992,12 +1024,15 @@ class TranslatedMixedWordPattern(TranslatedPattern):
                 return self.get_new_superset(other)
         else:
             case1 = other.is_words()
-            case2 = other.is_non_whitespace()
+            case2 = other.is_non_whitespace() or other.is_symbol() or other.is_symbols()
+            case3 = other.is_symbols_group()
 
             if case1:
                 return TranslatedMixedWordsPattern(self.data, other.data)
             elif case2:
                 return TranslatedNonWhitespacesPattern(self.data, other.data)
+            elif case3:
+                return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
             else:
                 self.raise_recommend_exception(other)
 
@@ -1023,9 +1058,9 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
 
     def is_superset_of(self, other):
         chk = other.is_letter() or other.is_letters()
-        chk = chk or other.is_digit() or other.is_digits()
-        chk = chk or other.is_alphabet_numeric()
-        chk = chk or other.is_word() or other.is_words() or other.is_mixed_word()
+        chk |= other.is_digit() or other.is_digits()
+        chk |= other.is_alphabet_numeric()
+        chk |= other.is_word() or other.is_words() or other.is_mixed_word()
 
         return chk
 
@@ -1038,6 +1073,7 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
                 return self.get_new_superset(other)
         else:
             case1 = other.is_non_whitespace() or other.is_non_whitespaces()
+            case1 |= other.is_symbol() or other.is_symbols() or other.is_symbols_group()
 
             if case1:
                 return TranslatedNonWhitespacesGroupPattern(self.data, other.data)
@@ -1052,14 +1088,14 @@ class TranslatedNonWhitespacePattern(TranslatedPattern):
 
     def is_subset_of(self, other):
         chk = other.is_non_whitespace() or other.is_non_whitespaces()
-        chk = chk or other.is_non_whitespaces_group()
+        chk |= other.is_non_whitespaces_group()
 
         return chk
 
     def is_superset_of(self, other):
         chk = other.is_letter() or other.is_digit()
-        chk = chk or other.is_alphabet_numeric()
-        chk = chk or other.is_symbol() or other.is_graph()
+        chk |= other.is_alphabet_numeric()
+        chk |= other.is_symbol() or other.is_graph()
 
         return chk
 
@@ -1072,10 +1108,10 @@ class TranslatedNonWhitespacePattern(TranslatedPattern):
                 return self.get_new_superset(other)
         else:
             case1 = other.is_letters() or other.is_digits() or other.is_symbols()
-            case1 = case1 or other.is_number() or other.is_mixed_number()
-            case1 = case1 or other.is_word() or other.is_mixed_word()
+            case1 |= other.is_number() or other.is_mixed_number()
+            case1 |= other.is_word() or other.is_mixed_word()
 
-            case2 = other.is_words() or other.is_mixed_words()
+            case2 = other.is_words() or other.is_mixed_words() or other.is_symbols_group()
 
             if case1:
                 return TranslatedNonWhitespacesPattern(self.data, other.data)
@@ -1097,12 +1133,12 @@ class TranslatedNonWhitespacesPattern(TranslatedPattern):
 
     def is_superset_of(self, other):
         chk = other.is_digit() or other.is_digits()
-        chk = chk or other.is_number() or other.is_mixed_number()
-        chk = chk or other.is_letter() or other.is_letters()
-        chk = chk or other.is_alphabet_numeric() or other.is_graph()
-        chk = chk or other.is_symbol() or other.is_symbols()
-        chk = chk or other.is_word() or other.is_mixed_word()
-        chk = chk or other.is_non_whitespace()
+        chk |= other.is_number() or other.is_mixed_number()
+        chk |= other.is_letter() or other.is_letters()
+        chk |= other.is_alphabet_numeric() or other.is_graph()
+        chk |= other.is_symbol() or other.is_symbols()
+        chk |= other.is_word() or other.is_mixed_word()
+        chk |= other.is_non_whitespace()
 
         return chk
 
@@ -1143,13 +1179,13 @@ class TranslatedNonWhitespacesGroupPattern(TranslatedPattern):
 
     def is_superset_of(self, other):
         chk = other.is_digit() or other.is_digits()
-        chk = chk or other.is_number() or other.is_mixed_number()
-        chk = chk or other.is_letter() or other.is_letters()
-        chk = chk or other.is_alphabet_numeric() or other.is_graph()
-        chk = chk or other.is_symbol() or other.is_symbols() or other.is_symbols_group()
-        chk = chk or other.is_word() or other.is_mixed_word()
-        chk = chk or other.is_words() or other.is_mixed_words()
-        chk = chk or other.is_non_whitespace() or other.is_non_whitespaces()
+        chk |= other.is_number() or other.is_mixed_number()
+        chk |= other.is_letter() or other.is_letters()
+        chk |= other.is_alphabet_numeric() or other.is_graph()
+        chk |= other.is_symbol() or other.is_symbols() or other.is_symbols_group()
+        chk |= other.is_word() or other.is_mixed_word()
+        chk |= other.is_words() or other.is_mixed_words()
+        chk |= other.is_non_whitespace() or other.is_non_whitespaces()
 
         return chk
 

@@ -435,7 +435,7 @@ class TestTabularTextPatternByVarColumns:
                     12/16/2021 12:30:59 PM CONTRIBUTING.md
                 """).strip(),
                 2,
-                r'(?P<lastwritetime>[\x21-\x7e]+( [\x21-\x7e]+){,2}) +(?P<name>[\x21-\x7e]+)',
+                r'(?P<lastwritetime>[\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*){,2}) +(?P<name>[\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)', # noqa
                 [
                     {'lastwritetime': 'LastWriteTime', 'name': 'Name'},
                     {'lastwritetime': '9/1/2021 6:13:50 AM', 'name': 'reference'},
@@ -451,7 +451,7 @@ class TestTabularTextPatternByVarColumns:
                     peach               pepsi soda
                 """).strip(),
                 3,
-                r'(?P<fruits>[a-zA-Z]+) (?P<meat>( {10,16})|( *[a-zA-Z]+ *)) (?P<drinks>[a-zA-Z0-9]+( [a-zA-Z0-9]+){,1})',  # noqa
+                r'(?P<fruits>[a-zA-Z]+) (?P<meat>( {10,16})|( *[a-zA-Z]+ *)) (?P<drinks>[a-zA-Z][a-zA-Z0-9]*( [a-zA-Z][a-zA-Z0-9]*){,1})',  # noqa
                 [
                     {'fruits': 'fruits', 'meat': 'meat', 'drinks': 'drinks'},
                     {'fruits': 'orange', 'meat': 'pork', 'drinks': 'water'},
@@ -466,7 +466,6 @@ class TestTabularTextPatternByVarColumns:
         node = TabularTextPatternByVarColumns(text, columns_count=columns_count, divider='  ')
         pattern = node.to_regex()
         assert pattern == expected_pattern
-
         for index, line in enumerate(Misc.get_list_of_lines(text)):
             expected_result = expected_results[index]
             match = re.match(pattern, line)

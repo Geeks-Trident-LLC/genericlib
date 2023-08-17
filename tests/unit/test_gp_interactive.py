@@ -70,7 +70,7 @@ class TestIterativeLinePattern:
                     'capture() keep() action(): word(var=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(var=v8, value=8051)symbol(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
                     'capture() keep() action(): word(cvar=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(cvar=v8, value=8051)symbol(var=v9, value=<)mixed_word(cvar=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(cvar=v3, value=1380)'   # noqa
                 ),
-                r'(?P<v4>[a-zA-Z0-9]+): flags=(?P<v8>[0-9]+)<(?P<v10>[\x21-\x7e]+)> mtu (?P<v3>[0-9]+)'
+                r'(?P<v4>[a-zA-Z][a-zA-Z0-9]*): flags=(?P<v8>\d+)<(?P<v10>[\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)> mtu (?P<v3>\d+)'
             )
         ]
     )
@@ -182,7 +182,7 @@ class TestIterativeLinesPattern:
                         capture() keep() action(): letters(var=v30, value=blab) symbols(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
                     """).strip()
                  ],
-                r'blab blab blab(\r?\n|\r)fruits: (?P<v11>[\x21-\x7e]+( [\x21-\x7e]+)*)(\r?\n|\r)meat: (?P<v21>[\x21-\x7e]+( [\x21-\x7e]+)*)(\r?\n|\r)blab \*\+{2,} \?\?\?blab\*\?\+'     # noqa
+                r'blab blab blab(\r?\n|\r)fruits: (?P<v11>[\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)*)(\r?\n|\r)meat: (?P<v21>[\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)*)(\r?\n|\r)blab \*\+{2,} \?\?\?blab\*\?\+'     # noqa
             ),
         ]
     )
