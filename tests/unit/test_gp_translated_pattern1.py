@@ -34,7 +34,7 @@ class TestTranslatedDigitPattern:
             ('5', TranslatedDigitPattern('4'), '[0-9]'),
             ('5', TranslatedDigitsPattern('44'), '[0-9]+'),
             ('5', TranslatedNumberPattern('4.4'), '[0-9]*[.]?[0-9]+'),
-            ('5', TranslatedMixedNumberPattern('4.4'), '[\\(+-]?[0-9]*[.]?[0-9]+[)]?'),
+            ('5', TranslatedMixedNumberPattern('4.4'),  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -68,7 +68,7 @@ class TestTranslatedDigitsPattern:
             ('5', TranslatedDigitPattern('4'), '[0-9]+'),
             ('5', TranslatedDigitsPattern('44'), '[0-9]+'),
             ('5', TranslatedNumberPattern('4.4'), '[0-9]*[.]?[0-9]+'),
-            ('5', TranslatedMixedNumberPattern('4.4'), '[\\(+-]?[0-9]*[.]?[0-9]+[)]?'),
+            ('5', TranslatedMixedNumberPattern('4.4'),  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -104,7 +104,7 @@ class TestTranslatedNumberPattern:
             ('5.1', TranslatedDigitPattern('4'), '[0-9]*[.]?[0-9]+'),
             ('5.1', TranslatedDigitsPattern('44'), '[0-9]*[.]?[0-9]+'),
             ('5.1', TranslatedNumberPattern('4.4'), '[0-9]*[.]?[0-9]+'),
-            ('5.1', TranslatedMixedNumberPattern('4.4'), '[\\(+-]?[0-9]*[.]?[0-9]+[)]?'),
+            ('5.1', TranslatedMixedNumberPattern('4.4'),  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
@@ -123,12 +123,12 @@ class TestTranslatedMixedNumberPattern:
         "data,expected_pattern",
         [
             ('', ''),
-            ('5', '[\\(+-]?[0-9]*[.]?[0-9]+[)]?'),
-            ('.5', '[\\(+-]?[0-9]*[.]?[0-9]+[)]?'),
-            ('0.5', '[\\(+-]?[0-9]*[.]?[0-9]+[)]?'),
-            ('-0.5', '[\\(+-]?[0-9]*[.]?[0-9]+[)]?'),
-            ('+0.5', '[\\(+-]?[0-9]*[.]?[0-9]+[)]?'),
-            ('(0.5)', '[\\(+-]?[0-9]*[.]?[0-9]+[)]?'),
+            ('5',  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
+            ('.5',  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
+            ('0.5',  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
+            ('-0.5',  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
+            ('+0.5',  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
+            ('(0.5)',  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
         ]
     )
     def test_mixed_number_pattern(self, data, expected_pattern):
@@ -139,9 +139,9 @@ class TestTranslatedMixedNumberPattern:
     @pytest.mark.parametrize(
         "data,other,expected_pattern",
         [
-            ('+5.1', TranslatedDigitPattern('4'), '[\\(+-]?[0-9]*[.]?[0-9]+[)]?'),
-            ('-5.1', TranslatedDigitsPattern('44'), '[\\(+-]?[0-9]*[.]?[0-9]+[)]?'),
-            ('(5.1)', TranslatedNumberPattern('4.4'), '[\\(+-]?[0-9]*[.]?[0-9]+[)]?'),
+            ('+5.1', TranslatedDigitPattern('4'),  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
+            ('-5.1', TranslatedDigitsPattern('44'),  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
+            ('(5.1)', TranslatedNumberPattern('4.4'),  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):

@@ -102,8 +102,8 @@ class TestTranslatedSymbolsGroupPattern:
             ('', ''),
             ('a', ''),
             ('1.', ''),
-            ('++ --', r'[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+( +[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+)+'),
-            ('+- +- +---', r'[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+( +[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+)+'),
+            ('++ --', r'[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+( [\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+)+'),
+            ('+- +-  +---', r'[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+( +[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]+)+'),
         ]
     )
     def test_symbols_group_pattern(self, data, expected_pattern):

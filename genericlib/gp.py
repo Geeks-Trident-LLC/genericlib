@@ -82,13 +82,13 @@ class LData(RuntimeException):
 class TranslatedPattern(RuntimeException):
 
     def __init__(self, data, *other, name='',
-                 defined_pattern='', defined_patterns=None):
+                 defined_pattern='', defined_patterns=None, ref_names=None):
         self.data = str(data)
         self.lst_of_other_data = list(other)
         self.lst_of_all_data = [self.data] + self.lst_of_other_data
         self.defined_pattern = str(defined_pattern)
-        lst = defined_patterns if isinstance(defined_patterns, list) else []
-        self.defined_patterns = lst
+        self.defined_patterns = defined_patterns if isinstance(defined_patterns, list) else []
+        self.ref_names = ref_names if isinstance(ref_names, (list, tuple)) else []
         self.name = str(name)
         self._pattern = STRING.EMPTY
         self.process()
@@ -107,10 +107,38 @@ class TranslatedPattern(RuntimeException):
         return chk
 
     @property
+    def actual_name(self):
+        if self.defined_patterns and self.ref_names:
+            return self.ref_names[self.defined_patterns.index(self._pattern)]
+        else:
+            return self.name
+
+    @property
     def pattern(self):
         return self._pattern
 
     def process(self):
+        if self.defined_patterns:
+            is_matched = False
+            if self.is_plural():
+                for pat in self.defined_patterns[-2:]:
+                    is_matched = self.check_matching(pat)
+                    if is_matched:
+                        self._pattern = pat
+                        break
+            else:
+                for pat in self.defined_patterns:
+                    is_matched = self.check_matching(pat)
+                    if is_matched:
+                        self._pattern = pat
+                        break
+            if not is_matched:
+                self._pattern = STRING.EMPTY
+        else:
+            is_matched = self.check_matching(self.defined_pattern)
+            self._pattern = self.defined_pattern if is_matched else STRING.EMPTY
+
+    def process_bak(self):
         if self.defined_patterns:
             is_matched = False
             for pat in self.defined_patterns:
@@ -292,9 +320,9 @@ class TranslatedPattern(RuntimeException):
         value = value.replace(SYMBOL.RIGHT_PARENTHESIS, '_SYMBOL_RIGHT_PARENTHESIS_')
 
         if var:
-            snippet = '%s(var=%s, value=%s)' % (self.name, var, value)
+            snippet = '%s(var=%s, value=%s)' % (self.actual_name, var, value)
         else:
-            snippet = '%s(value=%s)' % (self.name, value)
+            snippet = '%s(value=%s)' % (self.actual_name, value)
         return snippet
 
     def get_regex_pattern(self, var=''):
@@ -316,7 +344,7 @@ class TranslatedPattern(RuntimeException):
             )
 
         var_txt = 'var_%s' % var if var else STRING.EMPTY
-        tmpl_snippet = '%s(%s)' % (self.name, var_txt)
+        tmpl_snippet = '%s(%s)' % (self.actual_name, var_txt)
         return tmpl_snippet
 
     @classmethod
@@ -769,13 +797,16 @@ class TranslatedSymbolsPattern(TranslatedPattern):
 class TranslatedSymbolsGroupPattern(TranslatedPattern):
     def __init__(self, data, *other):
         defined_patterns = [
+            PATTERN.SYMBOLS_OR_PHRASE,
             PATTERN.SYMBOLS_OR_GROUP,
-            PATTERN.SYMBOLS_OR_FLEX_GROUP,
-            PATTERN.SYMBOLS_FLEX_GROUP,
+            PATTERN.SYMBOLS_PHRASE,
             PATTERN.SYMBOLS_GROUP
         ]
+        ref_names = ['symbols_or_phrase', 'symbols_or_group',
+                     'symbols_phrase', 'symbols_group']
         super().__init__(data, *other, name=TEXT.SYMBOLS_GROUP,
-                         defined_patterns=defined_patterns)
+                         defined_patterns=defined_patterns,
+                         ref_names=ref_names)
 
     def is_subset_of(self, other):
         chk = other.is_symbols_group() or other.is_mixed_word()
@@ -893,13 +924,15 @@ class TranslatedWordPattern(TranslatedPattern):
 class TranslatedWordsPattern(TranslatedPattern):
     def __init__(self, data, *other):
         defined_patterns = [
-            PATTERN.WORD_OR_WORDS,
-            PATTERN.WORD_OR_FLEX_WORDS,
-            PATTERN.FLEX_WORDS,
-            PATTERN.WORDS
+            PATTERN.WORDS,
+            PATTERN.WORD_OR_GROUP,
+            PATTERN.PHRASE,
+            PATTERN.WORD_GROUP
         ]
+        ref_names = ['words', 'word_or_group', 'phrase', 'word_group']
         super().__init__(data, *other, name=TEXT.WORDS,
-                         defined_patterns=defined_patterns)
+                         defined_patterns=defined_patterns,
+                         ref_names=ref_names)
 
     def is_subset_of(self, other):
         chk = other.is_words() or other.is_mixed_words() or other.is_non_whitespaces_group()
@@ -972,13 +1005,16 @@ class TranslatedMixedWordPattern(TranslatedPattern):
 class TranslatedMixedWordsPattern(TranslatedPattern):
     def __init__(self, data, *other):
         defined_patterns = [
-            PATTERN.MIXED_WORD_OR_WORDS,
-            PATTERN.MIXED_WORD_OR_FLEX_WORDS,
-            PATTERN.MIXED_FLEX_WORDS,
-            PATTERN.MIXED_WORDS
+            PATTERN.MIXED_WORDS,
+            PATTERN.MIXED_WORD_OR_GROUP,
+            PATTERN.MIXED_PHRASE,
+            PATTERN.MIXED_WORD_GROUP
         ]
+        ref_names = ['mixed_words', 'mixed_word_or_group',
+                     'mixed_phrase', 'mixed_word_group']
         super().__init__(data, *other, name=TEXT.MIXED_WORDS,
-                         defined_patterns=defined_patterns)
+                         defined_patterns=defined_patterns,
+                         ref_names=ref_names)
 
     def is_subset_of(self, other):
         chk = other.is_mixed_words() or other.is_non_whitespaces_group()
@@ -1089,13 +1125,16 @@ class TranslatedNonWhitespacesPattern(TranslatedPattern):
 class TranslatedNonWhitespacesGroupPattern(TranslatedPattern):
     def __init__(self, data, *other):
         defined_patterns = [
+            PATTERN.NON_WHITESPACES_OR_PHRASE,
             PATTERN.NON_WHITESPACES_OR_GROUP,
-            PATTERN.NON_WHITESPACES_OR_FLEX_GROUP,
-            PATTERN.NON_WHITESPACES_FLEX_GROUP,
+            PATTERN.NON_WHITESPACES_PHRASE,
             PATTERN.NON_WHITESPACES_GROUP
         ]
+        ref_names = ['non_whitespaces_or_phrase', 'non_whitespaces_or_group',
+                     'non_whitespaces_phrase', 'non_whitespaces_group']
         super().__init__(data, *other, name=TEXT.NON_WHITESPACES_GROUP,
-                         defined_patterns=defined_patterns)
+                         defined_patterns=defined_patterns,
+                         ref_names=ref_names)
 
     def is_subset_of(self, other):
         chk = other.is_non_whitespaces_group()
@@ -1646,17 +1685,17 @@ class SnippetElement(RuntimeException):
                 TEXT.ALPHABET_NUMERIC: PATTERN.ALPHABET_NUMERIC,
                 TEXT.SYMBOL: PATTERN.SYMBOL,
                 TEXT.SYMBOLS: PATTERN.SYMBOLS,
-                TEXT.SYMBOLS_GROUP: PATTERN.SYMBOLS_OR_GROUP,
+                TEXT.SYMBOLS_GROUP: PATTERN.SYMBOLS_OR_PHRASE,
                 TEXT.GRAPH: PATTERN.GRAPH,
                 TEXT.WORD: PATTERN.WORD,
-                TEXT.WORDS: PATTERN.WORD_OR_WORDS,
+                TEXT.WORDS: PATTERN.WORDS,
                 TEXT.MIXED_WORD: PATTERN.MIXED_WORD,
-                TEXT.MIXED_WORDS: PATTERN.MIXED_WORD_OR_WORDS,
+                TEXT.MIXED_WORDS: PATTERN.MIXED_WORDS,
                 TEXT.NON_WHITESPACE: PATTERN.NON_WHITESPACE,
                 TEXT.NON_WHITESPACES: PATTERN.NON_WHITESPACES,
-                TEXT.NON_WHITESPACES_GROUP: PATTERN.NON_WHITESPACES_OR_GROUP
+                TEXT.NON_WHITESPACES_GROUP: PATTERN.NON_WHITESPACES_OR_PHRASE
             }
-            pat = tbl.get(self.name, PATTERN.MIXED_WORD_OR_WORDS)
+            pat = tbl.get(self.name, PATTERN.MIXED_WORDS)
 
             if self.is_captured:
                 pat = '(?P<%s>%s)' % (self.var_name, pat)

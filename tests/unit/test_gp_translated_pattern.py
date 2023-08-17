@@ -15,7 +15,7 @@ class TestTranslatedPattern:
             ('1.1', '4', '[0-9]*[.]?[0-9]+'),
             ('12', '4.1', '[0-9]*[.]?[0-9]+'),
             ('12.3', '4.1', '[0-9]*[.]?[0-9]+'),
-            ('3', '+4.4', r'[\(+-]?[0-9]*[.]?[0-9]+[)]?'),
+            ('3', '+4.4',  r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'),
             ('4', 'a', r'[a-zA-Z0-9]'),
             ('5', '-', r'[\x21-\x7e]'),
             ('5', '-+', r'[\x21-\x7e]+'),
@@ -39,14 +39,14 @@ class TestTranslatedPattern:
             ('-1.1', 'v1', 'mixed_number(var=v1, value=-1.1)'),
             ('-', 'v1', 'symbol(var=v1, value=-)'),
             ('(),', 'v1', 'symbols(var=v1, value=_SYMBOL_LEFT_PARENTHESIS__SYMBOL_RIGHT_PARENTHESIS_,)'),  # noqa
-            ('( ) ,', 'v1', 'symbols_group(var=v1, value=_SYMBOL_LEFT_PARENTHESIS_ _SYMBOL_RIGHT_PARENTHESIS_ ,)'),    # noqa
+            ('( ) ,', 'v1', 'symbols_phrase(var=v1, value=_SYMBOL_LEFT_PARENTHESIS_ _SYMBOL_RIGHT_PARENTHESIS_ ,)'),    # noqa
             ('--  ---- ++++++', 'v1', 'symbols_group(var=v1, value=--  ---- ++++++)'),
             ('a', 'v1', 'letter(var=v1, value=a)'),
             ('ab', 'v1', 'letters(var=v1, value=ab)'),
             ('a1', 'v1', 'word(var=v1, value=a1)'),
-            ('a1 b2', 'v1', 'words(var=v1, value=a1 b2)'),
+            ('a1 b2', 'v1', 'phrase(var=v1, value=a1 b2)'),
             ('1.1.1.1', 'v1', 'mixed_word(var=v1, value=1.1.1.1)'),
-            ('1.1.1.1 2::2', 'v1', 'mixed_words(var=v1, value=1.1.1.1 2::2)'),
+            ('1.1.1.1 2::2', 'v1', 'mixed_phrase(var=v1, value=1.1.1.1 2::2)'),
         ]
     )
     def test_get_readable_snippet(self, data, var, expected_snippet):
