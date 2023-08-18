@@ -2169,7 +2169,7 @@ class CategorySpacerPattern(BaseCategoryPattern):
         return pattern
 
     def to_template_snippet(self):
-        tmpl_snippet = 'zospaces()' if self.is_empty else STRING.DOUBLE_SPACES
+        tmpl_snippet = 'zero_or_spaces()' if self.is_empty else STRING.DOUBLE_SPACES
         return tmpl_snippet
 
 
@@ -2257,7 +2257,7 @@ class CategoryLinePattern(BaseCategoryPattern):
 
         pattern = str.join(STRING.EMPTY, result)
         replaced_pat = r'( +)(something[\(]var_\w+, or_empty[\)])'
-        pattern = re.sub(replaced_pat, r'zospaces()\2', pattern)
+        pattern = re.sub(replaced_pat, r'zero_or_spaces()\2', pattern)
 
         return pattern
 
@@ -2270,7 +2270,7 @@ class CategoryLinePattern(BaseCategoryPattern):
             _snippet = item.to_template_snippet()
             if isinstance(item, CategoryRightDataPattern):
                 if item.is_empty and prev_item and not prev_item.is_trailing:
-                    _snippet = 'zospaces()%s' % _snippet
+                    _snippet = 'zero_or_spaces()%s' % _snippet
             result.append(_snippet)
             prev_item = item
         else:
@@ -2281,7 +2281,7 @@ class CategoryLinePattern(BaseCategoryPattern):
 
         tmpl_snippet = str.join(STRING.EMPTY, result)
         replaced_pat = r'( +)(something[\(]var_\w+, or_empty[\)])'
-        tmpl_snippet = re.sub(replaced_pat, r'zospaces()\2', tmpl_snippet)
+        tmpl_snippet = re.sub(replaced_pat, r'zero_or_spaces()\2', tmpl_snippet)
 
         return tmpl_snippet
 
@@ -3156,9 +3156,9 @@ class TabularTable(RuntimeException):
         lst_of_snippet = []
         does_prev_col_has_empty_cell = False
         is_divider = bool(self.divider.strip())
-        divider_snippet = 'zospaces()%szospaces()' % re.escape(self.divider)
-        divider_leading_snippet = '%szospaces()' % re.escape(self.divider)
-        divider_trailing_snippet = 'zospaces()%s' % re.escape(self.divider)
+        divider_snippet = 'zero_or_spaces()%szero_or_spaces()' % re.escape(self.divider)
+        divider_leading_snippet = '%szero_or_spaces()' % re.escape(self.divider)
+        divider_trailing_snippet = 'zero_or_spaces()%s' % re.escape(self.divider)
 
         pre_leading_data = 'start(space) ' if self.is_leading else 'start() '
         post_trailing_data = ' end(space) -> record' if self.is_trailing else ' end() -> record'
