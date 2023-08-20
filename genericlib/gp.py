@@ -292,13 +292,13 @@ class TranslatedPattern(RuntimeException):
     def is_plural(self):
         chk = True
         for data in self.lst_of_all_data:
-            chk = chk and STRING.SPACE_CHAR in data.strip()
+            chk &= len(re.split(PATTERN.WHITESPACES, data.strip())) > NUMBER.ONE
         return chk
 
     def is_singular(self):
         chk = True
         for data in self.lst_of_all_data:
-            chk = chk and STRING.SPACE_CHAR not in data.strip()
+            chk &= len(re.split(PATTERN.WHITESPACES, data.strip())) <= NUMBER.ONE
         return chk
 
     def is_mixing_singular_plural(self):
