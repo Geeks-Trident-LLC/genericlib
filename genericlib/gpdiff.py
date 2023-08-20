@@ -129,10 +129,11 @@ class NDiffChangedText(NDiffBaseText):
 
 class NDiffLinePattern:
     def __init__(self, line_a, line_b):
-        self.is_leading = line_a.startswith(STRING.SPACE_CHAR)
-        self.is_leading |= line_b.startswith(STRING.SPACE_CHAR)
-        self.is_trailing = line_a.startswith(STRING.SPACE_CHAR)
-        self.is_trailing |= line_b.startswith(STRING.SPACE_CHAR)
+        self.is_leading = Misc.is_leading_line(line_a)
+        self.is_leading |= Misc.is_leading_line(line_b)
+
+        self.is_trailing = Misc.is_trailing_line(line_a)
+        self.is_trailing |= Misc.is_trailing_line(line_b)
         self.line_a = line_a
         self.line_b = line_b
 
@@ -341,14 +342,14 @@ class DiffLinePattern(RuntimeException):
 
     def get_pattern_btw_two_lines(self, line_a, line_b):    # noqa
 
-        is_leading_a = line_a.startswith(STRING.SPACE_CHAR)
-        is_leading_b = line_b.startswith(STRING.SPACE_CHAR)
+        is_leading_a = Misc.is_leading_line(line_a)
+        is_leading_b = Misc.is_leading_line(line_b)
 
         is_both_leading = is_leading_a and is_leading_b
         is_leading = is_leading_a or is_leading_b
 
-        is_trailing_a = line_a.endswith(STRING.SPACE_CHAR)
-        is_trailing_b = line_b.endswith(STRING.SPACE_CHAR)
+        is_trailing_a = Misc.is_trailing_line(line_a)
+        is_trailing_b = Misc.is_trailing_line(line_b)
 
         is_both_trailing = is_trailing_a and is_trailing_b
         is_trailing = is_trailing_a or is_trailing_b
