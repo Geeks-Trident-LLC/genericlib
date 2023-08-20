@@ -6,7 +6,7 @@ from textwrap import dedent
 from genericlib.gp import verify
 from genericlib.gp import get_textfsm_template
 
-from genericlib.gp import DiffLinePattern
+from genericlib.gpdiff import DiffLinePattern
 from genericlib.gp import CategoryLinePattern
 
 
