@@ -527,6 +527,18 @@ class Misc:
         chk = is_data_line and is_trailing
         return chk
 
+    @classmethod
+    def is_whitespace_in_line(cls, line):
+        if not Misc.is_string(line):
+            return False
+
+        lst_of_ws = re.findall(r'\s+', line)
+        if lst_of_ws:
+            chk = any(bool(re.search(r'[^ \r\n]+', ws)) for ws in lst_of_ws)
+            return chk
+        else:
+            return False
+
 
 class MiscOutput:
     @classmethod
