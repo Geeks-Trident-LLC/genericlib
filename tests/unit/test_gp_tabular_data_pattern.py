@@ -11,7 +11,7 @@ from genericlib import get_data_as_tabular
 from genericlib.gp import verify
 from genericlib.gp import get_textfsm_template
 
-from genericlib.gp import TabularTextPatternByVarColumns
+from genericlib.gptabular import TabularTextPatternByVarColumns
 
 
 class TestTabularTextPatternByVarColumns:
