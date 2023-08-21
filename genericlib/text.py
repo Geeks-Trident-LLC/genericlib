@@ -86,7 +86,7 @@ class Text(BaseText):
             start = m.end()
 
         if m:
-            post_match = self[m.end()]
+            post_match = self[m.end():]
             result.append(post_match)
         else:
             result.append(str(self))

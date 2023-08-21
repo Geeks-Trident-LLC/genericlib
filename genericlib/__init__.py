@@ -14,6 +14,7 @@ from .constant import STRING
 from .constant import STR
 from .constant import TEXT
 from .constnum import NUMBER
+from .constnum import INDEX
 from .constsymbol import SYMBOL
 from .constpattern import PATTERN
 from .conststruct import STRUCT
@@ -46,6 +47,7 @@ __all__ = [
     'STRING',
     'STR',
 
+    'INDEX',
     'NUMBER',
     'SYMBOL',
     'PATTERN',

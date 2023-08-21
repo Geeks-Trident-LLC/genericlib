@@ -1,15 +1,21 @@
 import re
 from difflib import ndiff
 from itertools import combinations
+from collections import defaultdict
 
 from regexpro import TextPattern
+from regexpro import ElementPattern
+from regexpro import LinePattern
 
-from genericlib import STRING, PATTERN, Misc, NUMBER
+from genericlib import STRING, PATTERN, Misc, NUMBER, INDEX
+from genericlib import Text
 from genericlib.gp import RuntimeException, TranslatedPattern
 
 
 class NDiffBaseText:
     def __init__(self, txt):
+        self._pattern = STRING.EMPTY
+        self._snippet = STRING.EMPTY
         self._lst = []
         self._lst_other = []
         self._is_common = False
@@ -85,11 +91,16 @@ class NDiffCommonText(NDiffBaseText):
         name_ = 'ndiff_common_text' if self else STRING.EMPTY
         return name_
 
-    def get_pattern(self, var=''):
+    def get_pattern(self):
         txt = str.join(STRING.DOUBLE_SPACES, self.lst)
         pattern = TextPattern(txt) if txt else STRING.EMPTY
-        pattern = '(?P<%s>%s)' % (var, pattern) if var else pattern
+        self._pattern = pattern
         return pattern
+
+    def get_snippet(self):
+        snippet = str.join(STRING.DOUBLE_SPACES, self.lst)
+        self._snippet = snippet
+        return snippet
 
 
 class NDiffChangedText(NDiffBaseText):
@@ -107,7 +118,11 @@ class NDiffChangedText(NDiffBaseText):
         else:
             return False
 
-    def get_pattern(self, var=''):
+    def get_pattern(self, var='', label=None):
+        var = var.replace('v', f'v{label}', NUMBER.ONE) if label else var
+
+        empty_flag = '|' if self.is_containing_empty_changed else STRING.EMPTY
+
         txt1 = str.join(STRING.DOUBLE_SPACES, self.lst)
         txt2 = str.join(STRING.DOUBLE_SPACES, self.lst_other)
         if txt1 or txt2:
@@ -117,30 +132,63 @@ class NDiffChangedText(NDiffBaseText):
         else:
             pattern = STRING.EMPTY
 
-        empty_flag = '?' if self.is_containing_empty_changed else STRING.EMPTY
-
         if var:
-            pattern = '(?P<%s>%s)%s' % (var, pattern, empty_flag)
+            pattern = '(?P<%s>%s%s)' % (var, pattern, empty_flag)
         else:
             if pattern:
-                pattern = '(%s)?' % pattern
+                pattern = '(%s%s)' % (pattern, empty_flag)
         return pattern
+
+    def get_snippet(self, var='', label=None):
+        var = var.replace('v', f'v{label}', NUMBER.ONE) if label else var
+
+        txt1 = str.join(STRING.DOUBLE_SPACES, self.lst)
+        txt2 = str.join(STRING.DOUBLE_SPACES, self.lst_other)
+        if txt1 or txt2:
+            args = [txt1, txt2] if txt1 and txt2 else [txt1] if txt1 else [txt2]
+            translated_obj = TranslatedPattern.do_factory_create(*args)
+            self._snippet = translated_obj.get_template_snippet(var=var)
+            if self.is_containing_empty_changed:
+                self._snippet = '%s, or_empty)' % self._snippet[:-1]
+
+        return self._snippet
 
 
 class NDiffLinePattern:
-    def __init__(self, line_a, line_b):
+    def __init__(self, line_a, line_b, whitespace=None, label=None):
+        self.whitespace = whitespace
+        if not self.whitespace:
+            is_ws = any(Misc.is_whitespace_in_line(line) for line in [line_a, line_b])
+            self.whitespace = PATTERN.WHITESPACE if is_ws else PATTERN.SPACE
+
+        self.label = label
+
         self.is_leading = Misc.is_leading_line(line_a)
         self.is_leading |= Misc.is_leading_line(line_b)
+        self.are_leading = Misc.is_leading_line(line_a)
+        self.are_leading &= Misc.is_leading_line(line_b)
 
         self.is_trailing = Misc.is_trailing_line(line_a)
         self.is_trailing |= Misc.is_trailing_line(line_b)
+        self.are_trailing = Misc.is_trailing_line(line_a)
+        self.are_trailing &= Misc.is_trailing_line(line_b)
+
+        multi = '+' if self.are_leading else '*'
+        ws = self.whitespace
+        self.leading_whitespace = f'{ws}{multi}' if self.is_leading else STRING.EMPTY
+
+        multi = '+' if self.are_trailing else '*'
+        self.trailing_whitespace = f'{ws}{multi}' if self.is_trailing else STRING.EMPTY
+
         self.line_a = line_a
         self.line_b = line_b
 
         self._line_a = self.line_a.strip()
         self._line_b = self.line_b.strip()
 
+        self._is_diff = False
         self._pattern = STRING.EMPTY
+        self._snippet = STRING.EMPTY
         self.process()
 
     def __len__(self):
@@ -151,8 +199,30 @@ class NDiffLinePattern:
         return new_instance
 
     @property
+    def is_diff(self):
+        return self._is_diff
+
+    @property
     def pattern(self):
-        return self._pattern
+        leading_ws, trailing_ws = self.leading_whitespace, self.trailing_whitespace
+        pattern = f'{leading_ws}{self._pattern}{trailing_ws}'
+        return pattern
+
+    @property
+    def snippet(self):
+        if self.is_diff:
+            leading_snippet, trailing_snippet = 'start()', 'end()'
+            whitespace = 'whitespace' if self.whitespace == r'\s' else 'space'
+            if self.is_leading:
+                new_ws = f'{whitespace}s' if self.are_leading else whitespace
+                leading_snippet = leading_snippet.replace('()', f'({new_ws})')
+            if self.is_trailing:
+                new_ws = f'{whitespace}s' if self.are_trailing else whitespace
+                trailing_snippet = trailing_snippet.replace('()', f'({new_ws})')
+            snippet = f'{leading_snippet} {self._snippet} {trailing_snippet}'
+            return snippet
+        else:
+            return self._snippet
 
     def analyze_and_parse_empty_case(self):
         is_equal = self._line_a == self._line_b
@@ -160,32 +230,28 @@ class NDiffLinePattern:
 
         if is_empty and is_equal:
             if self.is_leading or self.is_trailing:
-                self._pattern = PATTERN.SPACES
+                self._pattern = f'{self.whitespace}+'
+            self._snippet = self.line_a
             return True
         return False
 
     def analyze_and_parse_identical_case(self):
         if self._line_a == self._line_b:
             self._pattern = TextPattern(self._line_a)
-            if self.is_leading:
-                self._pattern = '%s%s' % (PATTERN.ZOSPACES, self._pattern)
-            if self.is_trailing:
-                self._pattern = '%s%s' % (self._pattern, PATTERN.ZOSPACES)
+            self._snippet = self.line_a
+            return True
         else:
-            lst_a = re.split(PATTERN.SPACES, self._line_a)
-            lst_b = re.split(PATTERN.SPACES, self._line_b)
+            lst_a = re.split(f'{self.whitespace}+', self._line_a)
+            lst_b = re.split(f'{self.whitespace}+', self._line_b)
             if lst_a == lst_b:
-                self._pattern = TextPattern(str.join(STRING.DOUBLE_SPACES, lst_a))
-                if self.is_leading:
-                    self._pattern = '%s%s' % (PATTERN.ZOSPACES, self._pattern)
-                if self.is_trailing:
-                    self._pattern = '%s%s' % (self._pattern, PATTERN.ZOSPACES)
+                new_lst = [TextPattern(item) for item in lst_a]
+                self._pattern = str.join(f'{self.whitespace}+', new_lst)
                 return True
         return False
 
     def build_list_of_diff(self):
-        lst_a = re.split(PATTERN.SPACES, self._line_a)
-        lst_b = re.split(PATTERN.SPACES, self._line_b)
+        lst_a = re.split(PATTERN.WHITESPACES, self._line_a)
+        lst_b = re.split(PATTERN.WHITESPACES, self._line_b)
 
         diff = ndiff(lst_a, lst_b)
         lst = list(diff)
@@ -206,9 +272,9 @@ class NDiffLinePattern:
     def build_pattern_from_diff_list(self, lst):    # noqa
         total = len(lst)
         if total == NUMBER.ONE:
-            item = lst[NUMBER.ZERO]
+            item = lst[INDEX.ZERO]
             if item.is_changed:
-                pattern = item.get_pattern(var='v0')
+                pattern = item.get_pattern(var='v0', label=self.label)
             else:
                 pattern = item.get_pattern()
             return pattern
@@ -219,7 +285,7 @@ class NDiffLinePattern:
             for index, item in enumerate(lst):
                 if index <= total - NUMBER.TWO:
                     if item.is_changed:
-                        pat = item.get_pattern(var='v%s' % count)
+                        pat = item.get_pattern(var='v%s' % count, label=self.label)
                         count += 1
                         if item.is_containing_empty_changed:
                             result.extend([pat, '(%s)?' % spacer])
@@ -230,7 +296,7 @@ class NDiffLinePattern:
                         result.extend([pat, spacer])
                 else:
                     if item.is_changed:
-                        pat = item.get_pattern(var='v%s' % count)
+                        pat = item.get_pattern(var='v%s' % count, label=self.label)
                         if item.is_containing_empty_changed:
                             result.pop()
                             result.extend(['(%s)?' % spacer, pat])
@@ -242,6 +308,17 @@ class NDiffLinePattern:
             pattern = str.join(STRING.EMPTY, result)
             return pattern
 
+    def build_snippet_from_diff_list(self, lst):    # noqa
+        result = []
+        count = NUMBER.ZERO
+        for index, item in enumerate(lst):
+            kwargs = dict(var=f'v{count}', label=self.label) if item.is_changed else dict()
+            count += NUMBER.ONE if item.is_changed else NUMBER.ZERO
+            snippet_ = item.get_snippet(**kwargs)
+            result.append(snippet_)
+        snippet = str.join(STRING.DOUBLE_SPACES, result)
+        return snippet
+
     def analyze_and_parse_diff_case(self):
 
         if self.analyze_and_parse_empty_case():
@@ -249,8 +326,10 @@ class NDiffLinePattern:
         elif self.analyze_and_parse_identical_case():
             return False
         else:
+            self._is_diff = True
             lst = self.build_list_of_diff()
             self._pattern = self.build_pattern_from_diff_list(lst)
+            self._snippet = self.build_snippet_from_diff_list(lst)
             return True
 
     def process(self):
@@ -260,10 +339,13 @@ class NDiffLinePattern:
 
 
 class DiffLinePattern(RuntimeException):
-    def __init__(self, line1, line2, *other_lines):
+    def __init__(self, line1, line2, *other_lines, label=None):
+        self.label = label
         self.raw_lines = []
         self.lines = []
+        self._is_diff = False
         self._pattern = STRING.EMPTY
+        self._snippet = STRING.EMPTY
         self.prepare(line1, line2, *other_lines)
         self.process()
 
@@ -272,32 +354,45 @@ class DiffLinePattern(RuntimeException):
         return int(chk)
 
     @property
+    def is_diff(self):
+        return self._is_diff
+
+    @property
     def pattern(self):
-        pattern = self._pattern
-
-        fmt = '%s%s'
-        if self.is_leading:
-            if self.are_all_leading:
-                pattern = fmt % (PATTERN.SPACES, pattern)
-            else:
-                pattern = fmt % (PATTERN.ZOSPACES, pattern)
-
-        if self.is_trailing:
-            if self.are_all_trailing:
-                pattern = fmt % (pattern, PATTERN.SPACES)
-            else:
-                pattern = fmt % (pattern, PATTERN.ZOSPACES)
-
+        pattern = f'{self.leading_whitespace}{self._pattern}{self.trailing_whitespace}'
         return pattern
 
     @property
-    def are_all_leading(self):
-        chk = all(line.startswith(STRING.SPACE_CHAR) for line in self.raw_lines)
+    def snippet(self):
+        if self.is_diff:
+            leading_snippet, trailing_snippet = 'start()', 'end()'
+            whitespace = 'whitespace' if self.whitespace == r'\s' else 'space'
+            if self.is_leading:
+                new_ws = f'{whitespace}s' if self.are_leading else whitespace
+                leading_snippet = leading_snippet.replace('()', f'({new_ws})')
+            if self.is_trailing:
+                new_ws = f'{whitespace}s' if self.are_trailing else whitespace
+                trailing_snippet = trailing_snippet.replace('()', f'({new_ws})')
+
+            pat = r'^(start[(]\w*[)]) (?P<snippet>.+) (end[(]\w*[)])$'
+            match = re.match(pat, self._snippet)
+            if match:
+                snippet_ = match.group('snippet')
+                snippet = f'{leading_snippet} {snippet_} {trailing_snippet}'
+            else:
+                snippet = f'{leading_snippet} {self._snippet} {trailing_snippet}'
+            return snippet
+        else:
+            return self._snippet
+
+    @property
+    def are_leading(self):
+        chk = all(Misc.is_leading_line(line) for line in self.raw_lines)
         return chk
 
     @property
-    def are_all_trailing(self):
-        chk = all(line.endswith(STRING.SPACE_CHAR) for line in self.raw_lines)
+    def are_trailing(self):
+        chk = all(Misc.is_trailing_line(line) for line in self.raw_lines)
         return chk
 
     @property
@@ -309,6 +404,27 @@ class DiffLinePattern(RuntimeException):
     def is_trailing(self):
         chk = any(Misc.is_trailing_line(line) for line in self.raw_lines)
         return chk
+
+    @property
+    def is_whitespace_in_line(self):
+        chk = any(Misc.is_whitespace_in_line(line) for line in self.raw_lines)
+        return chk
+
+    @property
+    def whitespace(self):
+        return PATTERN.WHITESPACE if self.is_whitespace_in_line else PATTERN.SPACE
+
+    @property
+    def leading_whitespace(self):
+        multi = '+' if self.are_leading else '*'
+        pattern = f'{self.whitespace}{multi}' if self.is_leading else STRING.EMPTY
+        return pattern
+
+    @property
+    def trailing_whitespace(self):
+        multi = '+' if self.are_trailing else '*'
+        pattern = f'{self.whitespace}{multi}' if self.is_trailing else STRING.EMPTY
+        return pattern
 
     def reset(self):
         self.lines.clear()
@@ -340,35 +456,20 @@ class DiffLinePattern(RuntimeException):
             self.lines.extend(lines)
             self.raw_lines.extend(raw_lines)
 
-    def get_pattern_btw_two_lines(self, line_a, line_b):    # noqa
-
-        is_leading_a = Misc.is_leading_line(line_a)
-        is_leading_b = Misc.is_leading_line(line_b)
-
-        is_both_leading = is_leading_a and is_leading_b
-        is_leading = is_leading_a or is_leading_b
-
-        is_trailing_a = Misc.is_trailing_line(line_a)
-        is_trailing_b = Misc.is_trailing_line(line_b)
-
-        is_both_trailing = is_trailing_a and is_trailing_b
-        is_trailing = is_trailing_a or is_trailing_b
-
-        diff_line_obj = NDiffLinePattern(line_a, line_b)
+    def get_pattern_btw_two_lines(self, line_a, line_b):
+        diff_line_obj = NDiffLinePattern(
+            line_a, line_b, label=self.label, whitespace=f'{self.whitespace}'
+        )
         pattern = diff_line_obj.pattern
-
-        fmt = '%s%s'
-        if is_both_leading:
-            pattern = fmt % (PATTERN.SPACES, pattern)
-        elif is_leading:
-            pattern = fmt % (PATTERN.ZOSPACES, pattern)
-
-        if is_both_trailing:
-            pattern = fmt % (pattern, PATTERN.SPACES)
-        elif is_trailing:
-            pattern = fmt % (pattern, PATTERN.ZOSPACES)
-
+        self._is_diff = diff_line_obj.is_diff
         return pattern
+
+    def get_snippet_btw_two_lines(self, line_a, line_b):    # noqa
+        diff_line_obj = NDiffLinePattern(
+            line_a, line_b, label=self.label, whitespace=f'{self.whitespace}'
+        )
+        snippet = diff_line_obj.snippet
+        return snippet
 
     def is_matched_all(self, pattern):
         for line in self.lines:
@@ -379,6 +480,50 @@ class DiffLinePattern(RuntimeException):
                 if match.group() != line:
                     return False
         return True
+
+    def reconstruct_pattern_and_snippet(self):
+        lst = list()
+        first_line = self.lines[INDEX.ZERO]
+        match = re.match(f' *{self._pattern} *$', first_line)
+        if len(match.regs) == NUMBER.ONE:
+            return
+        else:
+            begin = 0
+            for index, pair in enumerate(match.groupdict().items()):
+                key, val = pair
+                start, end = match.regs[index + NUMBER.ONE]
+                pre_text = first_line[begin:start]
+                lst.append(DText(pre_text))
+                if not re.match(r'\s+$', val):
+                    lst.append(DChange(val, var=key))
+                else:
+                    lst.append(DText(val))
+                begin = end
+            else:
+                post_text = first_line[begin:]
+                lst.append(DText(post_text))
+
+        for line in self.lines[INDEX.ONE:]:
+            match = re.match(f' *{self._pattern} *$', line)
+
+            begin = 0
+            count = 0
+            for index, pair in enumerate(match.groupdict().items()):
+                key, val = pair
+                start, end = match.regs[index + NUMBER.ONE]
+                pre_text = line[begin:start]
+                pre_node = lst[count]
+                node = lst[count + NUMBER.ONE]
+                pre_node.add(pre_text)
+                node.add(val)
+                begin = end
+                count += 2
+            else:
+                post_text = first_line[begin:]
+                lst.append(DText(post_text))
+
+        self._snippet = str.join('', [item.get_snippet() for item in lst])
+        self._pattern = LinePattern(self._snippet)
 
     def process(self):
         lines_count = len(self.lines)
@@ -391,10 +536,108 @@ class DiffLinePattern(RuntimeException):
             line_a = self.lines[i]
             line_b = self.lines[j]
             pattern = self.get_pattern_btw_two_lines(line_a, line_b)
+            snippet = self.get_snippet_btw_two_lines(line_a, line_b)
             lst.append(pattern)
             if self.is_matched_all(pattern):
                 self._pattern = pattern
+                self._snippet = snippet
+                self.reconstruct_pattern_and_snippet()
                 return
 
         fmt = 'built pattern(s) did not match text\n  %s'
         self.raise_runtime_error(msg=fmt % str.join('\n  ', [repr(item) for item in lst]))
+
+
+class DText:
+    def __init__(self, text):
+        self.lst = []
+        self.text = text
+        self.lst.append(text)
+
+    @property
+    def first_text(self):
+        first = self.lst[INDEX.ZERO] if self.lst else STRING.EMPTY
+        return first
+
+    @property
+    def is_identical(self):
+        return len(set(self.lst)) == NUMBER.ONE
+
+    def concatenate(self, text):
+        if self.lst:
+            self.lst[-INDEX.ONE] = self.lst[-INDEX.ONE] + text
+        else:
+            self.lst.append(text)
+
+    def add(self, text):
+        self.lst.append(text)
+
+    def to_group(self):
+        lst = []
+        for line in self.lst:
+            sub_lst = Text(line).do_finditer_split(PATTERN.WHITESPACES)
+            lst.append(sub_lst)
+
+        group = list(zip(*lst))
+        for i, sub_grp in enumerate(group):
+            group[i] = list(set(sub_grp))
+        return group
+
+    def to_general_text(self):
+        result = []
+        for sub_grp in self.to_group():
+            if len(sub_grp) == NUMBER.ONE:
+                result.append(sub_grp[INDEX.ZERO])
+            else:
+                is_ws = any(Misc.is_whitespace_in_line(i) for i in sub_grp)
+                is_multi = any(bool(re.match(r'\s{2,}', i)) for i in sub_grp)
+                if is_ws:
+                    ws = None
+                    for item in sub_grp:
+                        if Misc.is_whitespace_in_line(item):
+                            ws = item.strip()
+                            break
+                    spacer = f'{ws} ' if is_multi else ws
+                    result.append(spacer)
+                else:
+                    spacer = STRING.DOUBLE_SPACES if is_multi else STRING.SPACE_CHAR
+                    result.append(spacer)
+        general_text = str.join(STRING.EMPTY, result)
+        return general_text
+
+    def get_pattern(self):
+        if self.is_identical:
+            return TextPattern(self.first_text)
+        else:
+            return TextPattern(self.to_general_text())
+
+    def get_snippet(self):
+        if self.is_identical:
+            return self.first_text
+        else:
+            return self.to_general_text()
+
+
+class DChange:
+    def __init__(self, text, var):
+        self.var = var
+        self.lst = []
+        self.text = text
+        self.is_empty = text.strip() == STRING.EMPTY
+        not self.is_empty and self.lst.append(text)
+
+    def add(self, text):
+        if text.strip() == STRING.EMPTY:
+            self.is_empty = True
+        not self.is_empty and text not in self.lst and self.lst.append(text)
+
+    def get_pattern(self):
+        snippet = self.get_snippet()
+        pattern = ElementPattern(snippet)
+        return pattern
+
+    def get_snippet(self):
+        factory = TranslatedPattern.do_factory_create(*self.lst)
+        snippet = factory.get_template_snippet(var=self.var)
+        snippet = '%s, or_empty)' % snippet[:-INDEX.ONE] if self.is_empty else snippet
+        return snippet

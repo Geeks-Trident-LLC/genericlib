@@ -65,7 +65,7 @@ class TestDiffLinePattern:
             (
                 'this line one is a first line',
                 'line ore is a second bad line',
-                '(?P<v0>[a-zA-Z]+)?( +)?line +(?P<v1>[a-zA-Z]+) +is +a +(?P<v2>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)*) +line'    # noqa
+                '(?P<v0>[a-zA-Z]+|)( +)?line +(?P<v1>[a-zA-Z]+) +is +a +(?P<v2>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)*) +line'    # noqa
             ),
         ]
     )
@@ -83,7 +83,7 @@ class TestDiffLinePattern:
                     'this is a pen',
                     'this is the yellow pen',
                  ),
-                'this +is +(?P<v0>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)*) +pen'
+                'this is (?P<v0>[a-zA-Z][a-zA-Z0-9]*( [a-zA-Z][a-zA-Z0-9]*)*) pen'
             ),
             (
                 (
@@ -91,7 +91,7 @@ class TestDiffLinePattern:
                     'this is the yellow pen',
                     'this is the good yellow pen',
                 ),
-                'this +is +(?P<v0>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)*) +pen'
+                'this is (?P<v0>[a-zA-Z][a-zA-Z0-9]*( [a-zA-Z][a-zA-Z0-9]*)*) pen'
             ),
             (
                 (
@@ -100,7 +100,7 @@ class TestDiffLinePattern:
                     'this is the good yellow pen',
                     'that is a pencil'
                 ),
-                '(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)+)'
+                '(?P<v0>[a-zA-Z]+) is (?P<v1>[a-zA-Z][a-zA-Z0-9]*( [a-zA-Z][a-zA-Z0-9]*)+)'
             ),
             (
                 (
@@ -109,7 +109,7 @@ class TestDiffLinePattern:
                     'this is the good yellow pen',
                     'that is a pencil'
                 ),
-                ' *(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)+)'
+                ' *(?P<v0>[a-zA-Z]+) is (?P<v1>[a-zA-Z][a-zA-Z0-9]*( [a-zA-Z][a-zA-Z0-9]*)+)'
             ),
             (
                 (
@@ -118,7 +118,7 @@ class TestDiffLinePattern:
                     'this is the good yellow pen  ',
                     ' that is a pencil'
                 ),
-                ' *(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)+) *'
+                ' *(?P<v0>[a-zA-Z]+) is (?P<v1>[a-zA-Z][a-zA-Z0-9]*( [a-zA-Z][a-zA-Z0-9]*)+) *'
             ),
             (
                 (
@@ -127,7 +127,7 @@ class TestDiffLinePattern:
                     '  this is the good yellow pen ',
                     '    that is a pencil'
                 ),
-                ' +(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)+) *'
+                ' +(?P<v0>[a-zA-Z]+) is (?P<v1>[a-zA-Z][a-zA-Z0-9]*( [a-zA-Z][a-zA-Z0-9]*)+) *'
             ),
             (
                 (
@@ -136,7 +136,7 @@ class TestDiffLinePattern:
                     '  this is the good yellow pen ',
                     '    that is a pencil          '
                 ),
-                ' +(?P<v0>[a-zA-Z]+) +is +(?P<v1>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)+) +'
+                ' +(?P<v0>[a-zA-Z]+) is (?P<v1>[a-zA-Z][a-zA-Z0-9]*( [a-zA-Z][a-zA-Z0-9]*)+) +'
             ),
         ]
     )
@@ -144,3 +144,73 @@ class TestDiffLinePattern:
         node = DiffLinePattern(*lines)
         pattern = node.pattern
         assert pattern == expected_pattern
+
+    @pytest.mark.parametrize(
+        "lines,expected_snippet",
+        [
+            (
+                (
+                    'this is a pen',
+                    'this is the yellow pen',
+                 ),
+                'start() this is words(var_v0) pen end()'
+            ),
+            (
+                (
+                    'this is a pen',
+                    'this is the yellow pen',
+                    'this is the good yellow pen',
+                ),
+                'start() this is words(var_v0) pen end()'
+            ),
+            (
+                (
+                    'this is a pen',
+                    'this is the yellow pen',
+                    'this is the good yellow pen',
+                    'that is a pencil'
+                ),
+                'start() letters(var_v0) is phrase(var_v1) end()'
+            ),
+            (
+                (
+                    'this is a pen',
+                    '  this is the yellow pen',
+                    'this is the good yellow pen',
+                    'that is a pencil'
+                ),
+                'start(space) letters(var_v0) is phrase(var_v1) end()'
+            ),
+            (
+                (
+                    'this is a pen',
+                    'this is the yellow pen',
+                    'this is the good yellow pen  ',
+                    ' that is a pencil'
+                ),
+                'start(space) letters(var_v0) is phrase(var_v1) end(space)'
+            ),
+            (
+                (
+                    '  this is a pen',
+                    '    this is the yellow pen',
+                    '  this is the good yellow pen ',
+                    '    that is a pencil'
+                ),
+                'start(spaces) letters(var_v0) is phrase(var_v1) end(space)'
+            ),
+            (
+                (
+                    '  this is a pen               ',
+                    '    this is the yellow pen    ',
+                    '  this is the good yellow pen ',
+                    '    that is a pencil          '
+                ),
+                'start(spaces) letters(var_v0) is phrase(var_v1) end(spaces)'
+            ),
+        ]
+    )
+    def test_generated_snippet(self, lines, expected_snippet):
+        node = DiffLinePattern(*lines)
+        snippet = node.snippet
+        assert snippet == expected_snippet
