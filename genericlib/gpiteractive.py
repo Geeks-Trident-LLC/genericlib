@@ -76,7 +76,7 @@ class SnippetElement(RuntimeException):
         if splitter:
             pat = '[%s]+' % re.escape(splitter)
         else:
-            pat = PATTERN.SYMBOLS
+            pat = PATTERN.PUNCTS
 
         separators = re.findall(pat, self.value)
         items = re.split(pat, self.value)
@@ -135,9 +135,9 @@ class SnippetElement(RuntimeException):
                 TEXT.LETTER: PATTERN.LETTER,
                 TEXT.LETTERS: PATTERN.LETTERS,
                 TEXT.ALPHABET_NUMERIC: PATTERN.ALPHABET_NUMERIC,
-                TEXT.SYMBOL: PATTERN.SYMBOL,
-                TEXT.SYMBOLS: PATTERN.SYMBOLS,
-                TEXT.SYMBOLS_GROUP: PATTERN.SYMBOLS_OR_PHRASE,
+                TEXT.PUNCT: PATTERN.PUNCT,
+                TEXT.PUNCTS: PATTERN.PUNCTS,
+                TEXT.PUNCTS_GROUP: PATTERN.PUNCTS_OR_PHRASE,
                 TEXT.GRAPH: PATTERN.GRAPH,
                 TEXT.WORD: PATTERN.WORD,
                 TEXT.WORDS: PATTERN.WORDS,

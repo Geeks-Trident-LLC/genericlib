@@ -8,9 +8,9 @@ from genericlib.gp import TranslatedLettersPattern
 
 from genericlib.gp import TranslatedAlphabetNumericPattern
 
-from genericlib.gp import TranslatedSymbolPattern
-from genericlib.gp import TranslatedSymbolsPattern
-from genericlib.gp import TranslatedSymbolsGroupPattern
+from genericlib.gp import TranslatedPunctPattern
+from genericlib.gp import TranslatedPunctsPattern
+from genericlib.gp import TranslatedPunctsGroupPattern
 from genericlib.gp import TranslatedGraphPattern
 
 from genericlib.gp import TranslatedWordPattern
@@ -18,7 +18,7 @@ from genericlib.gp import TranslatedWordsPattern
 
 
 class TestTranslatedSymbolPattern:
-    """Test class for TranslatedSymbolPattern."""
+    """Test class for TranslatedPunctPattern."""
 
     @pytest.mark.parametrize(
         "data,expected_pattern",
@@ -31,7 +31,7 @@ class TestTranslatedSymbolPattern:
         ]
     )
     def test_symbol_pattern(self, data, expected_pattern):
-        node = TranslatedSymbolPattern(data)
+        node = TranslatedPunctPattern(data)
         pattern = node.pattern
         assert pattern == expected_pattern
 
@@ -48,7 +48,7 @@ class TestTranslatedSymbolPattern:
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
-        node = TranslatedSymbolPattern(data)
+        node = TranslatedPunctPattern(data)
         recommended_pat_obj = node.recommend(other)
         recommended_pat = recommended_pat_obj.pattern
 
@@ -56,7 +56,7 @@ class TestTranslatedSymbolPattern:
 
 
 class TestTranslatedSymbolsPattern:
-    """Test class for TranslatedSymbolsPattern."""
+    """Test class for TranslatedPunctsPattern."""
 
     @pytest.mark.parametrize(
         "data,expected_pattern",
@@ -69,7 +69,7 @@ class TestTranslatedSymbolsPattern:
         ]
     )
     def test_symbols_pattern(self, data, expected_pattern):
-        node = TranslatedSymbolsPattern(data)
+        node = TranslatedPunctsPattern(data)
         pattern = node.pattern
         assert pattern == expected_pattern
 
@@ -86,14 +86,14 @@ class TestTranslatedSymbolsPattern:
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
-        node = TranslatedSymbolsPattern(data)
+        node = TranslatedPunctsPattern(data)
         recommended_pat_obj = node.recommend(other)
         recommended_pat = recommended_pat_obj.pattern
         assert recommended_pat == expected_pattern
 
 
 class TestTranslatedSymbolsGroupPattern:
-    """Test class for TranslatedSymbolsGroupPattern."""
+    """Test class for TranslatedPunctsGroupPattern."""
 
     @pytest.mark.parametrize(
         "data,expected_pattern",
@@ -106,7 +106,7 @@ class TestTranslatedSymbolsGroupPattern:
         ]
     )
     def test_symbols_group_pattern(self, data, expected_pattern):
-        node = TranslatedSymbolsGroupPattern(data)
+        node = TranslatedPunctsGroupPattern(data)
         pattern = node.pattern
         assert pattern == expected_pattern
 
@@ -123,7 +123,7 @@ class TestTranslatedSymbolsGroupPattern:
         ]
     )
     def test_recommend_pattern(self, data, other, expected_pattern):
-        node = TranslatedSymbolsGroupPattern(data)
+        node = TranslatedPunctsGroupPattern(data)
         recommended_pat_obj = node.recommend(other)
         recommended_pat = recommended_pat_obj.pattern
 

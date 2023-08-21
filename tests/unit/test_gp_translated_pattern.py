@@ -37,10 +37,10 @@ class TestTranslatedPattern:
             ('123', 'v1', 'digits(var=v1, value=123)'),
             ('1.1', 'v1', 'number(var=v1, value=1.1)'),
             ('-1.1', 'v1', 'mixed_number(var=v1, value=-1.1)'),
-            ('-', 'v1', 'symbol(var=v1, value=-)'),
-            ('(),', 'v1', 'symbols(var=v1, value=_SYMBOL_LEFT_PARENTHESIS__SYMBOL_RIGHT_PARENTHESIS_,)'),  # noqa
-            ('( ) ,', 'v1', 'symbols_phrase(var=v1, value=_SYMBOL_LEFT_PARENTHESIS_ _SYMBOL_RIGHT_PARENTHESIS_ ,)'),    # noqa
-            ('--  ---- ++++++', 'v1', 'symbols_group(var=v1, value=--  ---- ++++++)'),
+            ('-', 'v1', 'punct(var=v1, value=-)'),
+            ('(),', 'v1', 'puncts(var=v1, value=_SYMBOL_LEFT_PARENTHESIS__SYMBOL_RIGHT_PARENTHESIS_,)'),  # noqa
+            ('( ) ,', 'v1', 'puncts_phrase(var=v1, value=_SYMBOL_LEFT_PARENTHESIS_ _SYMBOL_RIGHT_PARENTHESIS_ ,)'),    # noqa
+            ('--  ---- ++++++', 'v1', 'puncts_group(var=v1, value=--  ---- ++++++)'),
             ('a', 'v1', 'letter(var=v1, value=a)'),
             ('ab', 'v1', 'letters(var=v1, value=ab)'),
             ('a1', 'v1', 'word(var=v1, value=a1)'),

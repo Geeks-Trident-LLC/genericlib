@@ -181,13 +181,13 @@ class TranslatedPattern(RuntimeException):
         return self.name == TEXT.ALPHABET_NUMERIC
 
     def is_symbol(self):
-        return self.name == TEXT.SYMBOL
+        return self.name == TEXT.PUNCT
 
     def is_symbols(self):
-        return self.name == TEXT.SYMBOLS
+        return self.name == TEXT.PUNCTS
 
     def is_symbols_group(self):
-        return self.name == TEXT.SYMBOLS_GROUP
+        return self.name == TEXT.PUNCTS_GROUP
 
     def is_graph(self):
         return self.name == TEXT.GRAPH
@@ -383,9 +383,9 @@ class TranslatedPattern(RuntimeException):
             TranslatedAlphabetNumericPattern,
             TranslatedWordPattern,
 
-            TranslatedSymbolPattern,
-            TranslatedSymbolsPattern,
-            TranslatedSymbolsGroupPattern,
+            TranslatedPunctPattern,
+            TranslatedPunctsPattern,
+            TranslatedPunctsGroupPattern,
 
             TranslatedGraphPattern,
 
@@ -736,10 +736,10 @@ class TranslatedAlphabetNumericPattern(TranslatedPattern):
                 self.raise_recommend_exception(other)
 
 
-class TranslatedSymbolPattern(TranslatedPattern):
+class TranslatedPunctPattern(TranslatedPattern):
     def __init__(self, data, *other):
-        super().__init__(data, *other, name=TEXT.SYMBOL,
-                         defined_pattern=PATTERN.SYMBOL)
+        super().__init__(data, *other, name=TEXT.PUNCT,
+                         defined_pattern=PATTERN.PUNCT)
 
     def is_subset_of(self, other):
         chk = other.is_symbol() or other.is_graph()
@@ -778,10 +778,10 @@ class TranslatedSymbolPattern(TranslatedPattern):
                 self.raise_recommend_exception(other)
 
 
-class TranslatedSymbolsPattern(TranslatedPattern):
+class TranslatedPunctsPattern(TranslatedPattern):
     def __init__(self, data, *other):
-        super().__init__(data, *other, name=TEXT.SYMBOLS,
-                         defined_pattern=PATTERN.SYMBOLS)
+        super().__init__(data, *other, name=TEXT.PUNCTS,
+                         defined_pattern=PATTERN.PUNCTS)
 
     def is_subset_of(self, other):
         chk = other.is_symbols() or other.is_symbols_group()
@@ -819,17 +819,17 @@ class TranslatedSymbolsPattern(TranslatedPattern):
                 self.raise_recommend_exception(other)
 
 
-class TranslatedSymbolsGroupPattern(TranslatedPattern):
+class TranslatedPunctsGroupPattern(TranslatedPattern):
     def __init__(self, data, *other):
         defined_patterns = [
-            PATTERN.SYMBOLS_OR_PHRASE,
-            PATTERN.SYMBOLS_OR_GROUP,
-            PATTERN.SYMBOLS_PHRASE,
-            PATTERN.SYMBOLS_GROUP
+            PATTERN.PUNCTS_OR_PHRASE,
+            PATTERN.PUNCTS_OR_GROUP,
+            PATTERN.PUNCTS_PHRASE,
+            PATTERN.PUNCTS_GROUP
         ]
-        ref_names = ['symbols_or_phrase', 'symbols_or_group',
-                     'symbols_phrase', 'symbols_group']
-        super().__init__(data, *other, name=TEXT.SYMBOLS_GROUP,
+        ref_names = ['puncts_or_phrase', 'puncts_or_group',
+                     'puncts_phrase', 'puncts_group']
+        super().__init__(data, *other, name=TEXT.PUNCTS_GROUP,
                          defined_patterns=defined_patterns,
                          ref_names=ref_names)
 

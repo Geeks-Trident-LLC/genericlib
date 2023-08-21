@@ -154,9 +154,9 @@ class TEXT:
     NON_WHITESPACES = 'non_whitespaces'
     NON_WHITESPACES_GROUP = 'non_whitespace_group'
 
-    SYMBOL = 'symbol'
-    SYMBOLS = 'symbols'
-    SYMBOLS_GROUP = 'symbols_group'
+    PUNCT = 'punct'
+    PUNCTS = 'puncts'
+    PUNCTS_GROUP = 'puncts_group'
 
     WORD = 'word'
     WORDS = 'words'

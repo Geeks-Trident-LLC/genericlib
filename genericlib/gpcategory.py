@@ -56,7 +56,7 @@ class CategoryRightDataPattern(BaseCategoryPattern):
 
     def __init__(self, data, var_txt):
         super().__init__(data)
-        symbol_n_space_pat = '[ %s' % PATTERN.SYMBOLS[NUMBER.ONE:]
+        symbol_n_space_pat = '[ %s' % PATTERN.PUNCTS[NUMBER.ONE:]
         self.var_name = re.sub(symbol_n_space_pat, '_', var_txt).strip('_')
 
     @property

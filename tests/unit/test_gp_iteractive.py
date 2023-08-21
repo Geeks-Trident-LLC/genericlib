@@ -16,11 +16,11 @@ class TestIterativeLinePattern:
         [
             (
                 'total oranges : 123', '',
-                'capture() keep() action(): letters(var=v0, value=total) letters(var=v1, value=oranges) symbol(var=v2, value=:) digits(var=v3, value=123)'     # noqa
+                'capture() keep() action(): letters(var=v0, value=total) letters(var=v1, value=oranges) punct(var=v2, value=:) digits(var=v3, value=123)'     # noqa
             ),
             (
                 'total oranges : 123', '0',
-                'capture() keep() action(): letters(var=v00, value=total) letters(var=v01, value=oranges) symbol(var=v02, value=:) digits(var=v03, value=123)'  # noqa
+                'capture() keep() action(): letters(var=v00, value=total) letters(var=v01, value=oranges) punct(var=v02, value=:) digits(var=v03, value=123)'  # noqa
             ),
             (
                 'utun0: flags=8051<UP,RUNNING> mtu 1380', '',
@@ -42,11 +42,11 @@ class TestIterativeLinePattern:
             ),
             (
                 'capture() keep() action(0-split, 1-split-=<>): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,RUNNING>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',   # noqa
-                'capture() keep() action(): word(var=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(var=v8, value=8051)symbol(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)'   # noqa
+                'capture() keep() action(): word(var=v4, value=utun0)punct(var=v5, value=:) letters(var=v6, value=flags)punct(var=v7, value==)digits(var=v8, value=8051)punct(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)punct(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)'   # noqa
             ),
             (
-                'capture(4,8,10,3) keep() action(): word(var=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(var=v8, value=8051)symbol(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
-                'capture() keep() action(): word(cvar=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(cvar=v8, value=8051)symbol(var=v9, value=<)mixed_word(cvar=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(cvar=v3, value=1380)'   # noqa
+                'capture(4,8,10,3) keep() action(): word(var=v4, value=utun0)punct(var=v5, value=:) letters(var=v6, value=flags)punct(var=v7, value==)digits(var=v8, value=8051)punct(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)punct(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
+                'capture() keep() action(): word(cvar=v4, value=utun0)punct(var=v5, value=:) letters(var=v6, value=flags)punct(var=v7, value==)digits(cvar=v8, value=8051)punct(var=v9, value=<)mixed_word(cvar=v10, value=UP,RUNNING)punct(var=v11, value=>) letters(var=v2, value=mtu) digits(cvar=v3, value=1380)'   # noqa
             ),
         ]
     )
@@ -62,12 +62,12 @@ class TestIterativeLinePattern:
                 (
                     'utun0: flags=8051<UP,RUNNING> mtu 1380',
                     'capture() keep() action(0-split, 1-split-=<>): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,RUNNING>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',   # noqa
-                    'capture(4,8,10,3) keep() action(): word(var=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(var=v8, value=8051)symbol(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
+                    'capture(4,8,10,3) keep() action(): word(var=v4, value=utun0)punct(var=v5, value=:) letters(var=v6, value=flags)punct(var=v7, value==)digits(var=v8, value=8051)punct(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)punct(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
                 ),
                 (
                     'capture() keep() action(): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,RUNNING>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',   # noqa
-                    'capture() keep() action(): word(var=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(var=v8, value=8051)symbol(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
-                    'capture() keep() action(): word(cvar=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(cvar=v8, value=8051)symbol(var=v9, value=<)mixed_word(cvar=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(cvar=v3, value=1380)'   # noqa
+                    'capture() keep() action(): word(var=v4, value=utun0)punct(var=v5, value=:) letters(var=v6, value=flags)punct(var=v7, value==)digits(var=v8, value=8051)punct(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)punct(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
+                    'capture() keep() action(): word(cvar=v4, value=utun0)punct(var=v5, value=:) letters(var=v6, value=flags)punct(var=v7, value==)digits(cvar=v8, value=8051)punct(var=v9, value=<)mixed_word(cvar=v10, value=UP,RUNNING)punct(var=v11, value=>) letters(var=v2, value=mtu) digits(cvar=v3, value=1380)'   # noqa
                 ),
                 r'(?P<v4>[a-zA-Z][a-zA-Z0-9]*): flags=(?P<v8>\d+)<(?P<v10>[\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)> mtu (?P<v3>\d+)'
             )
@@ -89,12 +89,12 @@ class TestIterativeLinePattern:
                 (
                     'utun0: flags=8051<UP,RUNNING> mtu 1380',
                     'capture() keep() action(0-split, 1-split-=<>): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,RUNNING>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',   # noqa
-                    'capture(4,8,10,3) keep() action(): word(var=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(var=v8, value=8051)symbol(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
+                    'capture(4,8,10,3) keep() action(): word(var=v4, value=utun0)punct(var=v5, value=:) letters(var=v6, value=flags)punct(var=v7, value==)digits(var=v8, value=8051)punct(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)punct(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
                 ),
                 (
                     'capture() keep() action(): mixed_word(var=v0, value=utun0:) mixed_word(var=v1, value=flags=8051<UP,RUNNING>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',   # noqa
-                    'capture() keep() action(): word(var=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(var=v8, value=8051)symbol(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
-                    'capture() keep() action(): word(cvar=v4, value=utun0)symbol(var=v5, value=:) letters(var=v6, value=flags)symbol(var=v7, value==)digits(cvar=v8, value=8051)symbol(var=v9, value=<)mixed_word(cvar=v10, value=UP,RUNNING)symbol(var=v11, value=>) letters(var=v2, value=mtu) digits(cvar=v3, value=1380)'   # noqa
+                    'capture() keep() action(): word(var=v4, value=utun0)punct(var=v5, value=:) letters(var=v6, value=flags)punct(var=v7, value==)digits(var=v8, value=8051)punct(var=v9, value=<)mixed_word(var=v10, value=UP,RUNNING)punct(var=v11, value=>) letters(var=v2, value=mtu) digits(var=v3, value=1380)',  # noqa
+                    'capture() keep() action(): word(cvar=v4, value=utun0)punct(var=v5, value=:) letters(var=v6, value=flags)punct(var=v7, value==)digits(cvar=v8, value=8051)punct(var=v9, value=<)mixed_word(cvar=v10, value=UP,RUNNING)punct(var=v11, value=>) letters(var=v2, value=mtu) digits(cvar=v3, value=1380)'   # noqa
                 ),
                 r'word(var_v4): flags=digits(var_v8)<mixed_word(var_v10)> mtu digits(var_v3)'
             )
@@ -128,14 +128,14 @@ class TestIterativeLinesPattern:
                         capture() keep() action(): letters(var=v0, value=blab) letters(var=v1, value=blab) letters(var=v2, value=blab)
                         capture() keep() action(11:12-join): mixed_word(var=v10, value=fruits:) mixed_word(var=v11, value=orange,) letters(var=v12, value=peach)
                         capture() keep() action(21:22-join): mixed_word(var=v20, value=meat:) mixed_word(var=v21, value=chicken,) letters(var=v22, value=fish)
-                        capture() keep() action(): letters(var=v30, value=blab) symbols(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
+                        capture() keep() action(): letters(var=v30, value=blab) puncts(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
                     """).strip(),
 
                     dedent("""
                         capture() keep() action(): letters(var=v0, value=blab) letters(var=v1, value=blab) letters(var=v2, value=blab)
                         capture(11) keep() action(): mixed_word(var=v10, value=fruits:) mixed_words(var=v11, value=orange, peach)
                         capture(21) keep() action(): mixed_word(var=v20, value=meat:) mixed_words(var=v21, value=chicken, fish)
-                        capture() keep() action(): letters(var=v30, value=blab) symbols(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
+                        capture() keep() action(): letters(var=v30, value=blab) puncts(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
                     """).strip()
                  ],
 
@@ -143,7 +143,7 @@ class TestIterativeLinesPattern:
                     capture() keep() action(): letters(var=v0, value=blab) letters(var=v1, value=blab) letters(var=v2, value=blab)
                     capture() keep() action(): mixed_word(var=v10, value=fruits:) mixed_words(cvar=v11, value=orange, peach)
                     capture() keep() action(): mixed_word(var=v20, value=meat:) mixed_words(cvar=v21, value=chicken, fish)
-                    capture() keep() action(): letters(var=v30, value=blab) symbols(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
+                    capture() keep() action(): letters(var=v30, value=blab) puncts(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
                 """).strip()
             ),
         ]
@@ -171,14 +171,14 @@ class TestIterativeLinesPattern:
                         capture() keep() action(): letters(var=v0, value=blab) letters(var=v1, value=blab) letters(var=v2, value=blab)
                         capture() keep() action(11:12-join): mixed_word(var=v10, value=fruits:) mixed_word(var=v11, value=orange,) letters(var=v12, value=peach)
                         capture() keep() action(21:22-join): mixed_word(var=v20, value=meat:) mixed_word(var=v21, value=chicken,) letters(var=v22, value=fish)
-                        capture() keep() action(): letters(var=v30, value=blab) symbols(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
+                        capture() keep() action(): letters(var=v30, value=blab) puncts(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
                     """).strip(),
 
                     dedent("""
                         capture() keep() action(): letters(var=v0, value=blab) letters(var=v1, value=blab) letters(var=v2, value=blab)
                         capture(11) keep() action(): mixed_word(var=v10, value=fruits:) mixed_words(var=v11, value=orange, peach)
                         capture(21) keep() action(): mixed_word(var=v20, value=meat:) mixed_words(var=v21, value=chicken, fish)
-                        capture() keep() action(): letters(var=v30, value=blab) symbols(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
+                        capture() keep() action(): letters(var=v30, value=blab) puncts(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
                     """).strip()
                  ],
                 r'blab blab blab(\r?\n|\r)fruits: (?P<v11>[\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)*)(\r?\n|\r)meat: (?P<v21>[\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)*)(\r?\n|\r)blab \*\+{2,} \?\?\?blab\*\?\+'     # noqa
@@ -212,14 +212,14 @@ class TestIterativeLinesPattern:
                         capture() keep() action(): letters(var=v0, value=blab) letters(var=v1, value=blab) letters(var=v2, value=blab)
                         capture() keep() action(11:12-join): mixed_word(var=v10, value=fruits:) mixed_word(var=v11, value=orange,) letters(var=v12, value=peach)
                         capture() keep() action(21:22-join): mixed_word(var=v20, value=meat:) mixed_word(var=v21, value=chicken,) letters(var=v22, value=fish)
-                        capture() keep() action(): letters(var=v30, value=blab) symbols(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
+                        capture() keep() action(): letters(var=v30, value=blab) puncts(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
                     """).strip(),
 
                     dedent("""
                         capture() keep() action(): letters(var=v0, value=blab) letters(var=v1, value=blab) letters(var=v2, value=blab)
                         capture(11) keep() action(): mixed_word(var=v10, value=fruits:) mixed_words(var=v11, value=orange, peach)
                         capture(21) keep() action(): mixed_word(var=v20, value=meat:) mixed_words(var=v21, value=chicken, fish)
-                        capture() keep() action(): letters(var=v30, value=blab) symbols(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
+                        capture() keep() action(): letters(var=v30, value=blab) puncts(var=v31, value=*++) mixed_word(var=v32, value=???blab*?+)
                     """).strip()
                  ],
                 dedent("""

@@ -47,19 +47,19 @@ class PATTERN:
     # ALPHABET_NUMERIC = '[a-zA-Z0-9]'
     ALPHABET_NUMERIC = REF_PATTERN.alphanumeric
 
-    # SYMBOL = r'[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]'
-    SYMBOL = REF_PATTERN.punctuation
-    SYMBOLS = '%s+' % SYMBOL
-    SYMBOLS_OR_PHRASE = '%s( %s)*' % (SYMBOLS, SYMBOLS)
-    SYMBOLS_OR_GROUP = '%s( +%s)*' % (SYMBOLS, SYMBOLS)
-    SYMBOLS_PHRASE = '%s( %s)+' % (SYMBOLS, SYMBOLS)
-    SYMBOLS_GROUP = '%s( +%s)+' % (SYMBOLS, SYMBOLS)
-    CHECK_SYMBOL = '%s$' % SYMBOL
-    CHECK_SYMBOLS = '%s$' % SYMBOLS
-    CHECK_SYMBOLS_GROUP = ' *%s *$' % SYMBOLS_GROUP
+    # PUNCT = r'[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]'
+    PUNCT = REF_PATTERN.punctuation
+    PUNCTS = '%s+' % PUNCT
+    PUNCTS_OR_PHRASE = '%s( %s)*' % (PUNCTS, PUNCTS)
+    PUNCTS_OR_GROUP = '%s( +%s)*' % (PUNCTS, PUNCTS)
+    PUNCTS_PHRASE = '%s( %s)+' % (PUNCTS, PUNCTS)
+    PUNCTS_GROUP = '%s( +%s)+' % (PUNCTS, PUNCTS)
+    CHECK_PUNCT = '%s$' % PUNCT
+    CHECK_PUNCTS = '%s$' % PUNCTS
+    CHECK_PUNCTS_GROUP = ' *%s *$' % PUNCTS_GROUP
 
-    SPACE_SYMBOL = r'[ \x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]'
-    MULTI_SPACE_SYMBOLS = '%s+' % SPACE_SYMBOL
+    SPACE_PUNCT = r'[ \x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]'
+    MULTI_SPACE_PUNCTS = '%s+' % SPACE_PUNCT
 
     # GRAPH = r'[\x21-\x7e]'
     GRAPH = REF_PATTERN.graph

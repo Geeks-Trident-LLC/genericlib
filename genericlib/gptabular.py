@@ -218,7 +218,7 @@ class TabularTextPatternByVarColumns(RuntimeException):
 
     @property
     def is_divider_a_symbol(self):
-        chk = bool(re.match(PATTERN.CHECK_SYMBOL, self.divider))
+        chk = bool(re.match(PATTERN.CHECK_PUNCT, self.divider))
         return chk
 
     @property
@@ -302,7 +302,7 @@ class TabularTextPatternByVarColumns(RuntimeException):
             header_names = re.split('[ ,]+', header_names.strip())
 
         if Misc.is_list(header_names) and len(header_names) == self.columns_count:
-            pat = '[ %s' % PATTERN.SYMBOLS[1:]
+            pat = '[ %s' % PATTERN.PUNCTS[1:]
             repl = STRING.UNDERSCORE_CHAR
             for i, hdr in enumerate(header_names):
                 new_hdr = re.sub(pat, repl, hdr.strip())
@@ -321,7 +321,7 @@ class TabularTextPatternByVarColumns(RuntimeException):
     def find_ref_row_by_symbols_divider(self, custom_line=''):
         fmt = ' *%(p)s( +%(p)s){%(rep)s} *$'
         repetition = self.columns_count - NUMBER.ONE
-        pat = fmt % dict(p=PATTERN.SYMBOLS, rep=repetition)
+        pat = fmt % dict(p=PATTERN.PUNCTS, rep=repetition)
 
         if custom_line:
             found_line = custom_line
@@ -331,7 +331,7 @@ class TabularTextPatternByVarColumns(RuntimeException):
             if not found_line:
                 return None
 
-        pattern = ' *%s *' % PATTERN.SYMBOLS
+        pattern = ' *%s *' % PATTERN.PUNCTS
         ref_row = TabularRow.create_ref_row(
             found_line, pattern,
             case='findall',
@@ -470,7 +470,7 @@ class TabularTextPatternByVarColumns(RuntimeException):
         if self.col_widths:
             case = 'col_widths'
             err_msg = 'Failed to parse tabular text by column widths'
-        elif re.match('%s$' % PATTERN.SYMBOL, self.divider.strip()):
+        elif re.match('%s$' % PATTERN.PUNCT, self.divider.strip()):
             case = 'separator'
             err_msg = 'Failed to parse tabular text by %r divider' % self.divider
         elif self.custom_headers_data:
@@ -674,7 +674,7 @@ class TabularTable(RuntimeException):
 
         lst = []
         for line in Misc.get_list_of_lines(*headers_lines):
-            is_line_of_symbols = bool(re.match(PATTERN.CHECK_SYMBOLS_GROUP, line))
+            is_line_of_symbols = bool(re.match(PATTERN.CHECK_PUNCTS_GROUP, line))
             is_header_line = Misc.is_data_line(line) and not is_line_of_symbols
             is_header_line and lst.append(line)
 
@@ -1011,7 +1011,7 @@ class TabularRow(RuntimeException):
         if self._is_symbols_group is None:
             if self.cells:
                 fmt = ' *%(p)s( +%(p)s)* *$'
-                pat = fmt % dict(p=PATTERN.SYMBOLS)
+                pat = fmt % dict(p=PATTERN.PUNCTS)
                 match = re.match(pat, self.line)
                 self._is_symbols_group = bool(match)
             else:
