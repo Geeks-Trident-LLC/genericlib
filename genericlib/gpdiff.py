@@ -91,14 +91,16 @@ class NDiffCommonText(NDiffBaseText):
         name_ = 'ndiff_common_text' if self else STRING.EMPTY
         return name_
 
-    def get_pattern(self):
+    def get_pattern(self, whitespace=' '):
         txt = str.join(STRING.DOUBLE_SPACES, self.lst)
         pattern = TextPattern(txt) if txt else STRING.EMPTY
-        self._pattern = pattern
-        return pattern
+        self._pattern = pattern.replace(STRING.SPACE_CHAR, whitespace)
+        return self._pattern
 
-    def get_snippet(self):
-        snippet = str.join(STRING.DOUBLE_SPACES, self.lst)
+    def get_snippet(self, whitespace=' '):
+        is_ws = whitespace == PATTERN.WHITESPACE
+        spacer = f'\t ' if is_ws else STRING.DOUBLE_SPACES
+        snippet = str.join(spacer, self.lst)
         self._snippet = snippet
         return snippet
 
@@ -276,12 +278,12 @@ class NDiffLinePattern:
             if item.is_changed:
                 pattern = item.get_pattern(var='v0', label=self.label)
             else:
-                pattern = item.get_pattern()
+                pattern = item.get_pattern(whitespace=self.whitespace)
             return pattern
         else:
             result = []
             count = 0
-            spacer = PATTERN.SPACES
+            spacer = PATTERN.WHITESPACES if self.whitespace == PATTERN.WHITESPACE else PATTERN.SPACES
             for index, item in enumerate(lst):
                 if index <= total - NUMBER.TWO:
                     if item.is_changed:
@@ -292,7 +294,7 @@ class NDiffLinePattern:
                         else:
                             result.extend([pat, spacer])
                     else:
-                        pat = item.get_pattern()
+                        pat = item.get_pattern(whitespace=self.whitespace)
                         result.extend([pat, spacer])
                 else:
                     if item.is_changed:
@@ -303,7 +305,7 @@ class NDiffLinePattern:
                         else:
                             result.append(pat)
                     else:
-                        pat = item.get_pattern()
+                        pat = item.get_pattern(whitespace=self.whitespace)
                         result.append(pat)
             pattern = str.join(STRING.EMPTY, result)
             return pattern
@@ -314,7 +316,10 @@ class NDiffLinePattern:
         for index, item in enumerate(lst):
             kwargs = dict(var=f'v{count}', label=self.label) if item.is_changed else dict()
             count += NUMBER.ONE if item.is_changed else NUMBER.ZERO
-            snippet_ = item.get_snippet(**kwargs)
+            if item.is_changed:
+                snippet_ = item.get_snippet(**kwargs)
+            else:
+                snippet_ = item.get_snippet(whitespace=self.whitespace)
             result.append(snippet_)
         snippet = str.join(STRING.DOUBLE_SPACES, result)
         return snippet
@@ -519,8 +524,8 @@ class DiffLinePattern(RuntimeException):
                 begin = end
                 count += 2
             else:
-                post_text = first_line[begin:]
-                lst.append(DText(post_text))
+                post_text = line[begin:]
+                lst[-INDEX.ONE].add(post_text)
 
         self._snippet = str.join('', [item.get_snippet() for item in lst])
         self._pattern = LinePattern(self._snippet)
@@ -585,7 +590,8 @@ class DText:
 
     def to_general_text(self):
         result = []
-        for sub_grp in self.to_group():
+        group = self.to_group()
+        for sub_grp in group:
             if len(sub_grp) == NUMBER.ONE:
                 result.append(sub_grp[INDEX.ZERO])
             else:
@@ -595,7 +601,7 @@ class DText:
                     ws = None
                     for item in sub_grp:
                         if Misc.is_whitespace_in_line(item):
-                            ws = item.strip()
+                            ws = item.strip(' ')
                             break
                     spacer = f'{ws} ' if is_multi else ws
                     result.append(spacer)
