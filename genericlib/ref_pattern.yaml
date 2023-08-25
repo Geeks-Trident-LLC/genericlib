@@ -590,7 +590,7 @@ mixed_pword: *mixed_word_phrase
 
 mixed_word_group: &mixed_word_group
   description: a pattern to match at least two mixed-word.
-  pattern: "[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( +[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*"
+  pattern: "[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( +[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+"
   positive_test: "email: abc@xyz.com"
   negative_test: "+-*/ -&^"
 

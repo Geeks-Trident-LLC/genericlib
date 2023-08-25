@@ -1,4 +1,3 @@
-# from time import time
 from .constant import STRING
 import re
 import string
@@ -345,3 +344,26 @@ def do_soft_regex_escape(pattern):
     new_pattern = ''.join(result)
     re.compile(new_pattern)
     return new_pattern
+
+
+def enclose_string(text, quote='"', is_new_line=False):
+    """enclose text with either double-quote or triple double-quote
+
+    Parameters
+    ----------
+    text (str): a text
+
+    Returns
+    -------
+    str: a new string with enclosed double-quote or triple double-quote
+    """
+    text = str(text)
+    reformat_txt = text.replace(quote, '\\' + quote)
+
+    if len(re.split(r'\r?\n|\r', text)) > 1:
+        fmt = f'{quote*3}\n%s\n{quote*3}' if is_new_line else f'{quote*3}%s{quote*3}'
+        enclosed_txt = fmt % reformat_txt
+        return enclosed_txt
+    else:
+        enclosed_txt = f'{quote}{reformat_txt}{quote}'
+        return enclosed_txt
