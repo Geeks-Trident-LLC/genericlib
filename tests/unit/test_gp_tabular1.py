@@ -1,0 +1,32 @@
+import re
+
+import pytest           # noqa
+from textwrap import dedent
+
+from genericlib import Misc
+from genericlib import MiscObject
+
+from genericlib import get_data_as_tabular
+
+from genericlib.gp import verify
+from genericlib.gp import get_textfsm_template
+
+from genericlib.gptabular import TabularTextPatternByVarColumns
+from genericlib.gptabular import TabularTextPattern
+
+
+class TestTabularTextPattern:
+    """Test class for TabularTextPattern"""
+
+    def test_fixed_columns(self):
+        text = dedent("""
+            index     col1            col2
+            1         item1.1         item1.2
+            2         item2.1         item2.2
+            3         ?               item3.2
+        """).strip()
+        node = TabularTextPattern(text, col_widths="10, 15,")
+
+        tmpl_snippet = node.to_template_snippet()
+        assert tmpl_snippet == ""
+
