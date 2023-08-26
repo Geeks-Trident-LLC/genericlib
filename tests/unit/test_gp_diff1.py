@@ -38,3 +38,27 @@ class TestDiffLinePattern:
         node = DiffLinePattern(*lines)
         snippet = node.snippet
         assert snippet == expected_snippet
+
+    @pytest.mark.parametrize(
+        "lines,expected_snippet",
+        [
+            (
+                (
+                    'ipv6_addr: a::b % 16',
+                    'ipv6_addr: a::c % 32',
+                 ),
+                'start() ipv6_addr: mixed_word(var_v0) % digits(var_v1) end()'
+            ),
+            (
+                (
+                    'ipv6_addr: 1::2 % 32',
+                    'ipv6_addr: 1::3 / 33',
+                ),
+                'start() ipv6_addr: non_whitespaces_phrase(var_v0) end()'
+            ),
+        ]
+    )
+    def test_generated_snippet1(self, lines, expected_snippet):
+        node = DiffLinePattern(*lines)
+        snippet = node.snippet
+        assert snippet == expected_snippet

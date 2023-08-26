@@ -1,11 +1,10 @@
 import re
 from difflib import ndiff
 from itertools import combinations
-from collections import defaultdict
 
-from regexpro import TextPattern
-from regexpro import ElementPattern
-from regexpro import LinePattern
+from regexpro import TextPattern        # noqa
+from regexpro import ElementPattern     # noqa
+from regexpro import LinePattern        # noqa
 
 from genericlib import STRING, PATTERN, Misc, NUMBER, INDEX
 from genericlib import Text
@@ -254,10 +253,8 @@ class NDiffLinePattern:
     def build_list_of_diff(self):
         lst_a = re.split(PATTERN.WHITESPACES, self._line_a)
         lst_b = re.split(PATTERN.WHITESPACES, self._line_b)
-
         diff = ndiff(lst_a, lst_b)
-        lst = list(diff)
-
+        lst = [item for item in diff if not item.startswith('? ')]
         result = []
         for item in lst:
             node = NDiffBaseText.do_factory_create(item)
