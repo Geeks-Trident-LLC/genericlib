@@ -262,6 +262,12 @@ class TabularTextPatternByVarColumns(RuntimeException):
         return self._is_end_with_divider
 
     def raise_exception_if_columns_count_not_provided(self):
+        pat = f"{PATTERN.PUNCTS_GROUP}$"
+        for line in self.lines:
+            if re.match(pat, line.strip()):
+                lst = re.split(PATTERN.WHITESPACES, line.strip())
+                self.columns_count = len(lst)
+                return
         if not self:
             self.raise_runtime_error(msg='columns_count CANT be zero')
 
