@@ -74,13 +74,16 @@ class LData(RuntimeException):
 class TranslatedPattern(RuntimeException):
 
     def __init__(self, data, *other, name='',
-                 defined_pattern='', defined_patterns=None, ref_names=None):
+                 defined_pattern='', defined_patterns=None, ref_names=None,
+                 singular_name='', singular_pattern=''):
         self.data = str(data)
         self.lst_of_other_data = list(other)
         self.lst_of_all_data = [self.data] + self.lst_of_other_data
         self.defined_pattern = str(defined_pattern)
         self.defined_patterns = defined_patterns if isinstance(defined_patterns, list) else []
         self.ref_names = ref_names if isinstance(ref_names, (list, tuple)) else []
+        self.singular_name = singular_name
+        self.singular_pattern = singular_pattern
         self.name = str(name)
         self._pattern = STRING.EMPTY
         self.process()
@@ -831,7 +834,9 @@ class TranslatedPunctsGroupPattern(TranslatedPattern):
                      'puncts_phrase', 'puncts_group']
         super().__init__(data, *other, name=TEXT.PUNCTS_GROUP,
                          defined_patterns=defined_patterns,
-                         ref_names=ref_names)
+                         ref_names=ref_names,
+                         singular_name='puncts',
+                         singular_pattern=PATTERN.PUNCTS)
 
     def is_subset_of(self, other):
         chk = other.is_symbols_group() or other.is_mixed_word()
@@ -956,7 +961,9 @@ class TranslatedWordsPattern(TranslatedPattern):
         ref_names = ['words', 'word_or_group', 'phrase', 'word_group']
         super().__init__(data, *other, name=TEXT.WORDS,
                          defined_patterns=defined_patterns,
-                         ref_names=ref_names)
+                         ref_names=ref_names,
+                         singular_name='word',
+                         singular_pattern=PATTERN.WORD)
 
     def is_subset_of(self, other):
         chk = other.is_words() or other.is_mixed_words() or other.is_non_whitespaces_group()
@@ -1041,7 +1048,9 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
                      'mixed_phrase', 'mixed_word_group']
         super().__init__(data, *other, name=TEXT.MIXED_WORDS,
                          defined_patterns=defined_patterns,
-                         ref_names=ref_names)
+                         ref_names=ref_names,
+                         singular_name='mixed_word',
+                         singular_pattern=PATTERN.MIXED_WORD)
 
     def is_subset_of(self, other):
         chk = other.is_mixed_words() or other.is_non_whitespaces_group()
@@ -1162,7 +1171,9 @@ class TranslatedNonWhitespacesGroupPattern(TranslatedPattern):
                      'non_whitespaces_phrase', 'non_whitespaces_group']
         super().__init__(data, *other, name=TEXT.NON_WHITESPACES_GROUP,
                          defined_patterns=defined_patterns,
-                         ref_names=ref_names)
+                         ref_names=ref_names,
+                         singular_name='non_whitespaces',
+                         singular_pattern=PATTERN.NON_WHITESPACES)
 
     def is_subset_of(self, other):
         chk = other.is_non_whitespaces_group()

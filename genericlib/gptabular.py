@@ -1282,9 +1282,11 @@ class TabularColumn:
             max_items_count = max(cell.items_count for cell in self.cells)
             occurrence = max_items_count - NUMBER.ONE
             if occurrence > NUMBER.ZERO:
-                tmpl_snippet = tmpl_snippet.replace('words', 'word')
-                tmpl_snippet = tmpl_snippet.replace('_group', '')
-                fmt = '%s, at_most_%s_group_occurrences)'
+                if '_phrase' in tmpl_snippet:
+                    fmt = '%s, at_most_%s_phrase_occurrences)'
+                else:
+                    fmt = '%s, at_most_%s_group_occurrences)'
+                tmpl_snippet = node.singular_name + '(' + tmpl_snippet.split('(', 1)[-1]
                 tmpl_snippet = fmt % (tmpl_snippet[:-NUMBER.ONE], occurrence)
 
         if self.has_empty_cell:

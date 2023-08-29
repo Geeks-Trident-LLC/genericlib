@@ -25,8 +25,13 @@ class TestTabularTextPattern:
             2         item2.1         item2.2
             3         ?               item3.2
         """).strip()
-        node = TabularTextPattern(text, col_widths="10, 15,")
 
+        expected_tmpl_snippet = dedent("""
+            index     col1            col2
+            start() digit(var_index)  non_whitespaces(var_col)  mixed_word(var_col2) end() -> record
+        """).strip()
+
+        node = TabularTextPattern(text, col_widths="10, 15,")
         tmpl_snippet = node.to_template_snippet()
-        assert tmpl_snippet == ""
+        assert tmpl_snippet == expected_tmpl_snippet
 
