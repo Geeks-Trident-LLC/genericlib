@@ -176,7 +176,7 @@ zero_or_non_wses: *zero_or_non_whitespaces
 
 non_whitespaces_or_phrase: &non_whitespaces_or_phrase
   description: a pattern to match non-whitespaces or group of non-whitespaces.
-  pattern: "\\S+( \\S)*"
+  pattern: "\\S+( \\S+)*"
   positive_test: ["address", "address: 1.1.1.2"]
   negative_test: ["       ", "address:  1.1.1.2"]
 
@@ -186,7 +186,7 @@ non_wses_or_zphrase: *non_whitespaces_or_phrase
 
 non_whitespaces_or_group: &non_whitespaces_or_group
   description: a pattern to match non-whitespaces or group of non-whitespaces.
-  pattern: "\\S+( +\\S)*"
+  pattern: "\\S+( +\\S+)*"
   positive_test: ["address", "address: 1.1.1.2", "address:      1.1.1.2"]
   negative_test: ["       "]
 
@@ -196,7 +196,7 @@ non_wses_or_zgroup: *non_whitespaces_or_group
 
 non_whitespaces_phrase: &non_whitespaces_phrase
   description: a pattern to match group of non-whitespaces.
-  pattern: "\\S+( \\S)+"
+  pattern: "\\S+( \\S+)+"
   positive_test: ["address: 1.1.1.2",]
   negative_test: ["address:      1.1.1.2"]
 
@@ -206,7 +206,7 @@ non_wses_phrase: *non_whitespaces_phrase
 
 non_whitespaces_group: &non_whitespaces_group
   description: a pattern to match group of non-whitespaces.
-  pattern: "\\S+( +\\S)+"
+  pattern: "\\S+( +\\S+)+"
   positive_test: ["address: 1.1.1.2", "address:      1.1.1.2"]
   negative_test: ["address:"]
 
