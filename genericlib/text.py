@@ -333,7 +333,7 @@ def do_soft_regex_escape(pattern):
     consistency pattern during invoking re.escape on different Python version.
     """
     chk1 = f'{string.punctuation} '
-    chk2 = '^$.?*+|{}[]()'
+    chk2 = '^$.?*+|{}[]()\\'
     result = []
     for char in pattern:
         escape_char = re.escape(char)
