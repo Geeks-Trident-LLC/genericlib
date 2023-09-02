@@ -41,7 +41,7 @@ class SnippetElement(RuntimeException):
             return NUMBER.ZERO
 
     def parse(self):
-        pat = ('(?P<name>[a-zA-Z]+(_[a-zA-Z]+)?)[(] *'
+        pat = ('(?P<name>[a-zA-Z]+(_[a-zA-Z]+)*)[(] *'
                '(?P<check>[cCkK]?var)=(?P<var_name>.+), +'
                'value=(?P<value>.+) *[)]')
         match = re.match(pat, self.element_txt)
@@ -111,7 +111,9 @@ class SnippetElement(RuntimeException):
             for arg in args:
                 txt = '%s%s%s' % (txt, arg.value, arg.trailing)
             txt = txt.strip()
-            new_pat_obj = TranslatedPattern.do_factory_create(txt)
+            actual_txt = txt.replace('_SYMBOL_LEFT_PARENTHESIS_', '(')
+            actual_txt = actual_txt.replace('_SYMBOL_RIGHT_PARENTHESIS_', ')')
+            new_pat_obj = TranslatedPattern.do_factory_create(actual_txt)
             element_txt = new_pat_obj.get_readable_snippet(var=self.var_name)
             trailing = arg.trailing     # noqa
         else:
