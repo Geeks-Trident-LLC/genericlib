@@ -149,16 +149,28 @@ class TEXT:
     MIXED_NUMBER = 'mixed_number'
     MIXED_WORD = 'mixed_word'
     MIXED_WORDS = 'mixed_words'
+    MIXED_WORD_OR_PHRASE = 'mixed_word_or_phrase'
+    MIXED_WORD_OR_GROUP = 'mixed_word_or_group'
+    MIXED_PHRASE = 'mixed_phrase'
+    MIXED_WORD_GROUP = 'mixed_word_group'
 
     NON_WHITESPACE = 'non_whitespace'
     NON_WHITESPACES = 'non_whitespaces'
+    NON_WHITESPACES_OR_PHRASE = 'non_whitespace_or_phrase'
+    NON_WHITESPACES_OR_GROUP = 'non_whitespace_or_group'
+    NON_WHITESPACES_PHRASE = 'non_whitespace_phrase'
     NON_WHITESPACES_GROUP = 'non_whitespace_group'
 
     PUNCT = 'punct'
     PUNCTS = 'puncts'
+    PUNCTS_OR_PHRASE = 'puncts_or_phrase'
+    PUNCTS_OR_GROUP = 'puncts_or_group'
+    PUNCTS_PHRASE = 'puncts_phrase'
     PUNCTS_GROUP = 'puncts_group'
 
     WORD = 'word'
     WORDS = 'words'
-
-
+    WORD_OR_PHRASE = 'word_or_phrase'
+    WORD_OR_GROUP = 'word_or_group'
+    PHRASE = 'phrase'
+    WORD_GROUP = 'word_group'

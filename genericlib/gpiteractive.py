@@ -4,6 +4,7 @@ from regexpro import TextPattern
 
 from genericlib import STRING, NUMBER, PATTERN, TEXT, SYMBOL, Misc
 from genericlib.gp import RuntimeException, TranslatedPattern, LData
+from genericlib.constpattern import get_ref_pattern_by_name
 
 
 class SnippetElement(RuntimeException):
@@ -129,27 +130,7 @@ class SnippetElement(RuntimeException):
             txt_pat = TextPattern(txt)
             return txt_pat
         else:
-            tbl = {
-                TEXT.DIGIT: PATTERN.DIGIT,
-                TEXT.DIGITS: PATTERN.DIGITS,
-                TEXT.NUMBER: PATTERN.NUMBER,
-                TEXT.MIXED_NUMBER: PATTERN.MIXED_NUMBER,
-                TEXT.LETTER: PATTERN.LETTER,
-                TEXT.LETTERS: PATTERN.LETTERS,
-                TEXT.ALPHABET_NUMERIC: PATTERN.ALPHABET_NUMERIC,
-                TEXT.PUNCT: PATTERN.PUNCT,
-                TEXT.PUNCTS: PATTERN.PUNCTS,
-                TEXT.PUNCTS_GROUP: PATTERN.PUNCTS_OR_PHRASE,
-                TEXT.GRAPH: PATTERN.GRAPH,
-                TEXT.WORD: PATTERN.WORD,
-                TEXT.WORDS: PATTERN.WORDS,
-                TEXT.MIXED_WORD: PATTERN.MIXED_WORD,
-                TEXT.MIXED_WORDS: PATTERN.MIXED_WORDS,
-                TEXT.NON_WHITESPACE: PATTERN.NON_WHITESPACE,
-                TEXT.NON_WHITESPACES: PATTERN.NON_WHITESPACES,
-                TEXT.NON_WHITESPACES_GROUP: PATTERN.NON_WHITESPACES_OR_PHRASE
-            }
-            pat = tbl.get(self.name, PATTERN.MIXED_WORDS)
+            pat = get_ref_pattern_by_name(self.name)
 
             if self.is_captured:
                 pat = '(?P<%s>%s)' % (self.var_name, pat)

@@ -1,5 +1,6 @@
 from .refpattern import REF_PATTERN
 
+
 class PATTERN:
 
     ANYTHING = '.'
@@ -84,3 +85,10 @@ class PATTERN:
     NON_WHITESPACES_PHRASE = r'%s( %s)+' % (NON_WHITESPACES, NON_WHITESPACES)
     NON_WHITESPACES_OR_GROUP = r'%s( +%s)*' % (NON_WHITESPACES, NON_WHITESPACES)
     NON_WHITESPACES_GROUP = r'%s( +%s)+' % (NON_WHITESPACES, NON_WHITESPACES)
+
+
+def get_ref_pattern_by_name(name, default=None):
+    default = default or PATTERN.NON_WHITESPACES_OR_GROUP
+    attr = name.upper()
+    pattern = getattr(PATTERN, attr, default)
+    return pattern
