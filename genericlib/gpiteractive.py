@@ -485,11 +485,15 @@ class IterativeLinePattern(LData):
     def to_regex(self):
         node = EditingSnippet(self._snippet)
         pattern = node.to_regex()
+        pattern = pattern.replace('_SYMBOL_LEFT_PARENTHESIS_', re.escape('('))
+        pattern = pattern.replace('_SYMBOL_RIGHT_PARENTHESIS_', re.escape(')'))
         return pattern
 
     def to_template_snippet(self):
         node = EditingSnippet(self._snippet)
         tmpl_snippet = node.to_template_snippet()
+        tmpl_snippet = tmpl_snippet.replace('_SYMBOL_LEFT_PARENTHESIS_', '(')
+        tmpl_snippet = tmpl_snippet.replace('_SYMBOL_RIGHT_PARENTHESIS_', ')')
         return tmpl_snippet
 
     def is_captured_in_regex(self):
