@@ -550,6 +550,142 @@ class DiffLinePattern(RuntimeException):
         self.raise_runtime_error(msg=fmt % str.join('\n  ', [repr(item) for item in lst]))
 
 
+class CommonDiffLinePattern(RuntimeException):
+    def __init__(self, *lines, label=None):
+        self.raw_lines = lines
+        self.lines = [line.strip() for line in lines if line.strip()]
+        self.label = label
+        self._is_diff = False
+        self._pattern = ''
+        self._snippet = ''
+        self.process()
+
+    @property
+    def are_leading(self):
+        chk = all(Misc.is_leading_line(line) for line in self.raw_lines)
+        return chk
+
+    @property
+    def are_trailing(self):
+        chk = all(Misc.is_trailing_line(line) for line in self.raw_lines)
+        return chk
+
+    @property
+    def is_leading(self):
+        chk = any(Misc.is_leading_line(line) for line in self.raw_lines)
+        return chk
+
+    @property
+    def is_trailing(self):
+        chk = any(Misc.is_trailing_line(line) for line in self.raw_lines)
+        return chk
+
+    @property
+    def is_whitespace_in_line(self):
+        chk = any(Misc.is_whitespace_in_line(line) for line in self.raw_lines)
+        return chk
+
+    @property
+    def whitespace(self):
+        return PATTERN.WHITESPACE if self.is_whitespace_in_line else PATTERN.SPACE
+
+    @property
+    def leading_whitespace(self):
+        multi = '+' if self.are_leading else '*'
+        pattern = f'{self.whitespace}{multi}' if self.is_leading else STRING.EMPTY
+        return pattern
+
+    @property
+    def trailing_whitespace(self):
+        multi = '+' if self.are_trailing else '*'
+        pattern = f'{self.whitespace}{multi}' if self.is_trailing else STRING.EMPTY
+        return pattern
+
+    @property
+    def has_data(self):
+        return len(self.lines) > NUMBER.ZERO
+
+    @property
+    def are_identical_lines(self):
+        if not self.has_data:
+            return False
+
+        lst = [re.sub(PATTERN.WHITESPACES, STRING.EMPTY, line) for line in self.lines]
+        return len(set(lst)) == NUMBER.ONE
+
+    @property
+    def is_diff(self):
+        return self._is_diff
+
+    @property
+    def pattern(self):
+        return self._pattern
+
+    @property
+    def snippet(self):
+        return self._snippet
+
+    def get_common_pattern(self):
+        if not self.are_identical_lines:
+            return STRING.EMPTY
+
+        if len(set(self.lines)) == NUMBER.ONE:
+            pattern = TextPattern(self.lines[INDEX.ZERO])
+            return f"{self.leading_whitespace}{pattern}{self.trailing_whitespace}"
+
+        lst_of_groups = list(zip(*[Text(line).do_finditer_split(r'\S+') for line in self.lines]))
+
+        result = []
+        for grp in lst_of_groups[INDEX.ONE:-INDEX.ONE]:
+            if len(set(grp)) == 1:
+                result.append(TextPattern(grp[INDEX.ZERO]))
+            else:
+                is_space_only = re.match(' +$', str.join('', grp))
+                result.append(PATTERN.SPACES if is_space_only else PATTERN.WHITESPACES)
+        pattern = str.join(STRING.EMPTY, result)
+        return f"{self.leading_whitespace}{pattern}{self.trailing_whitespace}"
+
+    def get_common_snippet(self):
+        if not self.are_identical_lines:
+            return STRING.EMPTY
+
+        tbl = {' +': '(spaces)', ' *': '(space)',
+               r'\s+': '(whitespaces)', r'\s*': '(whitespace)',
+               '': STRING.EMPTY}
+        case = tbl.get(self.leading_whitespace)
+        leading_snippet = f"start({case})" if self.is_leading else STRING.EMPTY
+        trailing_snippet = f"end({case})" if self.is_trailing else STRING.EMPTY
+
+        if len(set(self.lines)) == NUMBER.ONE:
+            snippet = self.lines[INDEX.ZERO]
+            snippet = f"{leading_snippet} {snippet} {trailing_snippet}".strip()
+            return snippet
+
+        lst_of_groups = list(zip(*[Text(line).do_finditer_split(r'\S+') for line in self.lines]))
+
+        result = []
+        for grp in lst_of_groups[INDEX.ONE:-INDEX.ONE]:
+            if len(set(grp)) == 1:
+                result.append(TextPattern(grp[INDEX.ZERO]))
+            else:
+                result.append(list(set(grp))[-INDEX.ONE])
+        pattern = str.join(STRING.EMPTY, result)
+        return f"{self.leading_whitespace}{pattern}{self.trailing_whitespace}"
+
+    def process(self):
+        if not self.has_data:
+            return
+
+        if self.are_identical_lines:
+            self._pattern = self.get_common_pattern()
+            self._snippet = self.get_common_snippet()
+        else:
+            node = DiffLinePattern(*self.lines, label=self.label)
+            self._is_diff = node.is_diff
+            self._pattern = node.pattern
+            self._snippet = node.snippet
+
+
 class DText:
     def __init__(self, text):
         self.lst = []
