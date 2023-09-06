@@ -161,6 +161,8 @@ class SnippetElement(RuntimeException):
             if self.is_empty:
                 tmpl_snippet = '%s%s' % (tmpl_snippet, 'empty()')
 
+            tmpl_snippet = f"{tmpl_snippet}{self.trailing}"
+
             return tmpl_snippet
 
     def to_snippet(self):
@@ -409,11 +411,12 @@ class EditingSnippet(LData):
         tmpl_snippet = str.join(
             STRING.EMPTY, [elmt.to_template_snippet() for elmt in self.snippet_elements]
         )
-        if self.is_leading:
-            tmpl_snippet = '%s%s' % (PATTERN.ZOSPACES, tmpl_snippet)
-
-        if self.is_trailing:
-            tmpl_snippet = '%s%s' % (tmpl_snippet, PATTERN.ZOSPACES)
+        tmpl_snippet = f"{self.leading}{tmpl_snippet}{self.trailing}"
+        # if self.is_leading:
+        #     tmpl_snippet = '%s%s' % (self.leading, tmpl_snippet)
+        #
+        # if self.is_trailing:
+        #     tmpl_snippet = '%s%s' % (tmpl_snippet, self.trailing)
 
         return tmpl_snippet
 
@@ -431,9 +434,9 @@ class IterativeLinePattern(LData):
         return int(chk)
 
     def symbolize(self):
-        spaces = re.findall(PATTERN.SPACES, self.data)
+        spaces = re.findall(PATTERN.WHITESPACES, self.data)
         lst = []
-        for index, item in enumerate(re.split(PATTERN.SPACES, self.data)):
+        for index, item in enumerate(re.split(PATTERN.WHITESPACES, self.data)):
             node = TranslatedPattern.do_factory_create(item)
             var_ = 'v%s%s' % (self.label, index)
 
