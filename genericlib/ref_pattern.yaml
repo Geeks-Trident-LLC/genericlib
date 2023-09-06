@@ -454,6 +454,27 @@ alphanums_group: *alphanumerics_group
 
 galphanums: *alphanumerics_group
 
+hyphen_word:
+  description: a pattern to match a hyphen-word, e.g., FF-AA-12-22.
+  pattern: "[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*"
+  positive_test: ["a", "abc", "aa-bb"]
+  negative_test: "..."
+
+dot_word:
+  description: a pattern to match a dot-word, e.g., a, a.1, 1.2.3.4
+  pattern: "[a-zA-Z0-9]+(\\.[a-zA-Z0-9]+)*"
+  positive_test: ["a", "abc", "aa.bb"]
+  negative_test: "..."
+
+comma_words:
+  description: a pattern to match a comma-word, e.g., item1, item2.
+  pattern: "[a-zA-Z0-9]+(( *,)? *[a-zA-Z0-9]+)*"
+  positive_test: ["item1", "item1, item2",
+                  "item1  ,  item 2,  item3",
+                  "item 1 and 2, item3"
+                 ]
+  negative_test: "..."
+
 word:
   description: a pattern to match a word.
   pattern: "[a-zA-Z][a-zA-Z0-9]*"
@@ -492,15 +513,15 @@ word_group:
 
 another_word: &another_word
   description: a pattern to match a word.
-  pattern: "\\w*[a-zA-Z]\\w*"
+  pattern: "\\w*[a-zA-Z0-9]\\w*"
   positive_test: ["_abc", "____a_____", "a_b_c_d"]
-  negative_test: ["123", "1_2"]
+  negative_test: ["___", "1.2"]
 
 aword: *another_word
 
 another_word_or_phrase: &another_word_or_phrase
   description: a pattern to match at least one word.
-  pattern: "\\w*[a-zA-Z]\\w*( \\w*[a-zA-Z]\\w*)*"
+  pattern: "\\w*[a-zA-Z0-9]\\w*( \\w*[a-zA-Z0-9]\\w*)*"
   positive_test: ["abc xyz", "var _v1"]
   negative_test: "... +++"
 
@@ -514,7 +535,7 @@ awords: *another_word_or_phrase
 
 another_word_or_group: &another_word_or_group
   description: a pattern to match at least one word.
-  pattern: "\\w*[a-zA-Z]\\w*( +\\w*[a-zA-Z]\\w*)*"
+  pattern: "\\w*[a-zA-Z0-9]\\w*( +\\w*[a-zA-Z0-9]\\w*)*"
   positive_test: ["abc xyz", "var    _v1"]
   negative_test: "... +++"
 
@@ -522,7 +543,7 @@ aword_zgroup: *another_word_or_group
 
 another_word_phrase: &another_word_phrase
   description: a pattern to match at least two words.
-  pattern: "\\w*[a-zA-Z]\\w*( \\w*[a-zA-Z]\\w*)+"
+  pattern: "\\w*[a-zA-Z0-9]\\w*( \\w*[a-zA-Z0-9]\\w*)+"
   positive_test: ["abc xyz", "var _v1"]
   negative_test: ["abc", "... +++"]
 
@@ -532,7 +553,7 @@ aphrase: *another_word_phrase
 
 another_word_group: &another_word_group
   description: a pattern to match at least two words.
-  pattern: "\\w*[a-zA-Z]\\w*( +\\w*[a-zA-Z]\\w*)*"
+  pattern: "\\w*[a-zA-Z0-9]\\w*( +\\w*[a-zA-Z0-9]\\w*)*"
   positive_test: ["abc xyz", "var    _v1"]
   negative_test: "... +++"
 
