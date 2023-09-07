@@ -689,8 +689,46 @@ class CommonDiffLinePattern(RuntimeException):
 class DText:
     def __init__(self, text):
         self.lst = []
+        self.leading_lst = []
+        self.trailing_lst = []
         self.text = text
         self.lst.append(text)
+        leading = Misc.get_leading_line(text)
+        leading and self.leading_lst.append(leading)
+        trailing = Misc.get_trailing_line(text)
+        trailing and self.trailing_lst.append(trailing)
+
+    @property
+    def leading(self):
+        if not self.leading_lst:
+            return STRING.EMPTY
+
+        if len(set(self.trailing_lst)) == NUMBER.ONE:
+            return self.trailing_lst[INDEX.ZERO]
+        else:
+            ws = STRING.SPACE_CHAR
+            for item in self.trailing_lst:
+                if item.strip(STRING.SPACE_CHAR):
+                    ws = item.strip(STRING.SPACE_CHAR)
+                    break
+            is_multi = any(len(item) > NUMBER.ONE for item in self.trailing_lst)
+            return f"{ws} " if is_multi else ws
+
+    @property
+    def trailing(self):
+        if not self.trailing_lst:
+            return STRING.EMPTY
+
+        if len(set(self.trailing_lst)) == NUMBER.ONE:
+            return self.trailing_lst[INDEX.ZERO]
+        else:
+            ws = STRING.SPACE_CHAR
+            for item in self.trailing_lst:
+                if item.strip(STRING.SPACE_CHAR):
+                    ws = item.strip(STRING.SPACE_CHAR)
+                    break
+            is_multi = any(len(item) > NUMBER.ONE for item in self.trailing_lst)
+            return f"{ws} " if is_multi else ws
 
     @property
     def first_text(self):
@@ -700,6 +738,11 @@ class DText:
     @property
     def is_identical(self):
         return len(set(self.lst)) == NUMBER.ONE
+
+    @property
+    def is_closed_to_identical(self):
+        clean_lst = [item.strip() for item in self.lst if item.strip()]
+        return len(set(clean_lst)) == NUMBER.ONE
 
     def concatenate(self, text):
         if self.lst:
@@ -713,8 +756,10 @@ class DText:
     def to_group(self):
         lst = []
         for line in self.lst:
-            sub_lst = Text(line).do_finditer_split(PATTERN.WHITESPACES)
-            lst.append(sub_lst)
+            line = line.strip()
+            if line:
+                sub_lst = Text(line).do_finditer_split(PATTERN.WHITESPACES)
+                lst.append(sub_lst)
 
         group = list(zip(*lst))
         for i, sub_grp in enumerate(group):
@@ -728,31 +773,35 @@ class DText:
             if len(sub_grp) == NUMBER.ONE:
                 result.append(sub_grp[INDEX.ZERO])
             else:
-                is_ws = any(Misc.is_whitespace_in_line(i) for i in sub_grp)
-                is_multi = any(bool(re.match(r'\s{2,}', i)) for i in sub_grp)
-                if is_ws:
-                    ws = None
-                    for item in sub_grp:
-                        if Misc.is_whitespace_in_line(item):
-                            ws = item.strip(' ')
-                            break
-                    spacer = f'{ws} ' if is_multi else ws
-                    result.append(spacer)
-                else:
-                    spacer = STRING.DOUBLE_SPACES if is_multi else STRING.SPACE_CHAR
-                    result.append(spacer)
-        general_text = str.join(STRING.EMPTY, result)
+                ws = STRING.SPACE_CHAR
+                for item in sub_grp:
+                    if item.strip(STRING.SPACE_CHAR):
+                        ws = item.strip(STRING.SPACE_CHAR)
+                        break
+                is_multi = any(len(item) > NUMBER.ONE for item in sub_grp)
+                spacer = f"{ws} " if is_multi else ws
+                result.append(spacer)
+        general_text = self.leading + str.join(STRING.EMPTY, result) + self.trailing
         return general_text
 
     def get_pattern(self):
         if self.is_identical:
             return TextPattern(self.first_text)
+        elif self.is_closed_to_identical:
+            clean_lst = [item.strip() for item in self.lst if item.strip()]
+            txt = clean_lst[INDEX.ZERO]
+            pattern = TextPattern(self.leading + txt + self.trailing)
+            return pattern
         else:
             return TextPattern(self.to_general_text())
 
     def get_snippet(self):
         if self.is_identical:
             return self.first_text
+        elif self.is_closed_to_identical:
+            clean_lst = [item.strip() for item in self.lst if item.strip()]
+            txt = clean_lst[INDEX.ZERO]
+            return self.leading + txt + self.trailing
         else:
             return self.to_general_text()
 

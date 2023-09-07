@@ -62,3 +62,22 @@ class TestDiffLinePattern:
         node = DiffLinePattern(*lines)
         snippet = node.snippet
         assert snippet == expected_snippet
+
+    @pytest.mark.parametrize(
+        "lines,expected_snippet",
+        [
+            (
+                (
+                    'this is yellow half \t pencil',
+                    'this is red half pencil',
+                    'this is green half pencil',
+                    'this is half pencil',
+                 ),
+                'start() this is letters(var_v0, or_empty) half\t pencil end()'
+            ),
+        ]
+    )
+    def test_generated_snippet2(self, lines, expected_snippet):
+        node = DiffLinePattern(*lines)
+        snippet = node.snippet
+        assert snippet == expected_snippet
