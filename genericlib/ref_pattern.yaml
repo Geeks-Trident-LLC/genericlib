@@ -180,9 +180,27 @@ non_whitespaces_or_phrase: &non_whitespaces_or_phrase
   positive_test: ["address", "address: 1.1.1.2"]
   negative_test: ["       ", "address:  1.1.1.2"]
 
+nonwses_or_phrase: *non_whitespaces_or_phrase
+
+non_wses_or_or_phrase: *non_whitespaces_or_phrase
+
 nonwses_zphrase: *non_whitespaces_or_phrase
 
 non_wses_or_zphrase: *non_whitespaces_or_phrase
+
+non_whitespaces_or_wsphrase: &non_whitespaces_or_wsphrase
+  description: a pattern to match non-whitespaces or group of non-whitespaces.
+  pattern: "\\S+(\\s\\S+)*"
+  positive_test: ["address", "address: 1.1.1.2", "address:\t1.1.1.2"]
+  negative_test: ["       ", "address:  1.1.1.2"]
+
+nonwses_or_wsphrase: *non_whitespaces_or_wsphrase
+
+non_wses_or_wsphrase: *non_whitespaces_or_wsphrase
+
+nonwses_zwsphrase: *non_whitespaces_or_wsphrase
+
+non_wses_or_zwsphrase: *non_whitespaces_or_wsphrase
 
 non_whitespaces_or_group: &non_whitespaces_or_group
   description: a pattern to match non-whitespaces or group of non-whitespaces.
@@ -194,6 +212,20 @@ nonwses_zgroup: *non_whitespaces_or_group
 
 non_wses_or_zgroup: *non_whitespaces_or_group
 
+non_whitespaces_or_wsgroup: &non_whitespaces_or_wsgroup
+  description: a pattern to match non-whitespaces or group of non-whitespaces.
+  pattern: "\\S+(\\s+\\S+)*"
+  positive_test: ["address", "address: 1.1.1.2", "address: \t 1.1.1.2"]
+  negative_test: ["       "]
+
+nonwses_or_wsgroup: *non_whitespaces_or_wsgroup
+
+non_wses_or_wsgroup: *non_whitespaces_or_wsgroup
+
+nonwses_zwsgroup: *non_whitespaces_or_wsgroup
+
+non_wses_or_zwsgroup: *non_whitespaces_or_wsgroup
+
 non_whitespaces_phrase: &non_whitespaces_phrase
   description: a pattern to match group of non-whitespaces.
   pattern: "\\S+( \\S+)+"
@@ -204,6 +236,14 @@ nonwses_phrase: *non_whitespaces_phrase
 
 non_wses_phrase: *non_whitespaces_phrase
 
+non_whitespaces_wsphrase: &non_whitespaces_wsphrase
+  description: a pattern to match group of non-whitespaces.
+  pattern: "\\S+(\\s\\S+)+"
+  positive_test: ["address: 1.1.1.2", "address:\t1.1.1.2"]
+  negative_test: ["address:      1.1.1.2"]
+
+non_wses_wsphrase: *non_whitespaces_wsphrase
+
 non_whitespaces_group: &non_whitespaces_group
   description: a pattern to match group of non-whitespaces.
   pattern: "\\S+( +\\S+)+"
@@ -213,6 +253,16 @@ non_whitespaces_group: &non_whitespaces_group
 nonwses_group: *non_whitespaces_group
 
 non_wses_group: *non_whitespaces_group
+
+non_whitespaces_wsgroup: &non_whitespaces_wsgroup
+  description: a pattern to match group of non-whitespaces.
+  pattern: "\\S+(\\s+\\S+)+"
+  positive_test: ["address: 1.1.1.2", "address: \t 1.1.1.2"]
+  negative_test: ["address:"]
+
+nonwses_wsgroup: *non_whitespaces_wsgroup
+
+non_wses_wsgroup: *non_whitespaces_wsgroup
 
 punctuation: &punctuation
   description: a pattern to match a punctuation.
@@ -236,7 +286,19 @@ punctuations_or_phrase: &punctuations_or_phrase
   positive_test: [".+-", "--- +++"]
   negative_test: ["abc", "---  +++"]
 
+puncts_or_phrase: *punctuations_or_phrase
+
 puncts_zphrase: *punctuations_or_phrase
+
+punctuations_or_wsphrase: &punctuations_or_wsphrase
+  description: a pattern to match a group of multiple punctuation.
+  pattern: "[\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e]+(\\s[\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e]+)*"
+  positive_test: [".+-", "--- +++"]
+  negative_test: ["abc", "---  +++"]
+
+puncts_or_wsphrase: *punctuations_or_wsphrase
+
+puncts_zwsphrase: *punctuations_or_wsphrase
 
 punctuations_phrase: &punctuations_phrase
   description: a pattern to match a group of multiple punctuation.
@@ -246,13 +308,33 @@ punctuations_phrase: &punctuations_phrase
 
 puncts_phrase: *punctuations_phrase
 
+punctuations_wsphrase: &punctuations_wsphrase
+  description: a pattern to match a group of multiple punctuation.
+  pattern: "[\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e]+(\\s[\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e]+)+"
+  positive_test: ["--- +++", "--- +++\t==="]
+  negative_test: ["---", "---  +++"]
+
+puncts_wsphrase: *punctuations_wsphrase
+
 punctuations_or_group: &punctuations_or_group
   description: a pattern to match a group of multiple punctuation.
   pattern: "[\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e]+( +[\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e]+)*"
   positive_test: ["---", "---   +++ ==="]
   negative_test: ["-a-", "--1-  +c++"]
 
+puncts_or_group: *punctuations_or_group
+
 puncts_zgroup: *punctuations_or_group
+
+punctuations_or_wsgroup: &punctuations_or_wsgroup
+  description: a pattern to match a group of multiple punctuation.
+  pattern: "[\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e]+(\\s+[\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e]+)*"
+  positive_test: ["---", "--- \t +++ ==="]
+  negative_test: ["-a-", "--1-  +c++"]
+
+puncts_or_wsgroup: *punctuations_or_wsgroup
+
+puncts_zwsgroup: *punctuations_or_wsgroup
 
 punctuations_group: &punctuations_group
   description: a pattern to match a group of multiple punctuation.
@@ -261,6 +343,14 @@ punctuations_group: &punctuations_group
   negative_test: ["---", "--1-  +c++"]
 
 puncts_group: *punctuations_group
+
+punctuations_wsgroup: &punctuations_wsgroup
+  description: a pattern to match a group of multiple punctuation.
+  pattern: "[\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e]+(\\s+[\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e]+)+"
+  positive_test: ["--- +++", "--- \t +++ ==="]
+  negative_test: ["---", "--1-  +c++"]
+
+puncts_wsgroup: *punctuations_wsgroup
 
 non_punctuation: &non_punctuation
   description: a pattern to match a non-punctuation.
@@ -275,7 +365,7 @@ non_punct: *non_punctuation
 non_punctuations: &non_punctuations
   description: a pattern to match multiple non-punctuation.
   pattern: "[^\\x21-\\x2f\\x3a-\\x40\\x5b-\\x60\\x7b-\\x7e]+"
-  positive_test: ["a", "today temperature is    73\n"]
+  positive_test: ["a", "today temperature is  \t  73\n"]
   negative_test: "."
 
 nonpuncts: *non_punctuations
@@ -304,6 +394,16 @@ letters_zphrase: *letters_or_phrase
 
 zpletters: *letters_or_phrase
 
+letters_or_wsphrase: &letters_or_wsphrase
+  description: a pattern to match zero or group of letters.
+  pattern: "[a-zA-Z]+(\\s[a-zA-Z]+)*"
+  positive_test: ["abcd", "abcd\txyz"]
+  negative_test: ["var1", "abcd   xyz"]
+
+letters_zwsphrase: *letters_or_wsphrase
+
+zwspletters: *letters_or_wsphrase
+
 letters_or_group: &letters_or_group
   description: a pattern to match zero or group of letters.
   pattern: "[a-zA-Z]+( +[a-zA-Z]+)*"
@@ -314,21 +414,47 @@ letters_zgroup: *letters_or_group
 
 zgletters: *letters_or_group
 
+letters_or_wsgroup: &letters_or_wsgroup
+  description: a pattern to match zero or group of letters.
+  pattern: "[a-zA-Z]+(\\s+[a-zA-Z]+)*"
+  positive_test: ["abcd", "abcd xyz", "abcd   xyz"]
+  negative_test: ["var1", "abcd 1xyz"]
+
+letters_zwsgroup: *letters_or_wsgroup
+
+zwsgletters: *letters_or_wsgroup
+
 letters_phrase: &letters_phrase
   description: a pattern to match a group of letters.
   pattern: "[a-zA-Z]+( [a-zA-Z]+)+"
-  positive_test: ["abcd", "abcd xyz", "abcd   xyz"]
+  positive_test: ["abcd", "abcd xyz", "abcd xyz"]
   negative_test: ["var1", "abcd 1xyz"]
 
 pletters: *letters_phrase
 
+letters_wsphrase: &letters_wsphrase
+  description: a pattern to match a group of letters.
+  pattern: "[a-zA-Z]+(\\s[a-zA-Z]+)+"
+  positive_test: ["abcd", "abcd xyz", "abcd\txyz"]
+  negative_test: ["var1", "abcd 1xyz"]
+
+pwsletters: *letters_wsphrase
+
 letters_group: &letters_group
   description: a pattern to match a group of letters.
   pattern: "[a-zA-Z]+( +[a-zA-Z]+)+"
-  positive_test: "abc"
-  negative_test: "..."
+  positive_test: ["abc xyz", "abc   xyz"]
+  negative_test: ["abc", "..."]
 
 gletters: *letters_group
+
+letters_wsgroup: &letters_wsgroup
+  description: a pattern to match a group of letters.
+  pattern: "[a-zA-Z]+(\\s+[a-zA-Z]+)+"
+  positive_test: ["abc xyz", "abc \t xyz"]
+  negative_test: ["abc", "..."]
+
+gwsletters: *letters_wsgroup
 
 dictionary_word: &dictionary_word
   description: a pattern to match a dictionary word.
@@ -356,6 +482,22 @@ zpdword: *dictionary_word_or_phrase
 
 dwords: *dictionary_word_or_phrase
 
+dictionary_word_or_wsphrase: &dictionary_word_or_wsphrase
+  description: a pattern to match a group of dictionary word.
+  pattern: "\\b[a-zA-Z]+(-[a-zA-Z]+)?(\\s[a-zA-Z]+(-[a-zA-Z]+)?)*\\b"
+  positive_test: ["take", "take-in", "that is\twater-cooling"]
+  negative_test: "var1"
+
+dictword_zwsphrase: *dictionary_word_or_wsphrase
+
+dword_zwsphrase: *dictionary_word_or_wsphrase
+
+zwspdictword: *dictionary_word_or_wsphrase
+
+zwspdword: *dictionary_word_or_wsphrase
+
+dwswords: *dictionary_word_or_wsphrase
+
 dictionary_word_phrase: &dictionary_word_phrase
   description: a pattern to match a group of dictionary word.
   pattern: "\\b[a-zA-Z]+(-[a-zA-Z]+)?( [a-zA-Z]+(-[a-zA-Z]+)?)+\\b"
@@ -365,6 +507,16 @@ dictionary_word_phrase: &dictionary_word_phrase
 dictword_phrase: *dictionary_word_phrase
 
 dphrase: *dictionary_word_phrase
+
+dictionary_word_wsphrase: &dictionary_word_wsphrase
+  description: a pattern to match a group of dictionary word.
+  pattern: "\\b[a-zA-Z]+(-[a-zA-Z]+)?(\\s[a-zA-Z]+(-[a-zA-Z]+)?)+\\b"
+  positive_test: ["tailor-made cloth", "that is water-cooling"]
+  negative_test: ["var1", "take", "take-in"]
+
+dictword_wsphrase: *dictionary_word_wsphrase
+
+dwsphrase: *dictionary_word_wsphrase
 
 dictionary_word_or_group: &dictionary_word_or_group
   description: a pattern to match a group of dictionary word.
@@ -378,17 +530,41 @@ dword_zgroup: *dictionary_word_or_group
 
 dzgword: *dictionary_word_or_group
 
+dictionary_word_or_wsgroup: &dictionary_word_or_wsgroup
+  description: a pattern to match a group of dictionary word.
+  pattern: "\\b[a-zA-Z]+(-[a-zA-Z]+)?(\\s+[a-zA-Z]+(-[a-zA-Z]+)?)*\\b"
+  positive_test: ["take", "take-in", "that is   water-cooling"]
+  negative_test: "var1"
+
+dictword_zwsgroup: *dictionary_word_or_wsgroup
+
+dword_zwsgroup: *dictionary_word_or_wsgroup
+
+dzwsgword: *dictionary_word_or_wsgroup
+
 dictionary_word_group: &dictionary_word_group
   description: a pattern to match group of dictionary word.
   pattern: "\\b[a-zA-Z]+(-[a-zA-Z]+)?( +[a-zA-Z]+(-[a-zA-Z]+)?)+\\b"
   positive_test: ["tailor-made cloth", "that is   water-cooling"]
   negative_test: ["var1", "take", "address 1.1.1.1"]
 
-adictword_group: *dictionary_word_group
+dictword_group: *dictionary_word_group
 
 dword_group: *dictionary_word_group
 
 dgword: *dictionary_word_group
+
+dictionary_word_wsgroup: &dictionary_word_wsgroup
+  description: a pattern to match group of dictionary word.
+  pattern: "\\b[a-zA-Z]+(-[a-zA-Z]+)?( +[a-zA-Z]+(-[a-zA-Z]+)?)+\\b"
+  positive_test: ["tailor-made cloth", "that is \t water-cooling"]
+  negative_test: ["var1", "take", "address 1.1.1.1"]
+
+dictword_wsgroup: *dictionary_word_wsgroup
+
+dword_wsgroup: *dictionary_word_wsgroup
+
+dwsgword: *dictionary_word_wsgroup
 
 abbreviation: &abbreviation
   description: a pattern to match an abbreviation.
@@ -434,6 +610,16 @@ alphanums_phrase: *alphanumerics_phrase
 
 palphanums: *alphanumerics_phrase
 
+alphanumerics_wsphrase: &alphanumerics_wsphrase
+  description: a pattern to match at least two group of alpha or numeric.
+  pattern: "[a-zA-Z0-9]+(\\s[a-zA-Z0-9]+)+"
+  positive_test: ["item 1", "that is\t1st pencil"]
+  negative_test: ["item1", "item #1"]
+
+alphanums_wsphrase: *alphanumerics_wsphrase
+
+wspalphanums: *alphanumerics_wsphrase
+
 alphanumerics_or_group: &alphanumerics_or_group
   description: a pattern to match at least one group of alpha or numeric.
   pattern: "[a-zA-Z0-9]+( [a-zA-Z0-9]+)*"
@@ -443,6 +629,16 @@ alphanumerics_or_group: &alphanumerics_or_group
 alphanums_zgroup: *alphanumerics_or_group
 
 zgalphanums: *alphanumerics_or_group
+
+alphanumerics_or_wsgroup: &alphanumerics_or_wsgroup
+  description: a pattern to match at least one group of alpha or numeric.
+  pattern: "[a-zA-Z0-9]+( [a-zA-Z0-9]+)*"
+  positive_test: ["a", "1", "var1", "item\t1"]
+  negative_test: "item #1"
+
+alphanums_zwsgroup: *alphanumerics_or_wsgroup
+
+zwsgalphanums: *alphanumerics_or_wsgroup
 
 alphanumerics_group: &alphanumerics_group
   description: a pattern to match at least one group of alpha or numeric.
@@ -454,11 +650,23 @@ alphanums_group: *alphanumerics_group
 
 galphanums: *alphanumerics_group
 
-hyphen_word:
+alphanumerics_wsgroup: &alphanumerics_wsgroup
+  description: a pattern to match at least one group of alpha or numeric.
+  pattern: "[a-zA-Z0-9]+( +[a-zA-Z0-9]+)+"
+  positive_test: ["item 1", "that is \t 1st pencil"]
+  negative_test: ["item1", "item #1"]
+
+alphanums_wsgroup: *alphanumerics_wsgroup
+
+wsgalphanums: *alphanumerics_wsgroup
+
+hyphen_word: &hyphen_word
   description: a pattern to match a hyphen-word, e.g., FF-AA-12-22.
   pattern: "[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*"
   positive_test: ["a", "abc", "aa-bb"]
   negative_test: "..."
+
+dash_word: *hyphen_word
 
 dot_word:
   description: a pattern to match a dot-word, e.g., a, a.1, 1.2.3.4
@@ -466,7 +674,7 @@ dot_word:
   positive_test: ["a", "abc", "aa.bb"]
   negative_test: "..."
 
-comma_words:
+comma_word: &comma_word
   description: a pattern to match a comma-word, e.g., item1, item2.
   pattern: "[a-zA-Z0-9]+(( *,)? *[a-zA-Z0-9]+)*"
   positive_test: ["item1", "item1, item2",
@@ -474,6 +682,8 @@ comma_words:
                   "item 1 and 2, item3"
                  ]
   negative_test: "..."
+
+comma_words: *comma_word
 
 word:
   description: a pattern to match a word.
@@ -491,6 +701,16 @@ word_zphrase: *word_or_phrase
 
 words: *word_or_phrase
 
+word_or_wsphrase: &word_or_wsphrase
+  description: a pattern to match at least one word.
+  pattern: "[a-zA-Z][a-zA-Z0-9]*(\\s[a-zA-Z][a-zA-Z0-9]*)*"
+  positive_test: ["a", "a\tpencil"]
+  negative_test: ["1a", "1st day"]
+
+word_zwsphrase: *word_or_wsphrase
+
+wswords: *word_or_wsphrase
+
 word_or_group: &word_or_group
   description: a pattern to match at least one word.
   pattern: "[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)*"
@@ -499,16 +719,36 @@ word_or_group: &word_or_group
 
 word_zgroup: *word_or_group
 
+word_or_wsgroup: &word_or_wsgroup
+  description: a pattern to match at least one word.
+  pattern: "[a-zA-Z][a-zA-Z0-9]*(\\s+[a-zA-Z][a-zA-Z0-9]*)*"
+  positive_test: ["a", "a \t pencil"]
+  negative_test: ["1a", "1st day"]
+
+word_zwsgroup: *word_or_wsgroup
+
 word_phrase:
   description: a pattern to match at least two words.
   pattern: "[a-zA-Z][a-zA-Z0-9]*( [a-zA-Z][a-zA-Z0-9]*)+"
   positive_test: ["a pencil", "a yellow pencil"]
   negative_test: ["a", "1st day"]
 
+word_wsphrase:
+  description: a pattern to match at least two words.
+  pattern: "[a-zA-Z][a-zA-Z0-9]*(\\s[a-zA-Z][a-zA-Z0-9]*)+"
+  positive_test: ["a pencil", "a yellow\tpencil"]
+  negative_test: ["a", "1st day"]
+
 word_group:
   description: a pattern to match at least two words.
   pattern: "[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)+"
   positive_test: ["a pencil", "a yellow   pencil"]
+  negative_test: ["a", "1st day"]
+
+word_wsgroup:
+  description: a pattern to match at least two words.
+  pattern: "[a-zA-Z][a-zA-Z0-9]*(\\s+[a-zA-Z][a-zA-Z0-9]*)+"
+  positive_test: ["a pencil", "a yellow \t pencil"]
   negative_test: ["a", "1st day"]
 
 another_word: &another_word
@@ -533,6 +773,20 @@ another_words: *another_word_or_phrase
 
 awords: *another_word_or_phrase
 
+another_word_or_wsphrase: &another_word_or_wsphrase
+  description: a pattern to match at least one word.
+  pattern: "\\w*[a-zA-Z0-9]\\w*(\\s\\w*[a-zA-Z0-9]\\w*)*"
+  positive_test: ["abc xyz", "var\t_v1"]
+  negative_test: "... +++"
+
+another_word_zwsphrase: *another_word_or_wsphrase
+
+aword_zwsphrase: *another_word_or_wsphrase
+
+another_wswords: *another_word_or_wsphrase
+
+awswords: *another_word_or_wsphrase
+
 another_word_or_group: &another_word_or_group
   description: a pattern to match at least one word.
   pattern: "\\w*[a-zA-Z0-9]\\w*( +\\w*[a-zA-Z0-9]\\w*)*"
@@ -540,6 +794,14 @@ another_word_or_group: &another_word_or_group
   negative_test: "... +++"
 
 aword_zgroup: *another_word_or_group
+
+another_word_or_wsgroup: &another_word_or_wsgroup
+  description: a pattern to match at least one word.
+  pattern: "\\w*[a-zA-Z0-9]\\w*(\\s+\\w*[a-zA-Z0-9]\\w*)*"
+  positive_test: ["abc xyz", "var \t  _v1"]
+  negative_test: "... +++"
+
+aword_zwsgroup: *another_word_or_wsgroup
 
 another_word_phrase: &another_word_phrase
   description: a pattern to match at least two words.
@@ -551,6 +813,16 @@ aword_phrase: *another_word_phrase
 
 aphrase: *another_word_phrase
 
+another_word_wsphrase: &another_word_wsphrase
+  description: a pattern to match at least two words.
+  pattern: "\\w*[a-zA-Z0-9]\\w*(\\s\\w*[a-zA-Z0-9]\\w*)+"
+  positive_test: ["abc xyz", "var\t_v1"]
+  negative_test: ["abc", "... +++"]
+
+aword_wsphrase: *another_word_wsphrase
+
+awsphrase: *another_word_wsphrase
+
 another_word_group: &another_word_group
   description: a pattern to match at least two words.
   pattern: "\\w*[a-zA-Z0-9]\\w*( +\\w*[a-zA-Z0-9]\\w*)*"
@@ -560,6 +832,16 @@ another_word_group: &another_word_group
 aword_group: *another_word_group
 
 agroup: *another_word_group
+
+another_word_wsgroup: &another_word_wsgroup
+  description: a pattern to match at least two words.
+  pattern: "\\w*[a-zA-Z0-9]\\w*(\\s+\\w*[a-zA-Z0-9]\\w*)*"
+  positive_test: ["abc xyz", "var    _v1"]
+  negative_test: "... +++"
+
+aword_wsgroup: *another_word_wsgroup
+
+awsgroup: *another_word_wsgroup
 
 graph:
   description: a pattern to match a printable character.
@@ -591,6 +873,18 @@ mixed_zpword: *mixed_word_or_phrase
 
 mixed_words: *mixed_word_or_phrase
 
+mixed_word_or_wsphrase: &mixed_word_or_wsphrase
+  description: a pattern to match at least one mixed-word.
+  pattern: "[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*(\\s[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)*"
+  positive_test: "email:\tabc@xyz.com"
+  negative_test: "+-*/ -&^"
+
+mixed_word_zwsphrase: *mixed_word_or_wsphrase
+
+mixed_zwspword: *mixed_word_or_wsphrase
+
+mixed_wswords: *mixed_word_or_wsphrase
+
 mixed_word_or_group: &mixed_word_or_group
   description: a pattern to match at least one mixed-word.
   pattern: "[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( +[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)*"
@@ -601,6 +895,16 @@ mixed_word_zgroup: *mixed_word_or_group
 
 mixed_zgword: *mixed_word_or_group
 
+mixed_word_or_wsgroup: &mixed_word_or_wsgroup
+  description: a pattern to match at least one mixed-word.
+  pattern: "[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*(\\s+[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)*"
+  positive_test: "email: abc@xyz.com"
+  negative_test: "+-*/ -&^"
+
+mixed_word_zwsgroup: *mixed_word_or_wsgroup
+
+mixed_zwsgword: *mixed_word_or_wsgroup
+
 mixed_word_phrase: &mixed_word_phrase
   description: a pattern to match at least two mixed-word.
   pattern: "[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( [\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+"
@@ -609,18 +913,40 @@ mixed_word_phrase: &mixed_word_phrase
 
 mixed_pword: *mixed_word_phrase
 
+mixed_word_wsphrase: &mixed_word_wsphrase
+  description: a pattern to match at least two mixed-word.
+  pattern: "[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*(\\s[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+"
+  positive_test: "email:\tabc@xyz.com"
+  negative_test: "+-*/ -&^"
+
+mixed_wspword: *mixed_word_wsphrase
+
 mixed_word_group: &mixed_word_group
   description: a pattern to match at least two mixed-word.
   pattern: "[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( +[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+"
-  positive_test: "email: abc@xyz.com"
+  positive_test: "email:   abc@xyz.com"
   negative_test: "+-*/ -&^"
 
 mixed_gword: *mixed_word_group
+
+mixed_word_wsgroup: &mixed_word_wsgroup
+  description: a pattern to match at least two mixed-word.
+  pattern: "[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*(\\s+[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+"
+  positive_test: "email: \t abc@xyz.com"
+  negative_test: "+-*/ -&^"
+
+mixed_wsgword: *mixed_word_wsgroup
 
 phrase:
   description: a pattern to match a phrase, i.e. at least two words.
   pattern: "[a-zA-Z][a-zA-Z0-9]*( [a-zA-Z][a-zA-Z0-9]*)+"
   positive_test: "abc xyz"
+  negative_test: "abc"
+
+wsphrase:
+  description: a pattern to match a phrase, i.e. at least two words.
+  pattern: "[a-zA-Z][a-zA-Z0-9]*(\\s[a-zA-Z][a-zA-Z0-9]*)+"
+  positive_test: "abc\txyz"
   negative_test: "abc"
 
 another_phrase:
@@ -629,28 +955,58 @@ another_phrase:
   positive_test: "abc xyz"
   negative_test: "abc"
 
+another_wsphrase:
+  description: a pattern to match a phrase, i.e. at least two words.
+  pattern: "\\w*[a-zA-Z0-9]\\w*(\\s\\w*[a-zA-Z0-9]\\w*)+"
+  positive_test: "abc xyz"
+  negative_test: "abc"
+
 flex_phrase:
   description: a pattern to match a phrase, i.e. at least two words.
   pattern: "[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)+"
-  positive_test: "abc xyz"
+  positive_test: "abc   xyz"
+  negative_test: ["abc", "abc \t xyz"]
+
+flex_wsphrase:
+  description: a pattern to match a phrase, i.e. at least two words.
+  pattern: "[a-zA-Z][a-zA-Z0-9]*(\\s+[a-zA-Z][a-zA-Z0-9]*)+"
+  positive_test: "abc \t xyz"
   negative_test: "abc"
 
 another_flex_phrase:
   description: a pattern to match a phrase, i.e. at least two words.
   pattern: "\\w*[a-zA-Z0-9]\\w*( +\\w*[a-zA-Z0-9]\\w*)+"
-  positive_test: "abc xyz"
+  positive_test: "abc   xyz"
+  negative_test: ["abc", "abc \t xyz"]
+
+another_flex_wsphrase:
+  description: a pattern to match a phrase, i.e. at least two words.
+  pattern: "\\w*[a-zA-Z0-9]\\w*(\\s+\\w*[a-zA-Z0-9]\\w*)+"
+  positive_test: ["abc xyz", "abc \t xyz"]
   negative_test: "abc"
 
 mixed_phrase:
   description: a pattern to match at least two mixed-word.
   pattern: "[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( [\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+"
   positive_test: "email: abc@xyz.com"
-  negative_test: "email:"
+  negative_test: ["email:", "email:\tabc@xyz.com", "email:   abc@xyz.com"]
+
+mixed_wsphrase:
+  description: a pattern to match at least two mixed-word.
+  pattern: "[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*(\\s[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+"
+  positive_test: ["email: abc@xyz.com", "email:\tabc@xyz.com"]
+  negative_test: ["email:", "email: \t abc@xyz.com"]
 
 flex_mixed_phrase:
   description: a pattern to match at least two mixed-word.
   pattern: "[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*( +[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+"
   positive_test: ["email: abc@xyz.com", "email:   abc@xyz.com"]
+  negative_test: "email:"
+
+flex_mixed_wsphrase:
+  description: a pattern to match at least two mixed-word.
+  pattern: "[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*(\\s+[\\x21-\\x7e]*[a-zA-Z0-9][\\x21-\\x7e]*)+"
+  positive_test: ["email: abc@xyz.com", "email: \t  abc@xyz.com"]
   negative_test: "email:"
 
 hexadecimal:
