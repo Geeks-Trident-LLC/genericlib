@@ -86,6 +86,7 @@ class TranslatedPattern(RuntimeException):
         self.singular_pattern = singular_pattern
         self.name = str(name)
         self._pattern = STRING.EMPTY
+        self._lessen_pattern = STRING.EMPTY
         self.process()
 
     def __len__(self):
@@ -109,8 +110,43 @@ class TranslatedPattern(RuntimeException):
             return self.name
 
     @property
+    def lessen_actual_name(self):
+        if self.defined_patterns and self.ref_names:
+            name = self.ref_names[self.defined_patterns.index(self._pattern)]
+
+            tbl = dict(
+                puncts_or_group="puncts_or_group",
+                puncts_group="puncts_or_group",
+                puncts_phrase="puncts_or_group",
+                puncts_or_phrase="puncts_or_group",
+
+                word_or_group="word_or_group",
+                word_group="word_or_group",
+                phrase="word_or_group",
+                words="word_or_group",
+
+                mixed_word_or_group="mixed_word_or_group",
+                mixed_words="mixed_word_or_group",
+                mixed_phrase="mixed_word_or_group",
+                mixed_word_group="mixed_word_or_group",
+
+                non_whitespaces_or_group="non_whitespaces_or_group",
+                non_whitespaces_or_phrase="non_whitespaces_or_group",
+                non_whitespaces_phrase="non_whitespaces_or_group",
+                non_whitespaces_group="non_whitespaces_or_group",
+            )
+            lessen_actual_name = tbl.get(name, self.name)
+            return lessen_actual_name
+        else:
+            return self.name
+
+    @property
     def pattern(self):
         return self._pattern
+
+    @property
+    def lessen_pattern(self):
+        return self._lessen_pattern
 
     def process(self):
         if self.defined_patterns:
@@ -120,37 +156,25 @@ class TranslatedPattern(RuntimeException):
                     is_matched = self.check_matching(pat)
                     if is_matched:
                         self._pattern = pat
+                        lessen_name = self.lessen_actual_name
+                        lessen_pat = self.defined_patterns[self.ref_names.index(lessen_name)]
+                        self._lessen_pattern = lessen_pat
                         break
             else:
                 for pat in self.defined_patterns:
                     is_matched = self.check_matching(pat)
                     if is_matched:
                         self._pattern = pat
+                        lessen_name = self.lessen_actual_name
+                        lessen_pat = self.defined_patterns[self.ref_names.index(lessen_name)]
+                        self._lessen_pattern = lessen_pat
                         break
             if not is_matched:
                 self._pattern = STRING.EMPTY
         else:
             is_matched = self.check_matching(self.defined_pattern)
             self._pattern = self.defined_pattern if is_matched else STRING.EMPTY
-
-    def process_bak(self):
-        if self.defined_patterns:
-            is_matched = False
-            for pat in self.defined_patterns:
-                is_matched = is_matched or self.check_matching(pat)
-            if is_matched:
-                is_multi_spaces = self.is_group_with_multi_spaces()
-                if self.is_plural():
-                    index = NUMBER.TWO if is_multi_spaces else NUMBER.ONE
-                    self._pattern = self.defined_patterns[-index]
-                else:
-                    index = NUMBER.ONE if is_multi_spaces else NUMBER.ZERO
-                    self._pattern = self.defined_patterns[index]
-            else:
-                self._pattern = STRING.EMPTY
-        else:
-            is_matched = self.check_matching(self.defined_pattern)
-            self._pattern = self.defined_pattern if is_matched else STRING.EMPTY
+            self._lessen_pattern = self._pattern
 
     def check_matching(self, pattern):
         pat = '%s$' % pattern
@@ -350,7 +374,7 @@ class TranslatedPattern(RuntimeException):
             snippet = '%s(value=%s)' % (self.actual_name, value)
         return snippet
 
-    def get_regex_pattern(self, var=''):
+    def get_regex_pattern(self, var='', is_lessen=False):
         if not self.name:
             self.raise_runtime_error(
                 name='TranslatedPatternRegexRTError',
@@ -358,10 +382,11 @@ class TranslatedPattern(RuntimeException):
             )
 
         fmt = '(?P<%s>%s)'
-        pattern = fmt % (var, self.pattern) if var else self.pattern
+        pattern = self.lessen_pattern if is_lessen else self.pattern
+        pattern = fmt % (var, pattern) if var else pattern
         return pattern
 
-    def get_template_snippet(self, var=''):
+    def get_template_snippet(self, var='', is_lessen=False):
         if not self.name:
             self.raise_runtime_error(
                 name='TranslatedPatternTemplateSnippetRTError',
@@ -369,7 +394,8 @@ class TranslatedPattern(RuntimeException):
             )
 
         var_txt = 'var_%s' % var if var else STRING.EMPTY
-        tmpl_snippet = '%s(%s)' % (self.actual_name, var_txt)
+        name = self.lessen_actual_name if is_lessen else self.actual_name
+        tmpl_snippet = '%s(%s)' % (name, var_txt)
         return tmpl_snippet
 
     @classmethod
