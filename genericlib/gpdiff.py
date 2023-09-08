@@ -122,8 +122,6 @@ class NDiffChangedText(NDiffBaseText):
     def get_pattern(self, var='', label=None):
         var = var.replace('v', f'v{label}', NUMBER.ONE) if label else var
 
-        empty_flag = '|' if self.is_containing_empty_changed else STRING.EMPTY
-
         txt1 = str.join(STRING.DOUBLE_SPACES, self.lst)
         txt2 = str.join(STRING.DOUBLE_SPACES, self.lst_other)
         if txt1 or txt2:
@@ -134,10 +132,11 @@ class NDiffChangedText(NDiffBaseText):
             pattern = STRING.EMPTY
 
         if var:
-            pattern = '(?P<%s>%s%s)' % (var, pattern, empty_flag)
+            fmt = "(?P<%s>(%s)|)" if self.is_containing_empty_changed else "(?P<%s>%s)"
+            pattern = fmt % (var, pattern)
         else:
             if pattern:
-                pattern = '(%s%s)' % (pattern, empty_flag)
+                pattern = f"(({pattern})|)" if self.is_containing_empty_changed else pattern
         return pattern
 
     def get_snippet(self, var='', label=None):

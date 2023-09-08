@@ -65,7 +65,7 @@ class TestDiffLinePattern:
             (
                 'this line one is a first line',
                 'line ore is a second bad line',
-                '(?P<v0>[a-zA-Z]+|)( +)?line +(?P<v1>[a-zA-Z]+) +is +a +(?P<v2>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)*) +line'    # noqa
+                '(?P<v0>([a-zA-Z]+)|)( +)?line +(?P<v1>[a-zA-Z]+) +is +a +(?P<v2>[a-zA-Z][a-zA-Z0-9]*( +[a-zA-Z][a-zA-Z0-9]*)*) +line'    # noqa
             ),
         ]
     )
