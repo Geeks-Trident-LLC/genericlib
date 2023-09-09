@@ -119,7 +119,7 @@ class NDiffChangedText(NDiffBaseText):
         else:
             return False
 
-    def get_pattern(self, var='', label=None, is_lessen=False):
+    def get_pattern(self, var='', label=None, is_lessen=False, is_root=False):
         var = var.replace('v', f'v{label}', NUMBER.ONE) if label else var
 
         txt1 = str.join(STRING.DOUBLE_SPACES, self.lst)
@@ -128,6 +128,7 @@ class NDiffChangedText(NDiffBaseText):
             args = [txt1, txt2] if txt1 and txt2 else [txt1] if txt1 else [txt2]
             factory = TranslatedPattern.do_factory_create(*args)
             pattern = factory.lessen_pattern if is_lessen else factory.pattern
+            pattern = factory.root_pattern if is_root else pattern
         else:
             pattern = STRING.EMPTY
 
@@ -139,7 +140,7 @@ class NDiffChangedText(NDiffBaseText):
                 pattern = f"(({pattern})|)" if self.is_containing_empty_changed else pattern
         return pattern
 
-    def get_snippet(self, var='', label=None, is_lessen=False):
+    def get_snippet(self, var='', label=None, is_lessen=False, is_root=False):
         var = var.replace('v', f'v{label}', NUMBER.ONE) if label else var
 
         txt1 = str.join(STRING.DOUBLE_SPACES, self.lst)
@@ -147,7 +148,8 @@ class NDiffChangedText(NDiffBaseText):
         if txt1 or txt2:
             args = [txt1, txt2] if txt1 and txt2 else [txt1] if txt1 else [txt2]
             factory = TranslatedPattern.do_factory_create(*args)
-            self._snippet = factory.get_template_snippet(var=var, is_lessen=is_lessen)
+            kwargs = dict(var=var, is_lessen=is_lessen, is_root=is_root)
+            self._snippet = factory.get_template_snippet(**kwargs)
             if self.is_containing_empty_changed:
                 self._snippet = '%s, or_empty)' % self._snippet[:-1]
 
@@ -155,7 +157,8 @@ class NDiffChangedText(NDiffBaseText):
 
 
 class NDiffLinePattern:
-    def __init__(self, line_a, line_b, whitespace=None, label=None, is_lessen=False):
+    def __init__(self, line_a, line_b, whitespace=None, label=None,
+                 is_lessen=False, is_root=False):
         self.whitespace = whitespace
         if not self.whitespace:
             is_ws = any(Misc.is_whitespace_in_line(line) for line in [line_a, line_b])
@@ -163,6 +166,7 @@ class NDiffLinePattern:
 
         self.label = label
         self.is_lessen = is_lessen
+        self.is_root = is_root
 
         self.is_leading = Misc.is_leading_line(line_a)
         self.is_leading |= Misc.is_leading_line(line_b)
@@ -269,7 +273,7 @@ class NDiffLinePattern:
         return result
 
     def build_pattern_from_diff_list(self, lst):    # noqa
-        kwargs = dict(label=self.label, is_lessen=self.is_lessen)
+        kwargs = dict(label=self.label, is_lessen=self.is_lessen, is_root=self.is_root)
 
         total = len(lst)
         if total == NUMBER.ONE:
@@ -315,7 +319,8 @@ class NDiffLinePattern:
         for index, item in enumerate(lst):
             count += NUMBER.ONE if item.is_changed else NUMBER.ZERO
             if item.is_changed:
-                kwargs = dict(var=f'v{count}', label=self.label, is_lessen=self.is_lessen)
+                kwargs = dict(var=f'v{count}', label=self.label,
+                              is_lessen=self.is_lessen, is_root=self.is_root)
                 snippet_ = item.get_snippet(**kwargs)
             else:
                 snippet_ = item.get_snippet(whitespace=self.whitespace)
@@ -460,19 +465,19 @@ class DiffLinePattern(RuntimeException):
             self.lines.extend(lines)
             self.raw_lines.extend(raw_lines)
 
-    def get_pattern_btw_two_lines(self, line_a, line_b, is_lessen=False):
+    def get_pattern_btw_two_lines(self, line_a, line_b, is_lessen=False, is_root=False):
         diff_line_obj = NDiffLinePattern(
             line_a, line_b, label=self.label, whitespace=f'{self.whitespace}',
-            is_lessen=is_lessen
+            is_lessen=is_lessen, is_root=is_root
         )
         pattern = diff_line_obj.pattern
         self._is_diff = diff_line_obj.is_diff
         return pattern
 
-    def get_snippet_btw_two_lines(self, line_a, line_b, is_lessen=False):    # noqa
+    def get_snippet_btw_two_lines(self, line_a, line_b, is_lessen=False, is_root=False):    # noqa
         diff_line_obj = NDiffLinePattern(
             line_a, line_b, label=self.label, whitespace=f'{self.whitespace}',
-            is_lessen=is_lessen
+            is_lessen=is_lessen, is_root=False
         )
         snippet = diff_line_obj.snippet
         return snippet
@@ -551,12 +556,25 @@ class DiffLinePattern(RuntimeException):
                 self.reconstruct_pattern_and_snippet()
                 return
 
-        # second pass
+        # if first pass failed, run second pass with is_lessen is True
         for i, j in pairs:
             line_a = self.lines[i]
             line_b = self.lines[j]
             pattern = self.get_pattern_btw_two_lines(line_a, line_b, is_lessen=True)
             snippet = self.get_snippet_btw_two_lines(line_a, line_b, is_lessen=True)
+            lst.append(pattern)
+            if self.is_matched_all(pattern):
+                self._pattern = pattern
+                self._snippet = snippet
+                self.reconstruct_pattern_and_snippet()
+                return
+
+        # if second pass failed, run third pass with is_root is True
+        for i, j in pairs:
+            line_a = self.lines[i]
+            line_b = self.lines[j]
+            pattern = self.get_pattern_btw_two_lines(line_a, line_b, is_root=True)
+            snippet = self.get_snippet_btw_two_lines(line_a, line_b, is_root=True)
             lst.append(pattern)
             if self.is_matched_all(pattern):
                 self._pattern = pattern

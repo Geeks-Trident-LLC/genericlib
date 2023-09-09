@@ -75,7 +75,7 @@ class TranslatedPattern(RuntimeException):
 
     def __init__(self, data, *other, name='',
                  defined_pattern='', defined_patterns=None, ref_names=None,
-                 singular_name='', singular_pattern=''):
+                 singular_name='', singular_pattern='', root_name=''):
         self.data = str(data)
         self.lst_of_other_data = list(other)
         self.lst_of_all_data = [self.data] + self.lst_of_other_data
@@ -84,6 +84,7 @@ class TranslatedPattern(RuntimeException):
         self.ref_names = ref_names if isinstance(ref_names, (list, tuple)) else []
         self.singular_name = singular_name
         self.singular_pattern = singular_pattern
+        self.root_name = root_name
         self.name = str(name)
         self._pattern = STRING.EMPTY
         self.process()
@@ -134,8 +135,8 @@ class TranslatedPattern(RuntimeException):
                 non_whitespaces_phrase="non_whitespaces_or_group",
                 non_whitespaces_group="non_whitespaces_or_group",
             )
-            lessen_actual_name = tbl.get(name, self.name)
-            return lessen_actual_name
+            lessen_name = tbl.get(name, self.name)
+            return lessen_name
         else:
             return self.name
 
@@ -151,6 +152,14 @@ class TranslatedPattern(RuntimeException):
             return lessen_pat
         else:
             return self.pattern
+
+    @property
+    def root_pattern(self):
+        tbl = dict(non_whitespace=PATTERN.NON_WHITESPACE,
+                   non_whitespaces=PATTERN.NON_WHITESPACES,
+                   non_whitespaces_or_group=PATTERN.NON_WHITESPACES_OR_GROUP)
+        root_pattern = tbl.get(self.root_name, PATTERN.NON_WHITESPACES_OR_GROUP)
+        return root_pattern
 
     def process(self):
         if self.defined_patterns:
@@ -371,7 +380,7 @@ class TranslatedPattern(RuntimeException):
             snippet = '%s(value=%s)' % (self.actual_name, value)
         return snippet
 
-    def get_regex_pattern(self, var='', is_lessen=False):
+    def get_regex_pattern(self, var='', is_lessen=False, is_root=False):
         if not self.name:
             self.raise_runtime_error(
                 name='TranslatedPatternRegexRTError',
@@ -380,10 +389,11 @@ class TranslatedPattern(RuntimeException):
 
         fmt = '(?P<%s>%s)'
         pattern = self.lessen_pattern if is_lessen else self.pattern
+        pattern = self.root_pattern if is_root else pattern
         pattern = fmt % (var, pattern) if var else pattern
         return pattern
 
-    def get_template_snippet(self, var='', is_lessen=False):
+    def get_template_snippet(self, var='', is_lessen=False, is_root=False):
         if not self.name:
             self.raise_runtime_error(
                 name='TranslatedPatternTemplateSnippetRTError',
@@ -392,6 +402,7 @@ class TranslatedPattern(RuntimeException):
 
         var_txt = 'var_%s' % var if var else STRING.EMPTY
         name = self.lessen_name if is_lessen else self.actual_name
+        name = self.root_name if is_root else name
         tmpl_snippet = '%s(%s)' % (name, var_txt)
         return tmpl_snippet
 
@@ -453,7 +464,8 @@ class TranslatedDigitPattern(TranslatedPattern):
 
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.DIGIT,
-                         defined_pattern=PATTERN.DIGIT)
+                         defined_pattern=PATTERN.DIGIT,
+                         root_name='non_whitespace')
 
     def is_subset_of(self, other):
         chk = other.is_digit() or other.is_digits()
@@ -500,7 +512,8 @@ class TranslatedDigitsPattern(TranslatedPattern):
 
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.DIGITS,
-                         defined_pattern=PATTERN.DIGITS)
+                         defined_pattern=PATTERN.DIGITS,
+                         root_name='non_whitespaces')
 
     def is_subset_of(self, other):
         chk = other.is_digits()
@@ -542,7 +555,8 @@ class TranslatedDigitsPattern(TranslatedPattern):
 class TranslatedNumberPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.NUMBER,
-                         defined_pattern=PATTERN.NUMBER)
+                         defined_pattern=PATTERN.NUMBER,
+                         root_name='non_whitespaces')
 
     def is_subset_of(self, other):
         chk = other.is_number() or other.is_mixed_number()
@@ -583,7 +597,8 @@ class TranslatedNumberPattern(TranslatedPattern):
 class TranslatedMixedNumberPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.MIXED_NUMBER,
-                         defined_pattern=PATTERN.MIXED_NUMBER)
+                         defined_pattern=PATTERN.MIXED_NUMBER,
+                         root_name='non_whitespaces')
 
     def is_subset_of(self, other):
         chk = other.is_mixed_number() or other.is_mixed_word() or other.is_mixed_words()
@@ -627,7 +642,8 @@ class TranslatedMixedNumberPattern(TranslatedPattern):
 class TranslatedLetterPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.LETTER,
-                         defined_pattern=PATTERN.LETTER)
+                         defined_pattern=PATTERN.LETTER,
+                         root_name='non_whitespace')
 
     def is_subset_of(self, other):
         chk = other.is_letter() or other.is_letters()
@@ -675,7 +691,8 @@ class TranslatedLetterPattern(TranslatedPattern):
 class TranslatedLettersPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.LETTERS,
-                         defined_pattern=PATTERN.LETTERS)
+                         defined_pattern=PATTERN.LETTERS,
+                         root_name='non_whitespaces')
 
     def is_subset_of(self, other):
         chk = other.is_letters() or other.is_word() or other.is_words()
@@ -719,7 +736,8 @@ class TranslatedLettersPattern(TranslatedPattern):
 class TranslatedAlphabetNumericPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.ALPHABET_NUMERIC,
-                         defined_pattern=PATTERN.ALPHABET_NUMERIC)
+                         defined_pattern=PATTERN.ALPHABET_NUMERIC,
+                         root_name='non_whitespace')
 
     def is_subset_of(self, other):
         chk = other.is_alphabet_numeric() or other.is_word() or other.is_words()
@@ -765,7 +783,8 @@ class TranslatedAlphabetNumericPattern(TranslatedPattern):
 class TranslatedPunctPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.PUNCT,
-                         defined_pattern=PATTERN.PUNCT)
+                         defined_pattern=PATTERN.PUNCT,
+                         root_name='non_whitespace')
 
     def is_subset_of(self, other):
         chk = other.is_symbol() or other.is_graph()
@@ -807,7 +826,8 @@ class TranslatedPunctPattern(TranslatedPattern):
 class TranslatedPunctsPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.PUNCTS,
-                         defined_pattern=PATTERN.PUNCTS)
+                         defined_pattern=PATTERN.PUNCTS,
+                         root_name='non_whitespaces')
 
     def is_subset_of(self, other):
         chk = other.is_symbols() or other.is_symbols_group()
@@ -859,7 +879,8 @@ class TranslatedPunctsGroupPattern(TranslatedPattern):
                          defined_patterns=defined_patterns,
                          ref_names=ref_names,
                          singular_name='puncts',
-                         singular_pattern=PATTERN.PUNCTS)
+                         singular_pattern=PATTERN.PUNCTS,
+                         root_name='non_whitespaces_or_group')
 
     def is_subset_of(self, other):
         chk = other.is_symbols_group() or other.is_mixed_word()
@@ -897,7 +918,8 @@ class TranslatedPunctsGroupPattern(TranslatedPattern):
 class TranslatedGraphPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.GRAPH,
-                         defined_pattern=PATTERN.GRAPH)
+                         defined_pattern=PATTERN.GRAPH,
+                         root_name='non_whitespace')
 
     def is_subset_of(self, other):
         chk = other.is_mixed_word() or other.is_mixed_words()
@@ -936,7 +958,8 @@ class TranslatedGraphPattern(TranslatedPattern):
 class TranslatedWordPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.WORD,
-                         defined_pattern=PATTERN.WORD)
+                         defined_pattern=PATTERN.WORD,
+                         root_name='non_whitespaces')
 
     def is_subset_of(self, other):
         chk = other.is_word() or other.is_words()
@@ -986,7 +1009,8 @@ class TranslatedWordsPattern(TranslatedPattern):
                          defined_patterns=defined_patterns,
                          ref_names=ref_names,
                          singular_name='word',
-                         singular_pattern=PATTERN.WORD)
+                         singular_pattern=PATTERN.WORD,
+                         root_name='non_whitespaces_or_group')
 
     def is_subset_of(self, other):
         chk = other.is_words() or other.is_mixed_words() or other.is_non_whitespaces_group()
@@ -1022,7 +1046,8 @@ class TranslatedWordsPattern(TranslatedPattern):
 class TranslatedMixedWordPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.MIXED_WORD,
-                         defined_pattern=PATTERN.MIXED_WORD)
+                         defined_pattern=PATTERN.MIXED_WORD,
+                         root_name='non_whitespaces')
 
     def is_subset_of(self, other):
         chk = other.is_mixed_word() or other.is_mixed_words()
@@ -1073,7 +1098,8 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
                          defined_patterns=defined_patterns,
                          ref_names=ref_names,
                          singular_name='mixed_word',
-                         singular_pattern=PATTERN.MIXED_WORD)
+                         singular_pattern=PATTERN.MIXED_WORD,
+                         root_name='non_whitespaces_or_group')
 
     def is_subset_of(self, other):
         chk = other.is_mixed_words() or other.is_non_whitespaces_group()
@@ -1108,7 +1134,8 @@ class TranslatedMixedWordsPattern(TranslatedPattern):
 class TranslatedNonWhitespacePattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.NON_WHITESPACE,
-                         defined_pattern=PATTERN.NON_WHITESPACE)
+                         defined_pattern=PATTERN.NON_WHITESPACE,
+                         root_name='non_whitespace')
 
     def is_subset_of(self, other):
         chk = other.is_non_whitespace() or other.is_non_whitespaces()
@@ -1148,7 +1175,8 @@ class TranslatedNonWhitespacePattern(TranslatedPattern):
 class TranslatedNonWhitespacesPattern(TranslatedPattern):
     def __init__(self, data, *other):
         super().__init__(data, *other, name=TEXT.NON_WHITESPACES,
-                         defined_pattern=PATTERN.NON_WHITESPACES)
+                         defined_pattern=PATTERN.NON_WHITESPACES,
+                         root_name='non_whitespaces')
 
     def is_subset_of(self, other):
         chk = other.is_non_whitespaces() or other.is_non_whitespaces_group()
@@ -1196,7 +1224,8 @@ class TranslatedNonWhitespacesGroupPattern(TranslatedPattern):
                          defined_patterns=defined_patterns,
                          ref_names=ref_names,
                          singular_name='non_whitespaces',
-                         singular_pattern=PATTERN.NON_WHITESPACES)
+                         singular_pattern=PATTERN.NON_WHITESPACES,
+                         root_name='non_whitespaces_or_group')
 
     def is_subset_of(self, other):
         chk = other.is_non_whitespaces_group()
