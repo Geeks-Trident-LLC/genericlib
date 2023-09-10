@@ -124,25 +124,27 @@ class SnippetElement(RuntimeException):
         return new_instance
 
     def to_regex(self):
-
         if not self.is_kept and not self.is_captured:
-            txt = '%s%s' % (self.value, self.trailing)
+            txt = f'{self.value}{self.trailing}'
             txt_pat = TextPattern(txt)
             return txt_pat
         else:
             pat = get_ref_pattern_by_name(self.name)
 
             if self.is_captured:
-                pat = '(?P<%s>%s)' % (self.var_name, pat)
+                if self.is_empty:
+                    pat = f'(?P<{self.var_name}>({pat})|)'
+                else:
+                    pat = f'(?P<{self.var_name}>{pat})'
+            else:
+                if self.is_empty:
+                    pat = f'(({pat})|)'
 
             if self.is_empty:
                 if self.trailing:
-                    if re.match(PATTERN.SPACESATEOS, self.trailing):
-                        pat = '(%s)?(%s)?' % (pat, TextPattern(self.trailing))
-                    else:
-                        pat = '(%s)?%s' % (pat, TextPattern(self.trailing))
-                else:
-                    pat = '(%s)?' % pat
+                    is_space = bool(re.match(r' +$', self.trailing))
+                    trailing_pat = ' *' if is_space else r'\s*'
+                    pat = f'{pat}{trailing_pat}'
             else:
                 pat = pat + TextPattern(self.trailing)
             return pat
@@ -150,18 +152,24 @@ class SnippetElement(RuntimeException):
     def to_template_snippet(self):
 
         if not self.is_kept and not self.is_captured:
-            txt = '%s%s' % (self.value, self.trailing)
+            txt = f'{self.value}{self.trailing}'
             return txt
         else:
             if self.is_captured:
-                tmpl_snippet = '%s(var_%s)' % (self.name, self.var_name)
+                if self.is_empty:
+                    tmpl_snippet = f'{self.name}(var_{self.var_name}, or_empty)'
+                else:
+                    tmpl_snippet = f'{self.name}(var_{self.var_name})'
             else:
-                tmpl_snippet = '%s()' % self.name
+                tmpl_snippet = f'{self.name}(or_empty)' if self.is_empty else f'{self.name}()'
 
             if self.is_empty:
-                tmpl_snippet = '%s%s' % (tmpl_snippet, 'empty()')
-
-            tmpl_snippet = f"{tmpl_snippet}{self.trailing}"
+                if self.trailing:
+                    is_space = bool(re.match(r' +$', self.trailing))
+                    ws = 'zero_or_spaces()' if is_space else 'zero_or_whitespaces()'
+                    tmpl_snippet = f'{tmpl_snippet}{ws}'
+            else:
+                tmpl_snippet = f"{tmpl_snippet}{self.trailing}"
 
             return tmpl_snippet
 
