@@ -3,7 +3,7 @@ import re
 import pytest           # noqa
 from textwrap import dedent
 
-from genericlib.gp import verify, get_textfsm_template
+from genericlib.gp import verify
 from genericlib.gp import get_textfsm_template
 
 from genericlib.gpcategory import CategoryLinesPattern, CategoryLinePattern
@@ -15,17 +15,18 @@ class TestCategoryLinesPattern:
     @pytest.mark.parametrize(
         "test_data,expected_pattern,expected_result",
         [
-            # (
-            #     dedent("""
-            #         fruits: orange, peach
-            #         meat: pork
-            #         drinks: water
-            #     """).strip(),
-            #     (r'fruits: *(?P<fruits>[\x21-\x7e]+( [\x21-\x7e]+)+)(\r?\n|\r)'
-            #      r'meat: *(?P<meat>[a-zA-Z]+)(\r?\n|\r)'
-            #      r'drinks: *(?P<drinks>[a-zA-Z]+)'),
-            #     {'fruits': 'orange, peach', 'meat': 'pork', 'drinks': 'water'}
-            # ),
+            (
+                dedent("""
+                    fruits: orange, peach
+                    meat: pork
+                    drinks: water
+                """).strip(),
+                r"fruits: *(?P<fruits>[\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)+)(\r?\n|\r)"    # noqa
+                r"meat: *(?P<meat>[a-zA-Z]+)(\r?\n|\r)"
+                r"drinks: *(?P<drinks>[a-zA-Z]+)"
+                ,
+                {'fruits': 'orange, peach', 'meat': 'pork', 'drinks': 'water'}
+            ),
             (
                 dedent("""
                     blab blab 1 - +++ ***
@@ -34,11 +35,11 @@ class TestCategoryLinesPattern:
                     meat: pork
                     drinks: water
                 """).strip(),
-                (r'blab blab 1 - \+{2,} \*{2,}(\r?\n|\r)'
-                 r'fruits: *(?P<fruits>[\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)+)(\r?\n|\r)'   # noqa
-                 r'blab blab 2 - \(\?P<\)(\r?\n|\r)'
-                 r'meat: *(?P<meat>[a-zA-Z]+)(\r?\n|\r)'
-                 r'drinks: *(?P<drinks>[a-zA-Z]+)'),
+                r'blab blab 1 - \+{2,} \*{2,}(\r?\n|\r)'
+                r'fruits: *(?P<fruits>[\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*( [\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*)+)(\r?\n|\r)'   # noqa
+                r'blab blab 2 - \(\?P<\)(\r?\n|\r)'
+                r'meat: *(?P<meat>[a-zA-Z]+)(\r?\n|\r)'
+                r'drinks: *(?P<drinks>[a-zA-Z]+)',
                 {'fruits': 'orange, peach', 'meat': 'pork', 'drinks': 'water'}
             ),
         ]

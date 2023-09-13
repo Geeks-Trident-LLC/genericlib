@@ -31,7 +31,7 @@ class GPCommon:
             is_number, index = Misc.try_to_get_number(item, return_type=int)
             total_lines_count = len(lines)
             if is_number:
-                return None if index >= total_lines_count - NUMBER.ONE else index
+                return None if index > total_lines_count - NUMBER.ONE else index
 
         return None
 

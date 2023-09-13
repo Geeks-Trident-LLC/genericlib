@@ -5,6 +5,7 @@ from regexpro import TextPattern
 from genericlib import STRING, PATTERN, NUMBER, Misc
 from genericlib.gp import LData, TranslatedPattern, RuntimeException
 from genericlib.gpiteractive import IterativeLinePattern
+from genericlib.gpcommon import GPCommon
 
 
 class BaseCategoryPattern(LData):
@@ -280,12 +281,17 @@ class CategoryLinePattern(BaseCategoryPattern):
 
 
 class CategoryLinesPattern(RuntimeException):
-    def __init__(self, *lines, options=None, count=1, separator=':'):
+    def __init__(self, *lines, options=None, count=1, separator=':',
+                 starting_from=None, ending_to=None):
         self.lines = Misc.get_list_of_lines(*lines)
         self.options = options or dict()
         self.count = count
         self.separator = separator
         self.kwargs = dict(count=self.count, separator=self.separator)
+        self.starting_from = starting_from
+        self.ending_to = ending_to
+        self.index_a = None
+        self.index_b = None
         self._lst = []
         self.process()
 
@@ -299,7 +305,16 @@ class CategoryLinesPattern(RuntimeException):
         return chk
 
     def process(self):
-        for index, line in enumerate(self.lines):
+        self.index_a = GPCommon.get_line_position_by(self.lines, self.starting_from)
+        self.index_b = GPCommon.get_line_position_by(self.lines, self.ending_to)
+
+        if self.index_a and self.index_b and self.index_a >= self.index_b:
+            self.index_b = None
+
+        start_index = self.index_a + 1 if self.index_a is not None else self.index_a
+        lines = self.lines[start_index:self.index_b]
+
+        for index, line in enumerate(lines):
             try:
                 kwargs = self.options.get(str(index), self.kwargs)
                 node = CategoryLinePattern(line, **kwargs)
@@ -334,5 +349,15 @@ class CategoryLinesPattern(RuntimeException):
                 result.append(item.to_template_snippet())
             else:
                 result.append(item)
-        tmpl_snippet = str.join(STRING.NEWLINE, result)
+
+        tmpl_snippet = Misc.join_string(*result, separator=STRING.NEWLINE)
+
+        if self.index_a is not None:
+            line_snippet = GPCommon.get_fixed_line_snippet(self.lines, index=self.index_a)
+            tmpl_snippet = f'{line_snippet} -> Table\nTable\n{tmpl_snippet}'
+
+        if self.index_b is not None:
+            line_snippet = GPCommon.get_fixed_line_snippet(self.lines, index=self.index_b)
+            tmpl_snippet = f'{tmpl_snippet}\n{line_snippet} -> EOF'
+
         return tmpl_snippet
