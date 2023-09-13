@@ -2,8 +2,10 @@ import operator as op
 import re
 
 from regexpro import TextPattern
+from regexpro import LinePattern
 
 from genericlib import Misc, STRING, Wildcard, NUMBER, PATTERN
+from genericlib import Text
 from genericlib.gp import RuntimeException, TranslatedPattern
 
 
@@ -74,19 +76,16 @@ class TabularTextPattern(RuntimeException):
         if not line:
             return STRING.EMPTY
 
-        lst = []
-        for item in re.findall(PATTERN.NON_WHITESPACES, line.strip()):
-            if re.search(PATTERN.DIGIT, item):
-                tp_obj = TranslatedPattern.do_factory_create(item)
-                item_snippet = tp_obj.get_template_snippet()
-                lst.append(item_snippet)
-            else:
-                lst.append(item)
-        snippet = Misc.join_string(*lst, sep=STRING.DOUBLE_SPACES)
-        is_leading = Misc.is_leading_line(line)
-        is_trailing = Misc.is_trailing_line(line)
-        snippet = 'start(%s) %s' % ('space' if is_leading else '', snippet)
-        snippet = '%s end(%s)' % (snippet, 'space' if is_trailing else '')
+        lst = Text(line.strip()).do_finditer_split(PATTERN.NON_WHITESPACES)
+        for i, item in enumerate(lst):
+            if item.strip():
+                factory = TranslatedPattern.do_factory_create(item)
+                if factory.name in ['digit', 'digits', 'number', 'mixed_number']:
+                    lst[i] = factory.get_template_snippet()
+        snippet = Misc.join_string(*lst)
+        leading = Misc.get_leading_line(line)
+        trailing = Misc.get_trailing_line(line)
+        snippet = f'{leading}{snippet}{trailing}'
 
         return snippet
 
@@ -147,18 +146,26 @@ class TabularTextPattern(RuntimeException):
     def to_template_snippet(self):
         tmpl_snippet = self.tabular_parser.to_template_snippet() if self else STRING.EMPTY
 
+        if not tmpl_snippet.strip():
+            return tmpl_snippet
+
+        lines = tmpl_snippet.splitlines()
+        first_line = lines[0]
         if self.index_a is not None:
             line_snippet = self.get_fixed_line_snippet(index=self.index_a)
             if line_snippet:
-                addition = STRING.EMPTY if self.is_excluding_from else 'Continue '
-                fmt = '{} -> {}Table\nTable\n{}'
-                tmpl_snippet = fmt.format(line_snippet, addition, tmpl_snippet)
+                if re.search(LinePattern(line_snippet), first_line):
+                    tmpl_snippet = Misc.join_string(*lines[1:], separator='\n')
+                tmpl_snippet = f'{line_snippet} -> Table\nTable\n{tmpl_snippet}'
 
+        lines = tmpl_snippet.splitlines()
+        last_line = lines[-1]
         if self.index_b is not None:
             line_snippet = self.get_fixed_line_snippet(index=self.index_b)
             if line_snippet:
-                fmt = '{}\n{} -> EOF'
-                tmpl_snippet = fmt.format(tmpl_snippet, line_snippet)
+                if re.search(LinePattern(line_snippet), last_line):
+                    tmpl_snippet = Misc.join_string(*lines[:-1], separator='\n')
+                tmpl_snippet = f'{tmpl_snippet}\n{line_snippet} -> EOF'
 
         return tmpl_snippet
 

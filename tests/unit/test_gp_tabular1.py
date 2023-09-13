@@ -1,17 +1,5 @@
-import re
-
 import pytest           # noqa
 from textwrap import dedent
-
-from genericlib import Misc
-from genericlib import MiscObject
-
-from genericlib import get_data_as_tabular
-
-from genericlib.gp import verify
-from genericlib.gp import get_textfsm_template
-
-from genericlib.gptabular import TabularTextPatternByVarColumns
 from genericlib.gptabular import TabularTextPattern
 
 
