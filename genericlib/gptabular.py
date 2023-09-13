@@ -13,7 +13,6 @@ class TabularTextPattern(RuntimeException):
     def __init__(self, *lines, divider='', columns_count=0, col_widths=None,
                  header_names=None, headers_data=None, custom_headers_data='',
                  starting_from=None, ending_to=None,
-                 excluding_from=None, excluding_to=None,
                  is_headers_row=True):
         self.lines = Misc.get_list_of_lines(*lines)
         self.kwargs = dict(
@@ -28,14 +27,10 @@ class TabularTextPattern(RuntimeException):
 
         self.starting_from = starting_from
         self.ending_to = ending_to
-        self.excluding_from = excluding_from
-        self.excluding_to = excluding_to
         self.tabular_parser = None
 
         self.index_a = None
         self.index_b = None
-        self.is_excluding_from = False
-        self.is_excluding_to = False
 
         self.prepare_col_widths()
         self.process()
@@ -118,25 +113,10 @@ class TabularTextPattern(RuntimeException):
             self.raise_runtime_error(msg=fmt % col_widths)
 
     def process(self):
-        index_a = self.get_line_position_by(self.starting_from)
-        self.index_a = index_a
-        if index_a is None:
-            index_a = self.get_line_position_by(self.excluding_from)
-            if index_a is not None:
-                self.index_a = index_a
-                self.is_excluding_from = True
-                index_a = index_a + NUMBER.ONE
+        self.index_a = self.get_line_position_by(self.starting_from)
+        self.index_b = self.get_line_position_by(self.ending_to)
 
-        index_b = self.get_line_position_by(self.ending_to)
-        self.index_b = index_b
-        if index_b is None:
-            index_b = self.get_line_position_by(self.excluding_to)
-            if index_b is not None:
-                self.index_b = index_b
-                self.is_excluding_to = True
-                index_b = index_b - NUMBER.ONE
-
-        lines = self.lines[index_a:index_b]
+        lines = self.lines[self.index_a:self.index_b]
         self.tabular_parser = TabularTextPatternByVarColumns(*lines, **self.kwargs)
 
     def to_regex(self):
