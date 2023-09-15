@@ -109,8 +109,6 @@ class TabularTextPatternByVarColumns(RuntimeException):
     def __init__(self, *lines, divider='', columns_count=0, col_widths=None,
                  header_names=None, headers_data=None, custom_headers_data='',
                  is_headers_row=True, **kwargs):
-        self._is_leading = None
-        self._is_trailing = None
         self._is_start_with_divider = None
         self._is_end_with_divider = None
 
@@ -133,30 +131,6 @@ class TabularTextPatternByVarColumns(RuntimeException):
 
     def __len__(self):
         return bool(self.columns_count)
-
-    @property
-    def is_leading(self):
-        if not self.total_lines:
-            return False
-
-        if self._is_leading is None:
-            for line in self.lines:
-                self._is_leading = Misc.is_leading_line(line)
-                if self._is_leading:
-                    break
-        return self._is_leading
-
-    @property
-    def is_trailing(self):
-        if not self.total_lines:
-            return False
-
-        if self._is_trailing is None:
-            for line in self.lines:
-                self._is_trailing = Misc.is_trailing_line(line)
-                if self._is_trailing:
-                    break
-        return self._is_trailing
 
     @property
     def is_divider_a_symbol(self):
@@ -404,7 +378,6 @@ class TabularTextPatternByVarColumns(RuntimeException):
                 *self.lines, ref_row=ref_row, divider=self.divider,
                 header_names=header_names,
                 raw_headers_data=self.raw_headers_data,
-                is_leading=self.is_leading, is_trailing=self.is_trailing,
                 is_start_with_divider=self.is_start_with_divider,
                 is_end_with_divider=self.is_end_with_divider,
                 is_headers_row=self.is_headers_row
@@ -465,7 +438,6 @@ class TabularTextPatternByVarColumns(RuntimeException):
 class TabularTable(RuntimeException):
     def __init__(self, *lines, ref_row=None, divider='', col_widths=None,
                  header_names=None, raw_headers_data=None,
-                 is_leading=False, is_trailing=False,
                  is_start_with_divider=False, is_end_with_divider=False,
                  is_headers_row=True):
         self.lines = Misc.get_list_of_lines(*lines)
@@ -479,8 +451,10 @@ class TabularTable(RuntimeException):
         self.header_columns = []
         self.header_names = header_names or []
         self.raw_headers_data = raw_headers_data or []
-        self.is_leading = is_leading
-        self.is_trailing = is_trailing
+
+        self._is_leading = None
+        self._is_trailing = None
+
         self.is_start_with_divider = is_start_with_divider
         self.is_end_with_divider = is_end_with_divider
         self.is_headers_row = is_headers_row
@@ -496,6 +470,25 @@ class TabularTable(RuntimeException):
         cls_name = Misc.get_instance_class_name(self)
         result = fmt % (cls_name, len(self.rows), len(self.columns))
         return result
+
+    @property
+    def is_leading(self):
+        if self._is_leading is None:
+            if self._is_leading is None:
+                for line in self.lines:
+                    self._is_leading = Misc.is_leading_line(line)
+                    if self._is_leading:
+                        break
+        return self._is_leading
+
+    @property
+    def is_trailing(self):
+        if self._is_trailing is None:
+            for line in self.lines:
+                self._is_trailing = Misc.is_trailing_line(line)
+                if self._is_trailing:
+                    break
+        return self._is_trailing
 
     @property
     def rows_count(self):
@@ -611,9 +604,11 @@ class TabularTable(RuntimeException):
             does_prev_col_has_empty_cell = column.has_empty_cell
 
         self.is_start_with_divider and lst.insert(NUMBER.ZERO, divider_leading_pat)
-        self.is_leading and lst.insert(NUMBER.ZERO, PATTERN.ZOSPACES)
+        if self.is_leading:
+            lst.insert(NUMBER.ZERO, PATTERN.ZOSPACES)
         self.is_end_with_divider and lst.append(divider_trailing_pat)
-        self.is_trailing and lst.append(PATTERN.ZOSPACES)
+        if self._is_trailing:
+            lst.append(PATTERN.ZOSPACES)
         pattern = Misc.join_string(*lst)
         return pattern
 
