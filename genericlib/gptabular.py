@@ -3,7 +3,7 @@ import re
 
 from regexpro import LinePattern
 
-from genericlib import Misc, STRING, NUMBER, PATTERN
+from genericlib import Misc, STRING, NUMBER, PATTERN, INDEX
 from genericlib.gp import RuntimeException, TranslatedPattern
 
 from genericlib.gpcommon import GPCommon
@@ -440,7 +440,7 @@ class TabularTable(RuntimeException):
                  header_names=None, raw_headers_data=None,
                  is_start_with_divider=False, is_end_with_divider=False,
                  is_headers_row=True):
-        self.lines = Misc.get_list_of_lines(*lines)
+        self.lines = self.prepare_lines(lines)
         self.ref_row = ref_row
         self.divider = divider
         self.col_widths = col_widths
@@ -454,6 +454,9 @@ class TabularTable(RuntimeException):
 
         self._is_leading = None
         self._is_trailing = None
+
+        self.first_column_data_info = dict()
+        self.last_column_data_lst = []
 
         self.is_start_with_divider = is_start_with_divider
         self.is_end_with_divider = is_end_with_divider
@@ -499,6 +502,54 @@ class TabularTable(RuntimeException):
     def columns_count(self):
         total = len(self.columns)
         return total
+
+    def prepare_lines(self, lines):
+        oneline_pat = r'^ *< *user[ ._+-]marker[ ._+-]one[ ._+-]?line *>'
+        multiline_pat = r'^ *< *user[ ._+-]marker[ ._+-]multi[ ._+-]?line *>'
+
+        lst = []
+        is_continue = False
+        all_lines = Misc.get_list_of_lines(*lines)
+        total_lines = len(all_lines)
+        baseline_spacers_count = None
+        index = 0
+        while index < total_lines:
+            line = all_lines[index]
+            if is_continue:
+                if baseline_spacers_count is None:
+                    baseline_spacers_count = len(Misc.get_leading_line(line))
+                    self.last_column_data_lst.append(line.lstrip())
+                    index += 1
+                    continue
+                else:
+                    spacers_count = len(Misc.get_leading_line(line))
+                    seventy_pct = 0.7
+                    if spacers_count > seventy_pct * baseline_spacers_count:
+                        self.last_column_data_lst.append(line.lstrip())
+                        index += 1
+                        continue
+                    else:
+                        is_continue = False
+                        baseline_spacers_count = None
+
+            match1 = re.match(oneline_pat, line)
+            match2 = re.match(multiline_pat, line)
+            if match1:
+                first_col_data = re.sub(oneline_pat, '', line)
+                self.first_column_data_info[index] = first_col_data
+                next_line = re.sub(oneline_pat, '', all_lines[index + NUMBER.ONE])
+                lst.append(next_line)
+                index += 1
+            elif match2:
+                new_line = re.sub(multiline_pat, '', line)
+                lst.append(new_line)
+                is_continue = True
+            else:
+                lst.append(line)
+
+            index += 1
+
+        return lst
 
     def add_data_to_rows(self):
         self.rows.clear()
