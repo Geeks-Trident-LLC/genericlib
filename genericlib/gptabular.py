@@ -440,6 +440,9 @@ class TabularTable(RuntimeException):
                  header_names=None, raw_headers_data=None,
                  is_start_with_divider=False, is_end_with_divider=False,
                  is_headers_row=True):
+        self.first_column_data_info = dict()
+        self.last_column_data_info = dict()
+
         self.lines = self.prepare_lines(lines)
         self.ref_row = ref_row
         self.divider = divider
@@ -454,9 +457,6 @@ class TabularTable(RuntimeException):
 
         self._is_leading = None
         self._is_trailing = None
-
-        self.first_column_data_info = dict()
-        self.last_column_data_lst = []
 
         self.is_start_with_divider = is_start_with_divider
         self.is_end_with_divider = is_end_with_divider
@@ -478,10 +478,13 @@ class TabularTable(RuntimeException):
     def is_leading(self):
         if self._is_leading is None:
             if self._is_leading is None:
-                for line in self.lines:
-                    self._is_leading = Misc.is_leading_line(line)
-                    if self._is_leading:
-                        break
+                lst = []
+                for index, line in enumerate(self.lines):
+                    if index in self.first_column_data_info:
+                        lst.append(False)
+                    else:
+                        lst.append(Misc.is_leading_line(line))
+                self._is_leading = any(lst)
         return self._is_leading
 
     @property
@@ -503,9 +506,18 @@ class TabularTable(RuntimeException):
         total = len(self.columns)
         return total
 
+    @property
+    def first_column(self):
+        first_col = self.columns[INDEX.ZERO]
+        return first_col
+
+    @property
+    def last_column(self):
+        last_col = self.columns[-INDEX.ONE]
+        return last_col
+
     def prepare_lines(self, lines):
-        oneline_pat = r'^ *< *user[ ._+-]marker[ ._+-]one[ ._+-]?line *>'
-        multiline_pat = r'^ *< *user[ ._+-]marker[ ._+-]multi[ ._+-]?line *>'
+        pattern = r'^ *< *user[ ._+-]marker[ ._+-](?P<case>one|multi)[ ._+-]?line *>'
 
         lst = []
         is_continue = False
@@ -518,32 +530,58 @@ class TabularTable(RuntimeException):
             if is_continue:
                 if baseline_spacers_count is None:
                     baseline_spacers_count = len(Misc.get_leading_line(line))
-                    self.last_column_data_lst.append(line.lstrip())
+                    lst_data = self.last_column_data_info.get('lst_data', [])
+                    self.last_column_data_info.update(lst_data=lst_data)
+                    lst_data.append(line.lstrip())
+                    spacers = self.last_column_data_info.get('spacers', [])
+                    self.last_column_data_info.update(spacers=spacers)
+                    if not spacers:
+                        left_spacer = baseline_spacers_count - 6
+                        spacers.append(2 if left_spacer <= 0 else left_spacer)
+                        spacers.append(baseline_spacers_count)
+                    else:
+                        left_spacer = min(spacers[0], baseline_spacers_count - 6)
+                        spacers[0] = 2 if left_spacer <= 0 else left_spacer
+                        spacers[1] = max(spacers[1], baseline_spacers_count)
                     index += 1
                     continue
                 else:
                     spacers_count = len(Misc.get_leading_line(line))
-                    seventy_pct = 0.7
-                    if spacers_count > seventy_pct * baseline_spacers_count:
-                        self.last_column_data_lst.append(line.lstrip())
+                    if spacers_count > .8 * baseline_spacers_count:
+                        lst_data = self.last_column_data_info.get('lst_data', [])
+                        self.last_column_data_info.update(lst_data=lst_data)
+                        lst_data.append(line.lstrip())
+                        spacers = self.last_column_data_info.get('spacers', [])
+                        self.last_column_data_info.update(spacers=spacers)
+                        if not spacers:
+                            left_spacer = spacers_count - 6
+                            spacers.append(2 if left_spacer <= 0 else left_spacer)
+                            spacers.append(baseline_spacers_count)
+                        else:
+                            left_spacer = min(spacers[0], spacers_count - 6)
+                            spacers[0] = 2 if left_spacer <= 0 else left_spacer
+                            spacers[1] = max(spacers[1], spacers_count)
                         index += 1
                         continue
                     else:
                         is_continue = False
                         baseline_spacers_count = None
 
-            match1 = re.match(oneline_pat, line)
-            match2 = re.match(multiline_pat, line)
-            if match1:
-                first_col_data = re.sub(oneline_pat, '', line)
-                self.first_column_data_info[index] = first_col_data
-                next_line = re.sub(oneline_pat, '', all_lines[index + NUMBER.ONE])
-                lst.append(next_line)
-                index += 1
-            elif match2:
-                new_line = re.sub(multiline_pat, '', line)
-                lst.append(new_line)
-                is_continue = True
+            match = re.match(pattern, line)
+            if match:
+                is_oneline = match.group('case').lower() == 'one'
+                if is_oneline:
+                    first_col_data = re.sub(pattern, '', line)
+                    next_line = re.sub(pattern, '', all_lines[index + NUMBER.ONE])
+                    leading = Misc.get_leading_line(next_line)
+                    self.first_column_data_info[len(lst)] = first_col_data
+                    self.first_column_data_info.update(spacers_count=len(leading))
+                    lst.append(next_line)
+                    index += 1
+                else:
+                    new_line = re.sub(pattern, '', line)
+                    lst.append(new_line)
+                    is_continue = True
             else:
                 lst.append(line)
 
@@ -553,8 +591,11 @@ class TabularTable(RuntimeException):
 
     def add_data_to_rows(self):
         self.rows.clear()
-        for line in self.lines:
+        for index, line in enumerate(self.lines):
             row = TabularRow(line, ref_row=self.ref_row)
+            if index in self.first_column_data_info:
+                first_cell = row.cells[0]
+                first_cell.set_data(self.first_column_data_info.get(index))
             self.rows.append(row)
 
     def add_data_to_columns(self):
@@ -577,6 +618,9 @@ class TabularTable(RuntimeException):
             is_created = True
         for col in self.columns:
             col.analyze_and_update_alignment()
+
+        last_column = self.columns[-INDEX.ONE]
+        last_column.add_extra_data(self.last_column_data_info.get('lst_data'))
 
     def to_list_of_dict(self):
         lst_of_dict = []
@@ -681,6 +725,7 @@ class TabularTable(RuntimeException):
 
         lst = []
         other_lst = []
+        another_lst = []
         lst_of_column_status = []
         lst_of_snippet = []
         does_prev_col_has_empty_cell = False
@@ -692,21 +737,27 @@ class TabularTable(RuntimeException):
         pre_leading_data = 'start(space) ' if self.is_leading else 'start() '
         post_trailing_data = ' end(space) -> record' if self.is_trailing else ' end() -> record'
 
-        for column in self.columns:
+        for index, column in enumerate(self.columns):
             has_empty_cell = does_prev_col_has_empty_cell or column.has_empty_cell
             lst_of_column_status.append(column.has_empty_cell)
 
             if is_divider:
                 lst and lst.append(divider_snippet)
                 other_lst and other_lst.append(divider_snippet)
+                another_lst and another_lst.append(divider_snippet)
             else:
                 sep_snippet = STRING.SPACE_CHAR if has_empty_cell else STRING.DOUBLE_SPACES
                 lst and lst.append(sep_snippet)
                 other_lst and other_lst.append(sep_snippet)
+                another_lst and another_lst.append(STRING.DOUBLE_SPACES)
 
-            col_snippet = column.to_template_snippet()
+            if index == self.columns_count - NUMBER.ONE and self.last_column_data_info:
+                col_snippet = column.to_template_snippet(added_list_meta_data=True)
+            else:
+                col_snippet = column.to_template_snippet()
             lst.append(col_snippet)
             other_lst.append(col_snippet)
+            another_lst.append(col_snippet)
             does_prev_col_has_empty_cell = column.has_empty_cell
 
         self.is_start_with_divider and lst.insert(NUMBER.ZERO, divider_leading_snippet)
@@ -715,10 +766,32 @@ class TabularTable(RuntimeException):
         lst.append(post_trailing_data)
 
         headers_snippet = self.get_header_lines_snippet()
-        main_snippet = Misc.join_string(*lst)
-
         self.is_headers_row and headers_snippet and lst_of_snippet.append(headers_snippet)
-        main_snippet and lst_of_snippet.append(main_snippet)
+
+        if self.last_column_data_info:
+            first_snippet = self.first_column.to_template_snippet(to_bared_snippet=True)
+            lst_of_snippet.append(f'{pre_leading_data}{first_snippet}zero_or_spaces() -> continue.record')
+            line_snippet = Misc.join_string(*another_lst)
+            lst_of_snippet.append(f'{pre_leading_data}{line_snippet} end(space) -> continue')
+            last_snippet = self.last_column.to_template_snippet(skipped_empty=True, added_list_meta_data=True)
+            m, n = self.last_column_data_info.get('spacers')
+            spacer_snippet = f'start() space(repetition_{m}_{n+2})  {last_snippet} end(space) -> continue'
+            lst_of_snippet.append(spacer_snippet)
+
+        if self.first_column_data_info:
+            n = self.first_column_data_info.get('spacers_count')
+            m = 1 if n - 3 <= 0 else n - 3
+            space_snippet = f'space(repetition_{m}_{n+1})'
+            first_snippet = self.first_column.to_template_snippet(skipped_empty=True)
+            first_snippet = f'{pre_leading_data}{first_snippet} end(space) -> Next'
+            next_snippet = Misc.join_string(space_snippet, *another_lst[INDEX.ONE:])
+            next_snippet = f'{pre_leading_data}{next_snippet}{post_trailing_data}'
+            lst_of_snippet.append(first_snippet)
+            lst_of_snippet.append(next_snippet)
+
+        if not self.last_column_data_info:
+            main_snippet = Misc.join_string(*lst)
+            main_snippet and lst_of_snippet.append(main_snippet)
 
         index = NUMBER.ONE
         for col_status in lst_of_column_status[::-NUMBER.ONE][:-NUMBER.ONE]:
@@ -866,8 +939,12 @@ class TabularCell(RuntimeException):
 
     @property
     def width(self):
+        base_width = self.right - self.left
         width = len(self.data)
-        return width
+        if base_width > 0:
+            return width if width < base_width else base_width
+        else:
+            return width
 
     @property
     def is_containing_spaces(self):
@@ -970,6 +1047,11 @@ class TabularCell(RuntimeException):
 
         self.inner_left = self.left + len(self.leading)
         self.inner_right = self.right - len(self.trailing)
+
+    def set_data(self, data):
+        self.data = data
+        self._leading = None
+        self._trailing = None
 
 
 class TabularRow(RuntimeException):
@@ -1149,6 +1231,9 @@ class TabularColumn:
         self.left_column = left_column
         self.right_column = right_column
         self.is_last = is_last
+
+        self.extra_data = None
+
         self.index = index
         self.name = name or 'col%s' % index
         self.cells = []
@@ -1223,6 +1308,9 @@ class TabularColumn:
         chk = any(cell.is_empty for cell in self.cells)
         return chk
 
+    def add_extra_data(self, extra_data):
+        self.extra_data = extra_data
+
     def append_cell(self, cell):
         self.cells.append(cell)
 
@@ -1244,6 +1332,7 @@ class TabularColumn:
             return STRING.EMPTY
 
         lst_of_txt = [cell.text for cell in self.cells if cell.text]
+        self.extra_data and lst_of_txt.extend(self.extra_data)
         node = TranslatedPattern.do_factory_create(*lst_of_txt)
         pattern = node.get_regex_pattern(var=self.name)
         if node.is_group() and not self.is_last:
@@ -1258,13 +1347,23 @@ class TabularColumn:
             pattern = fmt % (first, self.width, self.max_width, last[:-NUMBER.ONE])
         return pattern
 
-    def to_template_snippet(self):
+    def to_template_snippet(self, added_list_meta_data=False,
+                            skipped_empty=False,
+                            to_bared_snippet=False):
         if not self:
             return STRING.EMPTY
 
         lst_of_txt = [cell.text for cell in self.cells if cell.text]
+        self.extra_data and lst_of_txt.extend(self.extra_data)
         node = TranslatedPattern.do_factory_create(*lst_of_txt)
-        tmpl_snippet = node.get_template_snippet(var=self.name)
+        kwargs = dict() if to_bared_snippet else dict(var=self.name)
+        tmpl_snippet = node.get_template_snippet(**kwargs)
+
+        if to_bared_snippet:
+            return tmpl_snippet
+
+        if skipped_empty and not added_list_meta_data:
+            return tmpl_snippet
 
         if node.is_group() and not self.is_last:
             max_items_count = max(cell.items_count for cell in self.cells)
@@ -1275,7 +1374,10 @@ class TabularColumn:
                 else:
                     fmt = '%s, at_most_%s_group_occurrences)'
                 tmpl_snippet = node.singular_name + '(' + tmpl_snippet.split('(', 1)[-1]
-                tmpl_snippet = fmt % (tmpl_snippet[:-NUMBER.ONE], occurrence)
+                tmpl_snippet = fmt % (tmpl_snippet[:-INDEX.ONE], occurrence)
+
+        if added_list_meta_data:
+            tmpl_snippet = '%s, meta_data_list)' % tmpl_snippet[:-INDEX.ONE]
 
         if self.has_empty_cell:
             optional_flag = 'or_either_repeating_%s_%s_spaces' % (self.width, self.max_width)
