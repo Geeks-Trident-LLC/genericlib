@@ -462,6 +462,11 @@ class TabularTable(RuntimeException):
         self.is_end_with_divider = is_end_with_divider
         self.is_headers_row = is_headers_row
 
+        self.is_divider = bool(self.divider.strip())
+        self.divider_snippet = 'zero_or_spaces()%szero_or_spaces()' % re.escape(self.divider)
+        self.divider_leading_snippet = '%szero_or_spaces()' % re.escape(self.divider)
+        self.divider_trailing_snippet = 'zero_or_spaces()%s' % re.escape(self.divider)
+
         self.process()
 
     def __len__(self):
@@ -479,11 +484,14 @@ class TabularTable(RuntimeException):
         if self._is_leading is None:
             if self._is_leading is None:
                 lst = []
-                for index, line in enumerate(self.lines):
-                    if index in self.first_column_data_info:
-                        lst.append(False)
-                    else:
-                        lst.append(Misc.is_leading_line(line))
+                for cell in self.first_column.cells:
+                    if cell.text.strip():
+                        lst.append(Misc.is_leading_line(cell.data))
+                for key in self.first_column_data_info:
+                    if isinstance(key, int):
+                        data = self.first_column_data_info.get(key)
+                        lst.append(Misc.is_leading_line(data))
+
                 self._is_leading = any(lst)
         return self._is_leading
 
@@ -576,10 +584,17 @@ class TabularTable(RuntimeException):
                     leading = Misc.get_leading_line(next_line)
                     self.first_column_data_info[len(lst)] = first_col_data
                     self.first_column_data_info.update(spacers_count=len(leading))
+                    indices = self.first_column_data_info.get('indices', [])
+                    self.first_column_data_info.update(indices=indices)
+                    indices.append(next_line)
                     lst.append(next_line)
                     index += 1
                 else:
+                    indices = self.last_column_data_info.get('indices', [])
+                    self.last_column_data_info.update(indices=indices)
+
                     new_line = re.sub(pattern, '', line)
+                    indices.append(new_line)
                     lst.append(new_line)
                     is_continue = True
             else:
@@ -683,13 +698,12 @@ class TabularTable(RuntimeException):
 
         lst = []
         does_prev_col_has_empty_cell = False
-        is_divider = bool(self.divider.strip())
         divider_pat = ' *%s *' % re.escape(self.divider)
         divider_leading_pat = '%s *' % re.escape(self.divider)
         divider_trailing_pat = ' *%s' % re.escape(self.divider)
         for column in self.columns:
             has_empty_cell = does_prev_col_has_empty_cell or column.has_empty_cell
-            if is_divider:
+            if self.is_divider:
                 lst and lst.append(divider_pat)
             else:
                 sep_pat = PATTERN.SPACE if has_empty_cell else PATTERN.SPACES
@@ -723,99 +737,211 @@ class TabularTable(RuntimeException):
         if not self:
             return STRING.EMPTY
 
-        lst = []
-        other_lst = []
-        another_lst = []
-        lst_of_column_status = []
         lst_of_snippet = []
-        does_prev_col_has_empty_cell = False
-        is_divider = bool(self.divider.strip())
-        divider_snippet = 'zero_or_spaces()%szero_or_spaces()' % re.escape(self.divider)
-        divider_leading_snippet = '%szero_or_spaces()' % re.escape(self.divider)
-        divider_trailing_snippet = 'zero_or_spaces()%s' % re.escape(self.divider)
-
-        pre_leading_data = 'start(space) ' if self.is_leading else 'start() '
-        post_trailing_data = ' end(space) -> record' if self.is_trailing else ' end() -> record'
-
-        for index, column in enumerate(self.columns):
-            has_empty_cell = does_prev_col_has_empty_cell or column.has_empty_cell
-            lst_of_column_status.append(column.has_empty_cell)
-
-            if is_divider:
-                lst and lst.append(divider_snippet)
-                other_lst and other_lst.append(divider_snippet)
-                another_lst and another_lst.append(divider_snippet)
-            else:
-                sep_snippet = STRING.SPACE_CHAR if has_empty_cell else STRING.DOUBLE_SPACES
-                lst and lst.append(sep_snippet)
-                other_lst and other_lst.append(sep_snippet)
-                another_lst and another_lst.append(STRING.DOUBLE_SPACES)
-
-            if index == self.columns_count - NUMBER.ONE and self.last_column_data_info:
-                col_snippet = column.to_template_snippet(added_list_meta_data=True)
-            else:
-                col_snippet = column.to_template_snippet()
-            lst.append(col_snippet)
-            other_lst.append(col_snippet)
-            another_lst.append(col_snippet)
-            does_prev_col_has_empty_cell = column.has_empty_cell
-
-        self.is_start_with_divider and lst.insert(NUMBER.ZERO, divider_leading_snippet)
-        lst.insert(NUMBER.ZERO, pre_leading_data)
-        self.is_end_with_divider and lst.append(divider_trailing_snippet)
-        lst.append(post_trailing_data)
-
         headers_snippet = self.get_header_lines_snippet()
         self.is_headers_row and headers_snippet and lst_of_snippet.append(headers_snippet)
-
-        if self.last_column_data_info:
-            first_snippet = self.first_column.to_template_snippet(to_bared_snippet=True)
-            lst_of_snippet.append(f'{pre_leading_data}{first_snippet}zero_or_spaces() -> continue.record')
-            line_snippet = Misc.join_string(*another_lst)
-            lst_of_snippet.append(f'{pre_leading_data}{line_snippet} end(space) -> continue')
-            last_snippet = self.last_column.to_template_snippet(skipped_empty=True, added_list_meta_data=True)
-            m, n = self.last_column_data_info.get('spacers')
-            spacer_snippet = f'start() space(repetition_{m}_{n+2})  {last_snippet} end(space) -> continue'
-            lst_of_snippet.append(spacer_snippet)
-
-        if self.first_column_data_info:
-            n = self.first_column_data_info.get('spacers_count')
-            m = 1 if n - 3 <= 0 else n - 3
-            space_snippet = f'space(repetition_{m}_{n+1})'
-            first_snippet = self.first_column.to_template_snippet(skipped_empty=True)
-            first_snippet = f'{pre_leading_data}{first_snippet} end(space) -> Next'
-            next_snippet = Misc.join_string(space_snippet, *another_lst[INDEX.ONE:])
-            next_snippet = f'{pre_leading_data}{next_snippet}{post_trailing_data}'
-            lst_of_snippet.append(first_snippet)
-            lst_of_snippet.append(next_snippet)
-
-        if not self.last_column_data_info:
-            main_snippet = Misc.join_string(*lst)
-            main_snippet and lst_of_snippet.append(main_snippet)
-
-        index = NUMBER.ONE
-        for col_status in lst_of_column_status[::-NUMBER.ONE][:-NUMBER.ONE]:
-            subsidiary_lst = other_lst[:-index]
-            if not col_status or not subsidiary_lst:
-                break
-
-            last_item = subsidiary_lst[-NUMBER.ONE]
-            if not re.match(r'\w+[(][^)]*[)]$', last_item):
-                subsidiary_lst.pop()
-                index += NUMBER.ONE
-
-            self.is_start_with_divider and subsidiary_lst.insert(NUMBER.ZERO, divider_leading_snippet)
-            subsidiary_lst.insert(NUMBER.ZERO, pre_leading_data)
-            self.is_end_with_divider and subsidiary_lst.append(divider_trailing_snippet)
-            subsidiary_lst.append(post_trailing_data)
-            subsidiary_snippet = Misc.join_string(*subsidiary_lst)
-            if subsidiary_snippet and subsidiary_snippet not in lst_of_snippet:
-                lst_of_snippet.append(subsidiary_snippet)
-            index += NUMBER.ONE
-
+        self.build_snippet_for_last_column_case(lst_of_snippet)
+        self.build_snippet_for_first_column_case(lst_of_snippet)
+        self.build_snippet_for_other_case(lst_of_snippet)
         template_snippet = Misc.join_string(*lst_of_snippet, sep=STRING.NEWLINE)
 
         return template_snippet
+
+    def build_snippet_for_first_column_case(self, lst_of_snippet):
+        if not self.first_column_data_info:
+            return
+
+        leading_snippet = 'start(space)' if self.is_leading else 'start()'
+        trailing_snippet = 'end(space) -> record' if self.is_trailing else 'end() -> record'
+
+        first_snippet = self.first_column.to_template_snippet(skipped_empty=True)
+        first_snippet = f'{leading_snippet} {first_snippet} end(space) -> Next'
+
+        indices = self.first_column_data_info.get('indices', [])
+        layouts = []
+        for row in self.rows:
+            if row.line in indices:
+                row.row_layout not in layouts and layouts.append(row.row_layout)
+
+        for layout in sorted(layouts, reverse=True):
+            lst = []
+            for index, bit in enumerate(list(layout)):
+                column = self.columns[index]
+                m, n = column.width, column.max_width
+                m = n - 2 if m == n else m
+                space_snippet = f'space(repetition_{m}_{n})'
+                kwargs = dict()
+                if self.last_column_data_info and index == self.columns_count - NUMBER.ONE:
+                    kwargs.update(added_list_meta_data=True)
+
+                col_snippet = column.to_template_snippet(**kwargs)
+                lst.append(col_snippet if int(bit) else space_snippet)
+
+            sep = self.divider_snippet if self.is_divider else STRING.DOUBLE_SPACES
+            next_snippet = Misc.join_string(*lst, sep=sep)
+            if self.is_divider:
+                next_snippet = f'{self.divider_leading_snippet}{next_snippet}{self.divider_trailing_snippet}'
+                next_snippet = f'start() {next_snippet} {trailing_snippet}'
+            else:
+                pat = r' +space[(]repetition_\d+_\d+[)] *$'
+                if re.search(pat, next_snippet):
+                    next_snippet = re.sub(pat, ' end(space)', next_snippet)
+                else:
+                    next_snippet = f'{next_snippet} {trailing_snippet}'
+
+                pat = r' *space[(]repetition_\d+_\d+[)] *'
+                if re.match(pat, next_snippet):
+                    next_snippet = f'start() {next_snippet}'
+                else:
+                    next_snippet = f'{leading_snippet} {next_snippet}'
+
+            pat = r' +(space[(]repetition_\d+_\d+[)]) +'
+            next_snippet = re.sub(pat, r' \1 ', next_snippet)
+
+            lst_of_snippet.append(first_snippet)
+            lst_of_snippet.append(next_snippet)
+
+    def build_snippet_for_last_column_case(self, lst_of_snippet):
+        if not self.last_column_data_info:
+            return
+
+        leading_snippet = 'start(space)' if self.is_leading else 'start()'
+
+        first_snippet = self.first_column.to_template_snippet(to_bared_snippet=True)
+        if self.is_divider:
+            first_snippet = f'{self.divider_leading_snippet}{first_snippet}'
+        lst_of_snippet.append(f'{leading_snippet} {first_snippet}zero_or_spaces() -> continue.record')
+
+        indices = self.last_column_data_info.get('indices', [])
+        layouts = []
+        for row in self.rows:
+            if row.line in indices:
+                row.row_layout not in layouts and layouts.append(row.row_layout)
+
+        for layout in sorted(layouts, reverse=True):
+            lst = []
+            for index, bit in enumerate(list(layout)):
+                column = self.columns[index]
+                m, n = column.width, column.max_width
+                m = n - 2 if m == n else m
+                space_snippet = f'space(repetition_{m}_{n})'
+
+                kwargs = dict()
+                if index == self.columns_count - NUMBER.ONE:
+                    kwargs.update(added_list_meta_data=True)
+                col_snippet = column.to_template_snippet(**kwargs)
+
+                if int(bit) or self.is_divider:
+                    lst.append(col_snippet if int(bit) else space_snippet)
+                else:
+                    if lst:
+                        last_item = lst[-INDEX.ONE]
+                        pat = r'space[(]repetition_(?P<m>\d+)_(?P<n>\d+)[)]$'
+                        match = re.match(pat, last_item)
+                        if match:
+                            m, n = int(match.group('m')), int(match.group('n'))
+                            m += column.width
+                            n += column.max_width - column.max_edge_leading_width
+                            m = n - 2 if m == n else m
+                            extend_space_snippet = f'space(repetition_{m}_{n})'
+                            lst.pop()
+                            lst.append(extend_space_snippet)
+                        else:
+                            lst.append(space_snippet)
+                    else:
+                        lst.append(space_snippet)
+
+            sep = self.divider_snippet if self.is_divider else STRING.DOUBLE_SPACES
+            line_snippet = Misc.join_string(*lst, sep=sep)
+            if self.is_divider:
+                line_snippet = f'{self.divider_leading_snippet}{line_snippet}{self.divider_trailing_snippet}'
+
+            pat = r' *space[(]repetition_\d+_\d+[)] *$'
+            if re.search(pat, line_snippet):
+                line_snippet = re.sub(pat, ' end(space) -> continue', line_snippet)
+            else:
+                line_snippet = f'{line_snippet} end(space) -> continue'
+
+            pat = r' *space[(]repetition_\d+_\d+[)] *'
+            if re.match(pat, line_snippet):
+                line_snippet = f'start() {line_snippet}'
+            else:
+                line_snippet = f'{leading_snippet} {line_snippet}'
+
+            pat = r' +(space[(]repetition_\d+_\d+[)]) +'
+            line_snippet = re.sub(pat, r' \1 ', line_snippet)
+            lst_of_snippet.append(line_snippet)
+
+        last_snippet = self.last_column.to_template_snippet(skipped_empty=True, added_list_meta_data=True)
+        m, n = self.last_column_data_info.get('spacers')
+        spacer_snippet = f'start() space(repetition_{m}_{n+4}) {last_snippet} end(space) -> continue'
+        lst_of_snippet.append(spacer_snippet)
+
+    def build_snippet_for_other_case(self, lst_of_snippet):
+
+        leading_snippet = 'start(space)' if self.is_leading else 'start()'
+        trailing_snippet = 'end(space) -> record' if self.is_trailing else 'end() -> record'
+
+        a_indices = self.first_column_data_info.get('indices', [])
+        b_indices = self.last_column_data_info.get('indices', [])
+        layouts = []
+        for row in self.rows:
+            if row.line in a_indices or row.line in b_indices:
+                continue
+            row.row_layout not in layouts and layouts.append(row.row_layout)
+
+        for layout in sorted(layouts, reverse=True):
+            lst = []
+            for index, bit in enumerate(list(layout)):
+                column = self.columns[index]
+                m, n = column.width, column.max_width
+                m = n - 2 if m == n and m > 1 else m
+                space_snippet = f'space(repetition_{m}_{n})'
+
+                kwargs = dict()
+                if self.last_column_data_info and index == self.columns_count - NUMBER.ONE:
+                    kwargs.update(added_list_meta_data=True)
+                col_snippet = column.to_template_snippet(**kwargs)
+
+                if int(bit) or self.is_divider:
+                    lst.append(col_snippet if int(bit) else space_snippet)
+                else:
+                    if lst:
+                        last_item = lst[-INDEX.ONE]
+                        pat = r'space[(]repetition_(?P<m>\d+)_(?P<n>\d+)[)]$'
+                        match = re.match(pat, last_item)
+                        if match:
+                            m, n = int(match.group('m')), int(match.group('n'))
+                            m += column.width
+                            n += column.max_width - column.max_edge_leading_width
+                            extend_space_snippet = f'space(repetition_{m}_{n})'
+                            lst.pop()
+                            lst.append(extend_space_snippet)
+                        else:
+                            lst.append(space_snippet)
+                    else:
+                        lst.append(space_snippet)
+
+            sep = self.divider_snippet if self.is_divider else STRING.DOUBLE_SPACES
+            line_snippet = Misc.join_string(*lst, sep=sep)
+            if self.is_divider:
+                line_snippet = f'{self.divider_leading_snippet}{line_snippet}{self.divider_trailing_snippet}'
+
+            pat = r' *space[(]repetition_\d+_\d+[)] *$'
+            if re.search(pat, line_snippet):
+                line_snippet = re.sub(pat, ' end(space) -> record', line_snippet)
+            else:
+                line_snippet = f'{line_snippet} {trailing_snippet}'
+
+            pat = r' *space[(]repetition_\d+_\d+[)] *'
+            if re.match(pat, line_snippet):
+                line_snippet = f'start() {line_snippet}'
+            else:
+                line_snippet = f'{leading_snippet} {line_snippet}'
+
+            pat = r' +(space[(]repetition_\d+_\d+[)]) +'
+            line_snippet = re.sub(pat, r' \1 ', line_snippet)
+            lst_of_snippet.append(line_snippet)
 
 
 class TabularCell(RuntimeException):
@@ -1060,6 +1186,7 @@ class TabularRow(RuntimeException):
         self.aligned = aligned
         self.line = line
         self.ref_row = ref_row
+        self.row_layout = ''
         self.cells = []
         self.process()
 
@@ -1109,7 +1236,9 @@ class TabularRow(RuntimeException):
         if self.ref_row:
             for ref_cell in self.ref_row.cells:
                 left_pos, right_pos = ref_cell.left, ref_cell.right
-                self.append_new_cell(left_pos, right_pos)
+                cell = self.append_new_cell(left_pos, right_pos)
+                bit = 1 if cell.text else 0
+                self.row_layout = f'{self.row_layout}{bit}'
 
     @classmethod
     def do_creating_ref_row(cls, line, pattern, lst, aligned=True):
@@ -1284,23 +1413,42 @@ class TabularColumn:
 
     @property
     def width(self):
-        width = min(cell.width for cell in self.cells if cell.width)
-        width = width or NUMBER.ONE
-        return width
+        widths = [cell.width for cell in self.cells if cell.width]
+        average = int(sum(widths) / len(widths))
+        average = average or NUMBER.ONE
+        return average
+
+    @property
+    def max_edge_trailing_width(self):
+        if self.right_column:
+            lst = []
+            for cell in self.right_column.cells:
+                if cell.data.strip():
+                    outer_trailing = Misc.get_leading_line(cell.data)
+                    lst.append(len(outer_trailing))
+            edge_width = max(lst)
+            edge_width = NUMBER.ZERO if self.right_column.width == edge_width else edge_width
+            return edge_width
+        else:
+            return NUMBER.ZERO
+
+    @property
+    def max_edge_leading_width(self):
+        if self.left_column:
+            lst = []
+            for cell in self.left_column.cells:
+                if cell.data.strip():
+                    outer_leading = Misc.get_trailing_line(cell.data)
+                    lst.append(len(outer_leading))
+            edge_width = max(lst)
+            edge_width = NUMBER.ZERO if self.left_column.width == edge_width else edge_width
+            return edge_width
+        else:
+            return NUMBER.ZERO
 
     @property
     def max_width(self):
-        lst = []
-        for cell in self.cells:
-            leading = Misc.get_trailing_line(cell.line, end=cell.right)
-            trailing = Misc.get_leading_line(cell.line, start=cell.left)
-            leading_len, trailing_len = len(leading), len(trailing)
-            if cell.text:
-                width = leading_len + cell.width + trailing_len
-            else:
-                width = max(leading_len, trailing_len)
-            lst.append(width)
-        width = max(lst) if lst else NUMBER.TWO
+        width = self.width + self.max_edge_trailing_width + self.max_edge_leading_width
         return width
 
     @property
@@ -1369,7 +1517,7 @@ class TabularColumn:
             max_items_count = max(cell.items_count for cell in self.cells)
             occurrence = max_items_count - NUMBER.ONE
             if occurrence > NUMBER.ZERO:
-                if '_phrase' in tmpl_snippet:
+                if '_phrase' in tmpl_snippet or re.match('(mixed_)?words', tmpl_snippet):
                     fmt = '%s, at_most_%s_phrase_occurrences)'
                 else:
                     fmt = '%s, at_most_%s_group_occurrences)'
@@ -1379,7 +1527,4 @@ class TabularColumn:
         if added_list_meta_data:
             tmpl_snippet = '%s, meta_data_list)' % tmpl_snippet[:-INDEX.ONE]
 
-        if self.has_empty_cell:
-            optional_flag = 'or_either_repeating_%s_%s_spaces' % (self.width, self.max_width)
-            tmpl_snippet = '%s, %s)' % (tmpl_snippet[:-1], optional_flag)
         return tmpl_snippet
