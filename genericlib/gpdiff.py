@@ -690,6 +690,7 @@ class CommonDiffLinePattern(RuntimeException):
                '': STRING.EMPTY}
         case = tbl.get(self.leading_whitespace)
         leading_snippet = f"start({case})" if self.is_leading else STRING.EMPTY
+        case = tbl.get(self.trailing_whitespace)
         trailing_snippet = f"end({case})" if self.is_trailing else STRING.EMPTY
 
         if len(set(self.lines)) == NUMBER.ONE:
@@ -720,6 +721,20 @@ class CommonDiffLinePattern(RuntimeException):
             self._is_diff = node.is_diff
             self._pattern = node.pattern
             self._snippet = node.snippet
+
+            if node.is_diff:
+                tbl = {' +': 'spaces', ' *': 'space',
+                       r'\s+': 'whitespaces', r'\s*': 'whitespace',
+                       '': STRING.EMPTY}
+                case = tbl.get(self.leading_whitespace)
+                leading_snippet = f"start({case})" if self.is_leading else STRING.EMPTY
+                case = tbl.get(self.trailing_whitespace)
+                trailing_snippet = f"end({case})" if self.is_trailing else STRING.EMPTY
+                self._pattern = f'{self.leading_whitespace}{self._pattern}{self.trailing_whitespace}'
+                if leading_snippet:
+                    self._snippet = self._snippet.replace('start()', leading_snippet)
+                if trailing_snippet:
+                    self._snippet = self._snippet.replace('end()', trailing_snippet)
 
 
 class DText:
