@@ -493,48 +493,36 @@ class DiffLinePattern(RuntimeException):
         return True
 
     def reconstruct_pattern_and_snippet(self):
-        lst = list()
-        first_line = self.lines[INDEX.ZERO]
-        match = re.match(f' *{self._pattern} *$', first_line)
-        if len(match.regs) == NUMBER.ONE:
-            return
-        else:
-            begin = 0
-            for index, pair in enumerate(match.groupdict().items()):
-                key, val = pair
-                start, end = match.regs[index + NUMBER.ONE]
-                pre_text = first_line[begin:start]
-                lst.append(DText(pre_text))
-                if not re.match(r'\s+$', val):
-                    lst.append(DChange(val, var=key))
-                else:
-                    lst.append(DText(val))
-                begin = end
+        lst = []
+        for line in self.lines:
+            match = re.match(self._pattern, line)
+            other_lst = ['(?P<c0>.*)']
+            key = ''
+            for key, val in match.groupdict().items():
+                val = re.escape(val)
+                other_lst.append(f'(?P<{key}>{val})')
+                other_lst.append(f'(?P<c{key}>.+)')
             else:
-                post_text = first_line[begin:]
-                lst.append(DText(post_text))
+                other_lst.pop()
+                other_lst.append(f'(?P<c{key}>.*)')
 
-        for line in self.lines[INDEX.ONE:]:
-            match = re.match(f' *{self._pattern} *$', line)
+            generic_pattern = Misc.join_string(*other_lst)
+            match = re.match(generic_pattern, line)
 
-            begin = 0
-            count = 0
-            for index, pair in enumerate(match.groupdict().items()):
-                key, val = pair
-                start, end = match.regs[index + NUMBER.ONE]
-                pre_text = line[begin:start]
-                pre_node = lst[count]
-                node = lst[count + NUMBER.ONE]
-                pre_node.add(pre_text)
-                node.add(val)
-                begin = end
-                count += 2
+            if lst:
+                for index, pair in enumerate(match.groupdict().items()):
+                    key, val = pair
+                    lst[index].add(val)
             else:
-                post_text = line[begin:]
-                lst[-INDEX.ONE].add(post_text)
+                for key, val in match.groupdict().items():
+                    if key.startswith('c'):
+                        lst.append(DText(val))
+                    else:
+                        lst.append(DChange(val, var=key))
 
-        self._snippet = str.join('', [item.get_snippet() for item in lst])
-        self._pattern = LinePattern(self._snippet)
+        snippet = str.join('', [item.get_snippet() for item in lst])
+        self._snippet = f'start() {snippet} end()'
+        self._pattern = LinePattern(snippet)
 
     def process(self):
         lines_count = len(self.lines)
