@@ -754,15 +754,15 @@ class DText:
         if not self.leading_lst:
             return STRING.EMPTY
 
-        if len(set(self.trailing_lst)) == NUMBER.ONE:
-            return self.trailing_lst[INDEX.ZERO]
+        if len(set(self.leading_lst)) == NUMBER.ONE:
+            return self.leading_lst[INDEX.ZERO]
         else:
             ws = STRING.SPACE_CHAR
-            for item in self.trailing_lst:
+            for item in self.leading_lst:
                 if item.strip(STRING.SPACE_CHAR):
                     ws = item.strip(STRING.SPACE_CHAR)
                     break
-            is_multi = any(len(item) > NUMBER.ONE for item in self.trailing_lst)
+            is_multi = any(len(item) > NUMBER.ONE for item in self.leading_lst)
             return f"{ws} " if is_multi else ws
 
     @property
