@@ -118,8 +118,7 @@ val3.1   val3.2  val3.3
 a        b       c
 start() mixed_word()zero_or_spaces() -> continue.record
 start() mixed_word(var_a)  mixed_word(var_b)  mixed_word(var_c, meta_data_list) end(space) -> continue
-start() space(repetition_11_21) mixed_word(var_c, meta_data_list) end(space) -> continue
-start() mixed_word(var_a)  mixed_word(var_b)  mixed_word(var_c, meta_data_list) end() -> record
+start() space(repetition_13_19) mixed_word(var_c, meta_data_list) end(space) -> continue
     """).strip()
 
     node = TabularTextPattern(text)

@@ -874,7 +874,8 @@ class TabularTable(RuntimeException):
 
         last_snippet = self.last_column.to_template_snippet(skipped_empty=True, added_list_meta_data=True)
         m, n = self.last_column_data_info.get('spacers')
-        spacer_snippet = f'start() space(repetition_{m}_{n+4}) {last_snippet} end(space) -> continue'
+        m = n - 4 if (n - 4) > 0 else m
+        spacer_snippet = f'start() space(repetition_{m}_{n+2}) {last_snippet} end(space) -> continue'
         lst_of_snippet.append(spacer_snippet)
 
     def build_snippet_for_other_case(self, lst_of_snippet):
@@ -941,7 +942,19 @@ class TabularTable(RuntimeException):
 
             pat = r' +(space[(]repetition_\d+_\d+[)]) +'
             line_snippet = re.sub(pat, r' \1 ', line_snippet)
-            lst_of_snippet.append(line_snippet)
+
+            is_line_snippet_existed = False
+            pattern = r'(?i) *start\(\w*\) *(?P<chk>.+) *end\(\w*\) -> (record|continue)'
+            match = re.match(pattern, line_snippet)
+            if match:
+                baseline_chk = match.group('chk')
+                for snippet_ in lst_of_snippet:
+                    if is_line_snippet_existed:
+                        break
+                    other_match = re.match(pattern, snippet_)
+                    if other_match:
+                        is_line_snippet_existed = other_match.group('chk') == baseline_chk
+            not is_line_snippet_existed and lst_of_snippet.append(line_snippet)
 
 
 class TabularCell(RuntimeException):
