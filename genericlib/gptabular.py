@@ -1479,13 +1479,13 @@ class TabularColumn:
         if not self.cells:
             return
 
-        lst_of_left = [cell.left for cell in self.cells]
-        lst_of_right = [cell.right for cell in self.cells]
-        are_all_left_same = len(set(lst_of_left)) == NUMBER.ONE
-        are_all_right_same = len(set(lst_of_right)) == NUMBER.ONE
+        lst_of_left_edges = [cell.left + len(cell.leading) for cell in self.cells]
+        lst_of_right_edges = [cell.right + len(cell.trailing) for cell in self.cells]
+        are_all_left_edges_a_same = len(set(lst_of_left_edges)) == NUMBER.ONE
+        are_all_right_edges_a_same = len(set(lst_of_right_edges)) == NUMBER.ONE
 
-        tbl = {'11': 'right', '10': 'left', '01': 'right', '00': 'center'}
-        key = Misc.join_string(str(int(are_all_left_same)), str(int(are_all_right_same)))
+        tbl = {'11': 'left', '10': 'left', '01': 'right', '00': 'center'}
+        key = f'{int(are_all_left_edges_a_same)}{int(are_all_right_edges_a_same)}'
         self._alignment = tbl.get(key)
 
     def to_regex(self):
