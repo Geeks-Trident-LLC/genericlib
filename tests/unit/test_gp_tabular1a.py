@@ -312,7 +312,7 @@ mango     chicken
 fruits    meat      drinks
 start() letters(var_fruits)  letters(var_meat)  word(var_drinks, at_most_1_phrase_occurrences) end() -> record
 start() letters(var_fruits)  letters(var_meat) end(space) -> record
-start() letters(var_fruits) space(repetition_9_14) word(var_drinks, at_most_1_phrase_occurrences) end() -> record
+start() letters(var_fruits) space(repetition_10_15) word(var_drinks, at_most_1_phrase_occurrences) end() -> record
     """.strip()
 
     expected_template = r"""
@@ -328,7 +328,7 @@ Start
   ^fruits +meat +drinks
   ^${fruits} +${meat} +${drinks}$$ -> Record
   ^${fruits} +${meat} *$$ -> Record
-  ^${fruits}  {9,14} ${drinks}$$ -> Record
+  ^${fruits}  {10,15} ${drinks}$$ -> Record
     """.strip()
 
     expected_result = [

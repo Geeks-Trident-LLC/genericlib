@@ -17,7 +17,7 @@ mango     chicken
 fruits    meat      drinks
 start() letters(var_fruits)  letters(var_meat)  word(var_drinks, at_most_1_phrase_occurrences) end() -> record
 start() letters(var_fruits)  letters(var_meat) end(space) -> record
-start() letters(var_fruits) space(repetition_9_14) word(var_drinks, at_most_1_phrase_occurrences) end() -> record
+start() letters(var_fruits) space(repetition_10_15) word(var_drinks, at_most_1_phrase_occurrences) end() -> record
         """).strip()
 
     node = TabularTextPattern(text)
@@ -69,11 +69,11 @@ item5.1
 one       two       three
 start() mixed_word(var_one)  mixed_word(var_two)  mixed_word(var_three) end() -> record
 start() mixed_word(var_one)  mixed_word(var_two) end(space) -> record
-start() mixed_word(var_one) space(repetition_9_12) mixed_word(var_three) end() -> record
+start() mixed_word(var_one) space(repetition_10_13) mixed_word(var_three) end() -> record
 start() mixed_word(var_one) end(space) -> record
-start() space(repetition_7_9) mixed_word(var_two)  mixed_word(var_three) end() -> record
-start() space(repetition_7_9) mixed_word(var_two) end(space) -> record
-start() space(repetition_16_18) mixed_word(var_three) end() -> record
+start() space(repetition_8_10) mixed_word(var_two)  mixed_word(var_three) end() -> record
+start() space(repetition_8_10) mixed_word(var_two) end(space) -> record
+start() space(repetition_18_20) mixed_word(var_three) end() -> record
     """).strip()    # noqa
 
     node = TabularTextPattern(text)
@@ -94,7 +94,7 @@ val3.1   val3.2  val3.3
     expected_tmpl_snippet = dedent("""
 a        b       c
 start() mixed_word(var_a) end(space) -> Next
-start() space(repetition_7_9) mixed_word(var_b)  mixed_word(var_c) end() -> record
+start() space(repetition_5_9) mixed_word(var_b)  mixed_word(var_c) end() -> record
 start() mixed_word(var_a)  mixed_word(var_b)  mixed_word(var_c) end() -> record
     """).strip()
 
@@ -143,11 +143,11 @@ val7.1
 a        b       c
 start() mixed_word(var_a)  mixed_word(var_b)  mixed_word(var_c) end() -> record
 start() mixed_word(var_a)  mixed_word(var_b) end(space) -> record
-start() mixed_word(var_a) space(repetition_7_10) mixed_word(var_c) end() -> record
+start() mixed_word(var_a) space(repetition_8_11) mixed_word(var_c) end() -> record
 start() mixed_word(var_a) end(space) -> record
-start() space(repetition_6_8) mixed_word(var_b)  mixed_word(var_c) end() -> record
-start() space(repetition_6_8) mixed_word(var_b) end(space) -> record
-start() space(repetition_13_15) mixed_word(var_c) end() -> record
+start() space(repetition_7_9) mixed_word(var_b)  mixed_word(var_c) end() -> record
+start() space(repetition_7_9) mixed_word(var_b) end(space) -> record
+start() space(repetition_15_17) mixed_word(var_c) end() -> record
     """).strip()
 
     node = TabularTextPattern(text)

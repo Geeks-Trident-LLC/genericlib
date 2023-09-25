@@ -1,3 +1,6 @@
+from collections import Counter
+import math
+import statistics
 import operator as op
 import re
 
@@ -768,7 +771,8 @@ class TabularTable(RuntimeException):
             for index, bit in enumerate(list(layout)):
                 column = self.columns[index]
                 m, n = column.width, column.max_width
-                m = n - 2 if m == n else m
+                if m == n:
+                    m = n - 4 if (n - 4) > 2 else abs(n - 2)
                 space_snippet = f'space(repetition_{m}_{n})'
                 kwargs = dict()
                 if self.last_column_data_info and index == self.columns_count - NUMBER.ONE:
@@ -823,7 +827,8 @@ class TabularTable(RuntimeException):
             for index, bit in enumerate(list(layout)):
                 column = self.columns[index]
                 m, n = column.width, column.max_width
-                m = n - 2 if m == n else m
+                if m == n:
+                    m = n - 4 if (n - 4) > 2 else abs(n - 2)
                 space_snippet = f'space(repetition_{m}_{n})'
 
                 kwargs = dict()
@@ -842,7 +847,8 @@ class TabularTable(RuntimeException):
                             m, n = int(match.group('m')), int(match.group('n'))
                             m += column.width
                             n += column.max_width - column.max_edge_leading_width
-                            m = n - 2 if m == n else m
+                            if m == n:
+                                m = n - 4 if (n - 4) > 2 else abs(n - 2)
                             extend_space_snippet = f'space(repetition_{m}_{n})'
                             lst.pop()
                             lst.append(extend_space_snippet)
@@ -1427,9 +1433,27 @@ class TabularColumn:
     @property
     def width(self):
         widths = [cell.width for cell in self.cells if cell.width]
-        average = int(sum(widths) / len(widths))
-        average = average or NUMBER.ONE
-        return average
+        max_width = max(widths)
+        are_all_widths_a_same = len(set(widths)) == NUMBER.ONE
+        if are_all_widths_a_same:
+            return max_width
+        else:
+            lst_of_left_pos = [cell.left for cell in self.cells]
+            are_all_left_pos_a_same = len(set(lst_of_left_pos)) == NUMBER.ONE
+            lst_of_right_pos = [cell.right for cell in self.cells]
+            are_all_right_pos_a_same = len(set(lst_of_right_pos)) == NUMBER.ONE
+            if are_all_left_pos_a_same:
+                common_widths, _ = Counter(widths).most_common().pop(0)
+                if common_widths == max_width:
+                    return max_width
+                else:
+                    width = math.ceil(statistics.mean(widths))
+                    return width
+            elif are_all_right_pos_a_same:
+                return max_width
+            else:
+                width = math.ceil(statistics.mean(widths))
+                return width
 
     @property
     def max_edge_trailing_width(self):

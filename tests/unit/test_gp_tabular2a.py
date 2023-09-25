@@ -16,6 +16,10 @@ val5.1
     """).strip()
 
     expected_tmpl_snippet = dedent("""
+a        b      
+start() mixed_word(var_a)  mixed_word(var_b) end(space) -> record
+start() mixed_word(var_a) end(space) -> record
+start() space(repetition_7_9) mixed_word(var_b) end(space) -> record
     """).strip()
 
     node = TabularTextPattern(text)
