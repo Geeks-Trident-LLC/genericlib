@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 setup(
     name='genericlib',
     version='0.5.2',
-    license='Geeks Trident License',
+    license='BSD-3-Clause',
     license_files=['LICENSE'],
     description='Generic Library',
     long_description=open('README.md').read(),
