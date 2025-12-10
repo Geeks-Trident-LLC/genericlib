@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='genericlib',
-    version='0.5.2',
+    version='0.6.0',
     license='BSD-3-Clause',
     license_files=['LICENSE'],
     description='Generic Library',
