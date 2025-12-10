@@ -15,6 +15,8 @@ setup(
     maintainer_email='tuyen@geekstrident.com',
     install_requires=[
         'pyyaml',
+        'regexbuilder',
+        'textfsmgenerator'
     ],
     url='https://github.com/Geeks-Trident-LLC/genericlib',
     packages=find_packages(
