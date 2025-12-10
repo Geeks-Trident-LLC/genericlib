@@ -1,6 +1,6 @@
 import re
 
-from regexpro import TextPattern
+from regexbuilder import TextPattern
 
 from genericlib import STRING, NUMBER, PATTERN, TEXT, SYMBOL, Misc
 from genericlib.gp import RuntimeException, TranslatedPattern, LData

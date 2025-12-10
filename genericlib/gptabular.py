@@ -4,7 +4,7 @@ import statistics
 import operator as op
 import re
 
-from regexpro import LinePattern
+from regexbuilder import LinePattern
 
 from genericlib import Misc, STRING, NUMBER, PATTERN, INDEX
 from genericlib.gp import RuntimeException, TranslatedPattern

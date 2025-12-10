@@ -9,7 +9,7 @@ from genericlib import SYMBOL
 from genericlib import Misc
 from genericlib import MiscFunction
 
-from templatepro import TemplateBuilder
+from textfsmgenerator import TemplateBuilder
 
 
 def get_textfsm_template(template_snippet, author='', email='',
