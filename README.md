@@ -49,14 +49,13 @@ This project relies on the following Python packages to ensure smooth functional
 
 - [**python-dateutil**](https://pypi.org/project/python-dateutil/) – Extensions to Python’s `datetime` module for advanced parsing, formatting, and date manipulation.  
 - [**PyYAML**](https://pypi.org/project/PyYAML/) – YAML parser and emitter, enabling structured configuration management in Python applications.  
-- [**regexbuilder**]() – Simplifies regex creation by generating accurate patterns quickly and efficiently. ⚠️ *Planned for removal in the upcoming 1.x release.*  
-- [**textfsmgenerator**]() – Streamlines TextFSM template creation with intuitive, reusable, English‑readable snippets. ⚠️ *Planned for removal in the upcoming 1.x release.*  
+- [**regexbuilder**]() – Simplifies regex creation by generating accurate patterns quickly and efficiently. ⚠️ *Planned for removal in the upcoming 1.x release.*
 
 ---
 
 ## 🗺️ Future Roadmap
 
-- **TODO:** Remove `regexbuilder` and `textfsmgenerator` dependencies in the upcoming **1.x release**.  
+- **TODO:** Remove `regexbuilder` dependency in the upcoming **1.x release**.  
 - Focus on making the library fully independent and lightweight.  
 - Expand generic utilities to cover more common programming patterns.  
 - Improve documentation and add more usage examples.  
