@@ -32,6 +32,35 @@ By focusing on **efficiency**, **adaptability**, and **reusability**, the Generi
 
 ---
 
+## ⚙️ Installation  
+
+You can install the **genericlib** package directly from PyPI using `pip`:  
+
+```bash
+pip install genericlib
+```  
+
+### ✅ Requirements  
+- Python 3.9 or higher  
+- Internet connection to fetch dependencies from PyPI
+
+---
+
+Here’s a revived and polished version of your **Dependencies** section:  
+
+---
+
+## 📦 Dependencies  
+
+This project relies on the following Python packages to ensure smooth functionality and seamless integration:  
+
+- [**python-dateutil**](https://pypi.org/project/python-dateutil/) – Extensions to Python’s `datetime` module for advanced parsing, formatting, and date manipulation.  
+- [**PyYAML**](https://pypi.org/project/PyYAML/) – YAML parser and emitter, enabling structured configuration management in Python applications.  
+- [**regexbuilder**]() – Simplifies regex creation by generating accurate patterns quickly and efficiently. ⚠️ *Planned for removal in the upcoming 1.x release.*  
+- [**textfsmgenerator**]() – Streamlines TextFSM template creation with intuitive, reusable, English‑readable snippets. ⚠️ *Planned for removal in the upcoming 1.x release.*  
+
+---
+
 ## 🗺️ Future Roadmap
 
 - **TODO:** Remove `regexbuilder` and `textfsmgenerator` dependencies in the upcoming **1.x release**.  
