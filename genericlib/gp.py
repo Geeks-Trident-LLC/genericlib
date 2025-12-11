@@ -9,26 +9,6 @@ from genericlib import SYMBOL
 from genericlib import Misc
 from genericlib import MiscFunction
 
-from textfsmgenerator import TemplateBuilder
-
-
-def get_textfsm_template(template_snippet, author='', email='',
-                         company='', description=''):
-    builder = TemplateBuilder(user_data=template_snippet, author=author,
-                              email=email, company=company, description=description)
-    textfsm_tmpl = builder.template
-    return textfsm_tmpl
-
-
-def verify(template_snippet, test_data,
-           expected_rows_count=None, expected_result=None,
-           ignore_space=True):
-    builder = TemplateBuilder(user_data=template_snippet, test_data=test_data)
-    is_verified = builder.verify(expected_rows_count=expected_rows_count,
-                                 expected_result=expected_result,
-                                 ignore_space=ignore_space)
-    return is_verified
-
 
 class RuntimeException:
     def raise_runtime_error(self, name='', msg=''):
