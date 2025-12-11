@@ -1,6 +1,3 @@
-# genericlib
-
----
 
 # 📖 Overview
 
@@ -43,10 +40,6 @@ pip install genericlib
 ### ✅ Requirements  
 - Python 3.9 or higher  
 - Internet connection to fetch dependencies from PyPI
-
----
-
-Here’s a revived and polished version of your **Dependencies** section:  
 
 ---
 

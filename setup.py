@@ -45,7 +45,7 @@ setup(
         'Operating System :: POSIX :: Linux',
         'Operating System :: Microsoft :: Windows',
         # license
-        'License :: BSD License',
+        "License :: OSI Approved :: BSD License",  # BSD-3-Clause classifier
         # programming language
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
