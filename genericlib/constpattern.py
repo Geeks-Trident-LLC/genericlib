@@ -1,5 +1,3 @@
-from .refpattern import REF_PATTERN
-
 
 class PATTERN:
 
@@ -30,26 +28,18 @@ class PATTERN:
     MULTICRNL = r'[\r\n]+'
     ZOMULTICRNL = r'[\r\n]*'
 
-    # DIGIT = '[0-9]'
-    # DIGITS = '%s+' % DIGIT
-    DIGIT = REF_PATTERN.digit
-    DIGITS = REF_PATTERN.digits
+    DIGIT = r'\d'
+    DIGITS = '%s+' % DIGIT
 
-    # NUMBER = '[0-9]*[.]?[0-9]+'
-    # MIXED_NUMBER = r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'
-    NUMBER = REF_PATTERN.number
-    MIXED_NUMBER = REF_PATTERN.mixed_number
+    NUMBER = r'\d*[.]?\d+'
+    MIXED_NUMBER = r'[+\(\[\$-]?(\d+([,:/-]\d+)*)?[.]?\d+[\]\)%a-zA-Z]*'
 
-    # LETTER = '[a-zA-Z]'
-    # LETTERS = '%s+' % LETTER
-    LETTER = REF_PATTERN.letter
-    LETTERS = REF_PATTERN.letters
+    LETTER = '[a-zA-Z]'
+    LETTERS = '%s+' % LETTER
 
-    # ALPHABET_NUMERIC = '[a-zA-Z0-9]'
-    ALPHABET_NUMERIC = REF_PATTERN.alphanumeric
+    ALPHABET_NUMERIC = '[a-zA-Z0-9]'
 
-    # PUNCT = r'[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]'
-    PUNCT = REF_PATTERN.punctuation
+    PUNCT = r'[\x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]'
     PUNCTS = '%s+' % PUNCT
     PUNCTS_OR_PHRASE = '%s( %s)*' % (PUNCTS, PUNCTS)
     PUNCTS_OR_GROUP = '%s( +%s)*' % (PUNCTS, PUNCTS)
@@ -62,24 +52,21 @@ class PATTERN:
     SPACE_PUNCT = r'[ \x21-\x2f\x3a-\x40\x5b-\x60\x7b-\x7e]'
     MULTI_SPACE_PUNCTS = '%s+' % SPACE_PUNCT
 
-    # GRAPH = r'[\x21-\x7e]'
-    GRAPH = REF_PATTERN.graph
+    GRAPH = r'[\x21-\x7e]'
 
-    # WORD = r'%s+' % ALPHABET_NUMERIC
-    WORD = REF_PATTERN.word
+    WORD = r'[a-zA-Z][a-zA-Z0-9]*'
     WORDS = r'%s( %s)*' % (WORD, WORD)
     PHRASE = r'%s( %s)+' % (WORD, WORD)
     WORD_OR_GROUP = r'%s( +%s)*' % (WORD, WORD)
     WORD_GROUP = r'%s( +%s)+' % (WORD, WORD)
 
-    # MIXED_WORD = '%s+' % GRAPH
-    MIXED_WORD = REF_PATTERN.mixed_word
+    MIXED_WORD = r'[\x21-\x7e]*[a-zA-Z0-9][\x21-\x7e]*'
     MIXED_WORDS = '%s( %s)*' % (MIXED_WORD, MIXED_WORD)
     MIXED_PHRASE = '%s( %s)+' % (MIXED_WORD, MIXED_WORD)
     MIXED_WORD_OR_GROUP = '%s( +%s)*' % (MIXED_WORD, MIXED_WORD)
     MIXED_WORD_GROUP = '%s( +%s)+' % (MIXED_WORD, MIXED_WORD)
 
-    NON_WHITESPACE = REF_PATTERN.non_whitespace
+    NON_WHITESPACE = r'\S'
     NON_WHITESPACES = r'%s+' % NON_WHITESPACE
     NON_WHITESPACES_OR_PHRASE = r'%s( %s)*' % (NON_WHITESPACES, NON_WHITESPACES)
     NON_WHITESPACES_PHRASE = r'%s( %s)+' % (NON_WHITESPACES, NON_WHITESPACES)

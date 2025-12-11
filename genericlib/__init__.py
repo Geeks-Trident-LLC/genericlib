@@ -20,8 +20,6 @@ from .constpattern import PATTERN
 from .conststruct import STRUCT
 from .conststruct import SLICE
 
-from .refpattern import REF_PATTERN
-
 from .utils import Printer
 from .utils import Misc
 from .utils import MiscOutput
@@ -38,8 +36,6 @@ from .robotframeworklib import RFFile
 __all__ = [
     'DictObject',
     'DotObject',
-
-    'REF_PATTERN',
 
     'ECODE',
     'ICSValue',
