@@ -35,7 +35,6 @@ setup(
         "Tracker": "https://github.com/Geeks-Trident-LLC/genericlib/issues",
     },
     include_package_data=True,
-    test_suite="tests",
     classifiers=[
         # development status
         "Development Status :: 3 - Alpha",
@@ -53,8 +52,6 @@ setup(
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: POSIX :: Linux",
         "Operating System :: Microsoft :: Windows",
-        # license
-        "License :: OSI Approved :: BSD License",
         # programming language
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
