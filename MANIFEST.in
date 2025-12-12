@@ -1,1 +1,1 @@
-recursive-include genericlib *.py *.yaml
+recursive-include genericlib *.py
