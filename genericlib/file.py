@@ -353,7 +353,7 @@ class File:
         cls.on_failure = on_failure
 
         filename = cls.get_path(file_path)
-        with open(filename) as stream:
+        with open(filename, encoding="utf-8") as stream:
             content = stream.read()
             return content
 
@@ -391,7 +391,7 @@ class File:
             else:
                 filename = cls.get_path(file_path)
 
-            with open(filename) as stream:
+            with open(filename, encoding="utf-8") as stream:
                 content = stream.read()
                 if is_stripped:
                     content = content.strip()
@@ -654,11 +654,14 @@ class File:
             content = stream.read()
             if isinstance(content, str):
                 return content
-            else:
+            elif isinstance(content, bytes):
+                # else content is isinstance of byte
                 encoding = file_kwargs.get('encoding') or 'utf-8'
                 errors = file_kwargs.get('errors') or 'strict'
                 content = content.decode(encoding=encoding, errors=errors)
                 return content
+            else:
+                raise Exception('Unknown file type')
 
     rf_generic_lib_file_load_text = load_text
 
@@ -723,7 +726,7 @@ class File:
         lst = []
         file_kwargs = cls.build_open_file_kwargs_from(kwargs)
         csv_content = cls.load_text(filename, **file_kwargs)
-        stream = csv.StringIO(csv_content)
+        stream = csv.StringIO(csv_content)      # noqa
         rows = csv.DictReader(stream, **kwargs)
         for row in rows:
             lst.append(row)
