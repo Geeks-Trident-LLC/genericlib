@@ -2,11 +2,87 @@ from .constnum import NUMBER
 
 
 class STRUCT:
+    """
+    Common structural constants for genericlib.
+
+    This class provides reusable empty data structures to avoid
+    repeatedly instantiating them throughout the codebase.
+
+    Members
+    -------
+    EMPTY_LIST : list
+        An empty list (`[]`).
+    EMPTY_DICT : dict
+        An empty dictionary (`dict()`).
+
+    Examples
+    --------
+    >>> STRUCT.EMPTY_LIST
+    []
+
+    >>> STRUCT.EMPTY_DICT
+    {}
+    """
     EMPTY_LIST = []
     EMPTY_DICT = dict()
 
 
 class SLICE:
+    """
+    Predefined slice constants for genericlib.
+
+    This class defines commonly used slice objects for indexing
+    lists, strings, and other sequence types. By centralizing
+    slice definitions, it improves readability and reduces
+    duplication in code that frequently accesses sequence
+    elements.
+
+    Members
+    -------
+    FIRST_ITEM : slice
+        Slice for the first element (`[:1]`).
+    LAST_ITEM : slice
+        Slice for the last element (`[-1:]`).
+    GET_FIRST : slice
+        Alias for FIRST_ITEM.
+    GET_LAST : slice
+        Alias for LAST_ITEM.
+    EVERYTHING : slice
+        Slice for the entire sequence (`[:]`).
+    SKIP_FROM_FIRST : slice
+        Slice skipping the first element (`[1:]`).
+    SKIP_FROM_SECOND : slice
+        Slice skipping the first two elements (`[2:]`).
+    SKIP_FROM_THIRD : slice
+        Slice skipping the first three elements (`[3:]`).
+    TAKE_TO_LAST : slice
+        Slice up to (but not including) the last element (`[:-1]`).
+    TAKE_TO_SECOND_LAST : slice
+        Slice up to (but not including) the last two elements (`[:-2]`).
+    TAKE_TO_THIRD_LAST : slice
+        Slice up to (but not including) the last three elements (`[:-3]`).
+    FIRST_TO_LAST : slice
+        Slice from the first element to the last (exclusive) (`[1:-1]`).
+    SECOND_TO_SECOND_LAST : slice
+        Slice from the second element to the second-to-last (exclusive) (`[2:-2]`).
+    THIRD_TO_THIRD_LAST : slice
+        Slice from the third element to the third-to-last (exclusive) (`[3:-3]`).
+
+    Examples
+    --------
+    >>> lst = [0, 1, 3, 5]
+    >>> lst[SLICE.FIRST_ITEM]
+    [0]
+
+    >>> lst[SLICE.LAST_ITEM]
+    [5]
+
+    >>> lst[SLICE.SKIP_FROM_SECOND]
+    [3, 5]
+
+    >>> "01234567"[SLICE.SECOND_TO_SECOND_LAST]
+    '2345'
+    """
     FIRST_ITEM = slice(None, NUMBER.ONE)        # e.g., assert [0, 1, 3, 5][SLICE.FIRST_ITEM] == [0]
     LAST_ITEM = slice(-NUMBER.ONE, None)        # e.g., assert [0, 1, 3, 5][SLICE.LAST_ITEM] == [5]
 
