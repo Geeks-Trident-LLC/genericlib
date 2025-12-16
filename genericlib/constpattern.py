@@ -1,5 +1,72 @@
 
 class PATTERN:
+    """
+    Regular expression pattern constants for genericlib.
+
+    This class centralizes regex strings used for parsing and validating
+    text. It defines reusable patterns for whitespace, digits, numbers,
+    letters, punctuation, words, phrases, and mixed content. By providing
+    named constants, it avoids hardcoding regex literals throughout the
+    codebase and improves readability.
+
+    Categories
+    ----------
+    General
+        ANYTHING, ZOANYTHING, SOMETHING, EVERYTHING
+        Basic wildcard patterns ('.', '.?', '.*', '.+').
+    Spaces & Whitespace
+        SPACE, SPACES, MTONESPACES, MORETHANONESPACES, ATLONESPACES,
+        ATLEASTONESPACES, ZOSPACE, ZOSPACES, SPACEATSOS, SPACESATSOS,
+        SPACEATEOS, SPACESATEOS
+        Patterns for single/multiple spaces, optional spaces, and spaces
+        at start/end of string.
+        WHITESPACE, WHITESPACES, ZOWHITESPACES
+        Regex for whitespace characters.
+    Line Breaks
+        CRNL, CR_NL, MULTICRNL, ZOMULTICRNL
+        Patterns for carriage return/newline combinations.
+    Digits & Numbers
+        DIGIT, DIGITS, NUMBER, MIXED_NUMBER
+        Patterns for numeric values and mixed numeric formats.
+    Letters & Alphanumerics
+        LETTER, LETTERS, ALPHABET_NUMERIC
+        Patterns for alphabetic and alphanumeric characters.
+    Punctuation
+        PUNCT, PUNCTS, PUNCTS_OR_PHRASE, PUNCTS_OR_GROUP,
+        PUNCTS_PHRASE, PUNCTS_GROUP, CHECK_PUNCT, CHECK_PUNCTS,
+        CHECK_PUNCTS_GROUP, SPACE_PUNCT, MULTI_SPACE_PUNCTS
+        Regex for punctuation characters and grouped punctuation.
+    Graphical Characters
+        GRAPH
+        Pattern for visible ASCII characters.
+    Words & Phrases
+        WORD, WORDS, PHRASE, WORD_OR_GROUP, WORD_GROUP
+        Patterns for words, phrases, and grouped words.
+    Mixed Content
+        MIXED_WORD, MIXED_WORDS, MIXED_PHRASE, MIXED_WORD_OR_GROUP,
+        MIXED_WORD_GROUP
+        Patterns for mixed alphanumeric and symbol content.
+    Non-Whitespace
+        NON_WHITESPACE, NON_WHITESPACES, NON_WHITESPACES_OR_PHRASE,
+        NON_WHITESPACES_PHRASE, NON_WHITESPACES_OR_GROUP,
+        NON_WHITESPACES_GROUP
+        Patterns for non-whitespace characters in various groupings.
+
+    Notes
+    -----
+    - All constants are defined as raw regex strings.
+    - Use these patterns with Python's `re` module for matching,
+      searching, or validation.
+
+    Examples
+    --------
+    >>> import re
+    >>> re.match(PATTERN.DIGITS, "12345") is not None
+    True
+
+    >>> re.match(PATTERN.WORDS, "hello world") is not None
+    True
+    """
 
     ANYTHING = '.'
     ZOANYTHING = '.?'
@@ -75,6 +142,34 @@ class PATTERN:
 
 
 def get_ref_pattern_by_name(name, default=None):
+    """
+    Retrieve a regex pattern constant by name.
+
+    Converts the given name to uppercase and looks up the corresponding
+    attribute in the `PATTERN` class. If the name is not found, returns
+    the provided default or `PATTERN.NON_WHITESPACES_OR_GROUP`.
+
+    Parameters
+    ----------
+    name : str
+        The name of the pattern constant (case-insensitive).
+    default : str, optional
+        A fallback regex pattern if the name is not found. Defaults to
+        `PATTERN.NON_WHITESPACES_OR_GROUP`.
+
+    Returns
+    -------
+    str
+        The regex pattern string associated with the given name.
+
+    Examples
+    --------
+    >>> get_ref_pattern_by_name("digit")
+    '\\d'
+
+    >>> get_ref_pattern_by_name("unknown", default=PATTERN.WORD)
+    '[a-zA-Z][a-zA-Z0-9]*'
+    """
     default = default or PATTERN.NON_WHITESPACES_OR_GROUP
     attr = name.upper()
     pattern = getattr(PATTERN, attr, default)
