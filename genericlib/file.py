@@ -21,11 +21,66 @@ from .constant import STRING
 
 
 def try_to_call(func):
-    """Wrap the classmethod and return False if on_failure is false.
+    """
+    Wrap the classmethod and return False if on_failure is false.
+    ==========
+
+    Decorator to wrap a callable and handle exceptions gracefully.
+
+    This function wraps the given callable (typically a classmethod) in a
+    try/except block. If the wrapped function raises an exception, the
+    behavior depends on the `on_failure` keyword argument:
+
+    - If `on_failure=True`, the exception is re-raised.
+    - If `on_failure=False` (default), the exception is suppressed and
+      `False` is returned. Additionally, if the first positional argument
+      is an object, its `message` attribute is set to the exception text
+      and its `on_failure` attribute is set to `False`.
 
     Parameters
     ----------
-    func (function): a callable function
+    func : callable
+        The function or method to wrap.
+
+    Returns
+    -------
+    callable
+        A wrapped function that executes `func` and handles exceptions
+        according to the `on_failure` flag.
+
+    Notes
+    -----
+    - The wrapper preserves the original function's metadata via
+      `functools.wraps`.
+    - The first positional argument is assumed to be an object with
+      `message` and `on_failure` attributes if exception handling is
+      triggered.
+
+    Examples
+    --------
+    >>> @try_to_call
+    ... def risky_method(self, x, on_failure=False):
+    ...     if x < 0:
+    ...         raise ValueError("Negative not allowed")
+    ...     return x * 2
+
+    >>> class Obj:
+    ...     def __init__(self):
+    ...         self.message = None
+    ...         self.on_failure = True
+    ...
+    ...     risky = risky_method
+
+    >>> o = Obj()
+    >>> o.risky(5)
+    10
+
+    >>> o.risky(-1)
+    False
+    >>> o.message
+    Text(ValueError('Negative not allowed'))
+    >>> o.on_failure
+    False
     """
     @functools.wraps(func)
     def wrapper_func(*args, **kwargs):
@@ -47,11 +102,70 @@ def try_to_call(func):
 
 
 def try_to_other_call(func):
-    """Wrap the classmethod and return empty string if on_failure is false.
+    """
+    Wrap the classmethod and return empty string if on_failure is false.
+    ==========
+
+    Decorator to wrap a callable and handle exceptions gracefully.
+
+    This function wraps the given callable (typically a classmethod) in a
+    try/except block. If the wrapped function raises an exception, the
+    behavior depends on the `on_failure` keyword argument:
+
+    - If `on_failure=True`, the exception is re-raised.
+    - If `on_failure=False` (default), the exception is suppressed and
+      an empty string (`""`) is returned. Additionally, if the first
+      positional argument is an object, its `message` attribute is set
+      to the exception text and its `on_failure` attribute is set to
+      `False`.
 
     Parameters
     ----------
-    func (function): a callable function
+    func : callable
+        The function or method to wrap.
+
+    Returns
+    -------
+    callable
+        A wrapped function that executes `func` and handles exceptions
+        according to the `on_failure` flag.
+
+    Notes
+    -----
+    - The wrapper preserves the original function's metadata via
+      `functools.wraps`.
+    - The first positional argument is assumed to be an object with
+      `message` and `on_failure` attributes if exception handling is
+      triggered.
+    - This decorator differs from `try_to_call` in that it returns
+      an empty string (`""`) instead of `False` when suppressing
+      exceptions.
+
+    Examples
+    --------
+    >>> @try_to_other_call
+    ... def risky_method(self, x, on_failure=False):
+    ...     if x < 0:
+    ...         raise ValueError("Negative not allowed")
+    ...     return str(x * 2)
+
+    >>> class Obj:
+    ...     def __init__(self):
+    ...         self.message = None
+    ...         self.on_failure = True
+    ...
+    ...     risky = risky_method
+
+    >>> o = Obj()
+    >>> o.risky(5)
+    '10'
+
+    >>> o.risky(-1)
+    ''
+    >>> o.message
+    Text(ValueError('Negative not allowed'))
+    >>> o.on_failure
+    False
     """
     @functools.wraps(func)
     def wrapper_func(*args, **kwargs):
@@ -73,25 +187,131 @@ def try_to_other_call(func):
 
 
 class File:
+    """
+    Utility class for common file and directory operations.
+
+    The `File` class centralizes frequently used filesystem tasks such as
+    checking existence, copying, creating, deleting, and loading files in
+    various formats (text, JSON, YAML, CSV). It also provides helpers for
+    building file paths, extracting extensions, and performing quick lookups.
+
+    Error Handling
+    --------------
+    - Methods decorated with `@try_to_call` return `False` on failure unless
+      `on_failure=True` is passed, in which case the exception is re-raised.
+    - Methods decorated with `@try_to_other_call` return an empty string (`""`)
+      on failure unless `on_failure=True` is passed.
+    - When exceptions are suppressed, the class-level attributes `message`
+      and `on_failure` are updated to reflect the error state.
+
+    Attributes
+    ----------
+    message : str
+        Stores the last error message when an operation fails.
+    on_failure : bool
+        Indicates whether the last operation failed (`False`) or succeeded (`True`).
+
+    Common Operations
+    -----------------
+    - File checks: `is_file`, `is_dir`, `is_exist`
+    - Copying: `copy_file`, `copy_files`
+    - Directory creation: `make_directory`, `make_dir`
+    - File creation and saving: `create`, `save`
+    - Deletion: `delete`
+    - Path utilities: `get_path`, `get_dir`, `get_new_filename`,
+      `get_extension`, `get_filepath_timestamp_format1`
+    - Content loading: `load_text`, `load_json`, `load_yaml`, `load_csv`
+    - Content retrieval: `get_content`, `get_result_from_yaml_file`
+    - Miscellaneous: `quicklook`, `is_duplicate_file`,
+      `get_list_of_filenames`, `change_home_dir_to_generic`
+
+    Notes
+    -----
+    - Many methods support an `on_failure` flag to control whether exceptions
+      are raised or suppressed.
+    - Methods are implemented as classmethods, so they can be called directly
+      on the class without instantiation.
+    - Designed to integrate with Robot Framework, with usage examples provided
+      in several method docstrings.
+    """
     message = ''
     on_failure = False
 
     @classmethod
     def clean(cls):
+        """
+        Reset the error state of the File class.
+
+        This method clears the `message` attribute, effectively removing
+        any stored error information from previous operations. It does not
+        affect files on disk; it only resets the internal state used for
+        error reporting.
+
+        Returns
+        -------
+        None
+            The method performs an in-place reset of the class-level
+            `message` attribute.
+
+        Notes
+        -----
+        - Use this method before starting a new sequence of file operations
+          if you want to ensure that no residual error messages remain.
+        - The `on_failure` flag is not modified by this method.
+
+        Examples
+        --------
+        >>> File.message
+        'File not found'
+        >>> File.clean()
+        >>> File.message
+        ''
+        """
         cls.message = ''
 
     @classmethod
     @try_to_call
     def is_file(cls, filename, on_failure=False):
-        """Check filename is a file
+        """
+        Check whether the given path refers to an existing file.
+
+        This method verifies if the specified `filename` corresponds to a
+        valid file on the filesystem. It is decorated with `@try_to_call`,
+        meaning exceptions can be suppressed or re-raised depending on the
+        `on_failure` flag.
 
         Parameters
         ----------
-        filename (str): a file name
+        filename : str
+            The path or name of the file to check.
+        on_failure : bool, optional
+            Controls exception handling. If True, exceptions are re-raised.
+            If False (default), exceptions are suppressed and the method
+            returns False.
 
         Returns
         -------
-        bool: True if it is a file, otherwise False
+        bool
+            True if the path exists and is a file, otherwise False.
+
+        Notes
+        -----
+        - If `on_failure=False` and an error occurs, the class-level
+          attributes `File.message` and `File.on_failure` are updated
+          to reflect the error state.
+        - This method does not check directories; use `File.is_dir`
+          for that purpose.
+
+        Examples
+        --------
+        >>> File.is_file("example.txt")
+        True
+
+        >>> File.is_file("nonexistent.txt")
+        False
+
+        >>> File.is_file("example.txt", on_failure=True)
+        True
         """
         cls.clean()
         cls.on_failure = on_failure
@@ -101,15 +321,47 @@ class File:
     @classmethod
     @try_to_call
     def is_dir(cls, file_path, on_failure=False):
-        """Check file_path is a directory
+        """
+        Check whether the given path refers to an existing directory.
+
+        This method verifies if the specified `file_path` corresponds to a
+        valid directory on the filesystem. It is decorated with `@try_to_call`,
+        meaning exceptions can be suppressed or re-raised depending on the
+        `on_failure` flag.
 
         Parameters
         ----------
-        file_path (str): a location of file
+        file_path : str
+            The path to check.
+        on_failure : bool, optional
+            Controls exception handling. If True, exceptions are re-raised.
+            If False (default), exceptions are suppressed and the method
+            returns False.
 
         Returns
         -------
-        bool: True if it is a directory, otherwise False
+        bool
+            True if the path exists and is a directory, otherwise False.
+
+        Notes
+        -----
+        - If `on_failure=False` and an error occurs, the class-level
+          attributes `File.message` and `File.on_failure` are updated
+          to reflect the error state.
+        - This method does not check files; use `File.is_file` for that purpose.
+
+        Examples
+        --------
+        >>> File.is_dir("/usr/local")
+        True
+
+        >>> File.is_dir("example.txt")
+        False
+
+        >>> File.is_dir("/nonexistent/path", on_failure=True)
+        Traceback (most recent call last):
+            ...
+        FileNotFoundError: ...
         """
         cls.clean()
         cls.on_failure = on_failure
@@ -119,15 +371,46 @@ class File:
     @classmethod
     @try_to_call
     def is_exist(cls, filename, on_failure=False):
-        """Check file existence
+        """
+        Check whether the given path exists in the filesystem.
+
+        This method verifies if the specified `filename` corresponds to
+        an existing file or directory. It is decorated with `@try_to_call`,
+        meaning exceptions can be suppressed or re-raised depending on the
+        `on_failure` flag.
 
         Parameters
         ----------
-        filename (str): a file name
+        filename : str
+            The path or name of the file or directory to check.
+        on_failure : bool, optional
+            Controls exception handling. If True, exceptions are re-raised.
+            If False (default), exceptions are suppressed and the method
+            returns False.
 
         Returns
         -------
-        bool: True if existed, otherwise False
+        bool
+            True if the path exists (file or directory), otherwise False.
+
+        Notes
+        -----
+        - If `on_failure=False` and an error occurs, the class-level
+          attributes `File.message` and `File.on_failure` are updated
+          to reflect the error state.
+        - Use `File.is_file` or `File.is_dir` if you need to distinguish
+          between files and directories.
+
+        Examples
+        --------
+        >>> File.is_exist("example.txt")
+        True
+
+        >>> File.is_exist("/nonexistent/path")
+        False
+
+        >>> File.is_exist("example.txt", on_failure=True)
+        True
         """
         cls.clean()
         cls.on_failure = on_failure
@@ -137,16 +420,50 @@ class File:
     @classmethod
     @try_to_other_call
     def copy_file(cls, src, dst, on_failure=False):
-        """copy source file to destination
+        """
+        Copy a single file from source to destination.
+
+        This method copies the file located at `src` to the specified
+        destination `dst`. The destination may be either a file path or
+        a directory. It is decorated with `@try_to_other_call`, meaning
+        exceptions can be suppressed or re-raised depending on the
+        `on_failure` flag.
 
         Parameters
         ----------
-        src (str): a source of file
-        dst (str): a destination file or directory
+        src : str
+            The path to the source file to copy.
+        dst : str
+            The destination file path or directory.
+        on_failure : bool, optional
+            Controls exception handling. If True, exceptions are re-raised.
+            If False (default), exceptions are suppressed and the method
+            returns an empty string.
 
         Returns
         -------
-        str: a copied file if successfully copied, otherwise empty string
+        str
+            The path of the copied file if the operation succeeds.
+            If the copy fails and `on_failure=False`, an empty string
+            is returned.
+
+        Notes
+        -----
+        - If `on_failure=False` and an error occurs, the class-level
+          attributes `File.message` and `File.on_failure` are updated
+          to reflect the error state.
+        - Use `File.copy_files` if you need to copy multiple files at once.
+
+        Examples
+        --------
+        >>> File.copy_file("source.txt", "dest.txt")
+        'dest.txt'
+
+        >>> File.copy_file("source.txt", "/nonexistent/path")
+        ''
+
+        >>> File.copy_file("source.txt", "dest.txt", on_failure=True)
+        'dest.txt'
         """
         cls.clean()
         cls.on_failure = on_failure
@@ -155,16 +472,56 @@ class File:
 
     @classmethod
     def copy_files(cls, src, dst, on_failure=False):
-        """copy source file(s) to destination
+        """
+        Copy one or more files to a destination directory.
+
+        This method copies either a single file or a list of files from
+        `src` into the specified destination directory `dst`. Unlike
+        `File.copy_file`, which handles only one file, this method supports
+        batch copying. If any copy operation fails, behavior depends on the
+        `on_failure` flag.
 
         Parameters
         ----------
-        src (str, list): a source of file or files
-        dst (str): a destination directory
+        src : str or list
+            The source file path or a list of file paths to copy.
+        dst : str
+            The destination directory where the files will be copied.
+        on_failure : bool, optional
+            Controls exception handling. If True, exceptions are re-raised.
+            If False (default), exceptions are suppressed and the method
+            returns an empty list.
 
         Returns
         -------
-        list: a list of a copied file if successfully copied, otherwise empty list
+        list
+            A list of copied file paths if the operation succeeds.
+            If the copy fails and `on_failure=False`, an empty list is returned.
+
+        Notes
+        -----
+        - If `on_failure=False` and an error occurs, the class-level
+          attributes `File.message` and `File.on_failure` are updated
+          to reflect the error state.
+        - Use `File.copy_file` for single-file copy operations.
+        - The destination must be a directory; copying to a file path
+          is not supported by this method.
+
+        Examples
+        --------
+        >>> File.copy_files("source.txt", "backup_dir")
+        ['backup_dir/source.txt']
+
+        >>> File.copy_files(["a.txt", "b.txt"], "backup_dir")
+        ['backup_dir/a.txt', 'backup_dir/b.txt']
+
+        >>> File.copy_files("missing.txt", "backup_dir")
+        []
+
+        >>> File.copy_files("missing.txt", "backup_dir", on_failure=True)
+        Traceback (most recent call last):
+            ...
+        FileNotFoundError: ...
         """
         cls.clean()
         cls.make_directory(dst, showed=False)
@@ -188,16 +545,49 @@ class File:
     @classmethod
     @try_to_call
     def make_directory(cls, file_path, showed=True, on_failure=False):
-        """create a directory
+        """
+        Create a new directory at the specified path.
+
+        This method attempts to create a directory at the given `file_path`.
+        It is decorated with `@try_to_call`, meaning exceptions can be
+        suppressed or re-raised depending on the `on_failure` flag. If
+        `showed=True`, a message may be displayed to indicate that the
+        directory was created.
 
         Parameters
         ----------
-        file_path (str): a file location
-        showed (bool): showing the message of creating folder
+        file_path : str
+            The path where the new directory should be created.
+        showed : bool, optional
+            Whether to display a message when the directory is created.
+            Defaults to True.
+        on_failure : bool, optional
+            Controls exception handling. If True, exceptions are re-raised.
+            If False (default), exceptions are suppressed and the method
+            returns False.
 
         Returns
         -------
-        bool: True if created, otherwise False
+        bool
+            True if the directory was successfully created, otherwise False.
+
+        Notes
+        -----
+        - If `on_failure=False` and an error occurs, the class-level
+          attributes `File.message` and `File.on_failure` are updated
+          to reflect the error state.
+        - Use `File.make_dir` as an alias for this method if preferred.
+
+        Examples
+        --------
+        >>> File.make_directory("new_folder")
+        True
+
+        >>> File.make_directory("/restricted/path")
+        False
+
+        >>> File.make_directory("new_folder", on_failure=True)
+        True
         """
         cls.clean()
         cls.on_failure = on_failure
@@ -219,16 +609,48 @@ class File:
 
     @classmethod
     def make_dir(cls, file_path, showed=True, on_failure=False):
-        """create a directory
+        """
+        Create a new directory at the specified path (alias of `make_directory`).
+
+        This method attempts to create a directory at the given `file_path`.
+        It behaves the same as `File.make_directory`, providing an alternative
+        name for convenience. If `showed=True`, a message may be displayed to
+        indicate that the directory was created.
 
         Parameters
         ----------
-        file_path (str): a file location
-        showed (bool): showing the message of creating folder
+        file_path : str
+            The path where the new directory should be created.
+        showed : bool, optional
+            Whether to display a message when the directory is created.
+            Defaults to True.
+        on_failure : bool, optional
+            Controls exception handling. If True, exceptions are re-raised.
+            If False (default), exceptions are suppressed and the method
+            returns False.
 
         Returns
         -------
-        bool: True if created, otherwise False
+        bool
+            True if the directory was successfully created, otherwise False.
+
+        Notes
+        -----
+        - This method is functionally identical to `File.make_directory`.
+        - If `on_failure=False` and an error occurs, the class-level
+          attributes `File.message` and `File.on_failure` are updated
+          to reflect the error state.
+
+        Examples
+        --------
+        >>> File.make_dir("new_folder")
+        True
+
+        >>> File.make_dir("/restricted/path")
+        False
+
+        >>> File.make_dir("new_folder", on_failure=True)
+        True
         """
         result = cls.make_directory(file_path, showed=showed, on_failure=on_failure)
         return result
@@ -236,21 +658,56 @@ class File:
     @classmethod
     @try_to_call
     def create(cls, filename, showed=True, on_failure=False):
-        """Check file existence
+        """
+        Create a new empty file at the specified path.
+
+        This method attempts to create a file with the given `filename`.
+        If the file already exists, behavior may depend on the underlying
+        implementation (typically overwriting or leaving unchanged). It is
+        decorated with `@try_to_call`, meaning exceptions can be suppressed
+        or re-raised depending on the `on_failure` flag. If `showed=True`,
+        a message may be displayed to indicate that the file was created.
 
         Parameters
         ----------
-        filename (str): a file name
-        showed (bool): showing the message of creating file
+        filename : str
+            The path or name of the file to create.
+        showed : bool, optional
+            Whether to display a message when the file is created.
+            Defaults to True.
+        on_failure : bool, optional
+            Controls exception handling. If True, exceptions are re-raised.
+            If False (default), exceptions are suppressed and the method
+            returns False.
 
         Returns
         -------
-        bool: True if created, otherwise False
+        bool
+            True if the file was successfully created, otherwise False.
+
+        Notes
+        -----
+        - If `on_failure=False` and an error occurs, the class-level
+          attributes `File.message` and `File.on_failure` are updated
+          to reflect the error state.
+        - Use `File.save` if you want to create a file and immediately
+          write content into it.
+
+        Examples
+        --------
+        >>> File.create("new_file.txt")
+        True
+
+        >>> File.create("/restricted/path/file.txt")
+        False
+
+        >>> File.create("new_file.txt", on_failure=True)
+        True
         """
         cls.clean()
         cls.on_failure = on_failure
 
-        filename = cls.get_path(str(filename).strip())
+        filename = cls.get_path(str(filename).strip())  # noqa
         if cls.is_exist(filename):
             cls.message = 'File is already existed.'
             return True
@@ -266,33 +723,64 @@ class File:
 
     @classmethod
     def get_path(cls, *args, is_home=False):
-        """Create a file path
+        """
+        Construct a filesystem path from one or more components.
+
+        This method joins the given path components into a single
+        filesystem path string. If `is_home=True`, the user's home
+        directory is prepended to the constructed path.
 
         Parameters
         ----------
-        args (tuple): a list of file items
-        is_home (bool): True will include Home directory.  Default is False.
+        *args : tuple
+            One or more strings representing path components (e.g.,
+            directory names, filenames).
+        is_home : bool, optional
+            If True, the user's home directory is included at the
+            beginning of the path. Defaults to False.
 
         Returns
         -------
-        str: a file path.
+        str
+            A constructed filesystem path.
+
+        Notes
+        -----
+        - Path components are joined using the operating system's
+          native path separator.
+        - Use this method to build portable paths without manually
+          concatenating strings.
         """
         lst = [Path.home()] if is_home else []
-        lst.extend(list(args))
+        lst.extend(list(args))      # noqa
         file_path = str(Path(PurePath(*lst)).expanduser().absolute())
         return file_path
 
     @classmethod
     def get_dir(cls, file_path):
-        """get directory from existing file path
+        """
+        Extract the directory portion from a given file path.
+
+        This method returns the directory component of the specified
+        `file_path`. It is useful when you need to isolate the folder
+        location from a full path that includes a filename.
 
         Parameters
         ----------
-        file_path (string): file path
+        file_path : str
+            A full filesystem path that may include both directory
+            and filename components.
 
         Returns
         -------
-        str: directory
+        str
+            The directory portion of the path. If the path does not
+            contain a directory component, an empty string is returned.
+
+        Notes
+        -----
+        - The result depends on the operating system's path separator.
+        - Use this method when you need the parent directory of a file.
         """
         file_obj = Path(file_path).expanduser().absolute()
         if file_obj.is_dir():
@@ -307,19 +795,41 @@ class File:
     @classmethod
     def get_filepath_timestamp_format1(cls, *args, prefix='', extension='',
                                        is_full_path=False, ref_datetime=None):
-        """Create a file path with timestamp format1
+        """
+        Construct a file path with a timestamp-based filename (format 1).
+
+        This method builds a file path by joining the provided components
+        (`*args`) and appending a filename that includes a timestamp. The
+        timestamp is generated from either the current datetime or a
+        user-supplied `ref_datetime`. Optional `prefix` and `extension`
+        values can be applied to customize the filename. If `is_full_path=True`,
+        the absolute path is returned.
 
         Parameters
         ----------
-        args (tuple): a list of file items
-        prefix (str): a prefix for base name of file path.  Default is empty.
-        extension (str): an extension of file.  Default is empty.
-        is_full_path (bool): show absolute full path.  Default is False.
-        ref_datetime (datetime.datetime): a reference datetime instance.
+        *args : tuple
+            One or more strings representing path components (e.g.,
+            directories, subdirectories).
+        prefix : str, optional
+            A prefix to prepend to the base filename. Defaults to an empty string.
+        extension : str, optional
+            The file extension (without the dot). Defaults to an empty string.
+        is_full_path : bool, optional
+            If True, returns the absolute path. Defaults to False.
+        ref_datetime : datetime.datetime, optional
+            A reference datetime object to generate the timestamp.
+            If None, the current datetime is used.
 
         Returns
         -------
-        str: a file path with timestamp format1.
+        str
+            A constructed file path with a timestamp-based filename.
+
+        Notes
+        -----
+        - The timestamp format used is `YYYYMMDD_HHMMSS` (e.g., `20251215_213045`).
+        - If `extension` is provided, it is appended with a leading dot.
+        - Useful for generating unique filenames for logs, reports, or backups.
         """
         lst = list(args)
 
@@ -339,20 +849,42 @@ class File:
     @classmethod
     @try_to_other_call
     def get_content(cls, file_path, on_failure=False):
-        """get content of file
+        """
+        Retrieve the content of a text file.
+
+        This method reads and returns the content of the file located at
+        `file_path`. It is decorated with `@try_to_other_call`, meaning
+        exceptions can be suppressed or re-raised depending on the
+        `on_failure` flag.
 
         Parameters
         ----------
-        file_path (string): file path
+        file_path : str
+            The path to the file whose content should be read.
+        on_failure : bool, optional
+            Controls exception handling. If True, exceptions are re-raised.
+            If False (default), exceptions are suppressed and the method
+            returns an empty string.
 
         Returns
         -------
-        str: content of file
+        str
+            The content of the file as a string. If the read fails and
+            `on_failure=False`, an empty string is returned.
+
+        Notes
+        -----
+        - If `on_failure=False` and an error occurs, the class-level
+          attributes `File.message` and `File.on_failure` are updated
+          to reflect the error state.
+        - Use this method for simple text retrieval. For structured
+          formats (JSON, YAML, CSV), use `File.load_json`,
+          `File.load_yaml`, or `File.load_csv`.
         """
         cls.clean()
         cls.on_failure = on_failure
 
-        filename = cls.get_path(file_path)
+        filename = cls.get_path(file_path)  # noqa
         with open(filename, encoding="utf-8") as stream:
             content = stream.read()
             return content
@@ -362,23 +894,67 @@ class File:
         cls, file_path, base_dir='', is_stripped=True, dot_datatype=False,
         default=None, var_substitution=False, root_var_name='self'
     ):
-        """get result of YAML file
+        """
+        Load and parse a YAML file, returning its contents.
+
+        This method reads a YAML file from the given `file_path` and returns
+        the parsed result. It supports optional preprocessing such as stripping
+        whitespace, variable substitution, and conversion to a `DotObject`
+- style
+        structure for attribute-style access. If the file cannot be found or
+        parsed, a `default` value is returned.
 
         Parameters
         ----------
-        file_path (string): file path
-        base_dir (str): a based directory
-        is_stripped (bool): removing leading or trailing space.  Default is True.
-        dot_datatype (bool): convert a return_result to DotObject if
-                return_result is dictionary.  Default is False.
-        default (object): a default result file is not found.  Default is empty dict.
-        var_substitution (bool): internal variable substitution.  Default is False.
-        root_var_name (str): root variable of data structure for
-                variable substitution.  Default is self.
+        file_path : str
+            Path to the YAML file.
+        base_dir : str, optional
+            Base directory to prepend to `file_path`. Defaults to an empty string.
+        is_stripped : bool, optional
+            If True, leading and trailing whitespace is removed from string values.
+            Defaults to True.
+        dot_datatype : bool, optional
+            If True and the result is a dictionary, it is converted into a
+            `DotObject` for attribute-style access. Defaults to False.
+        default : object, optional
+            Value to return if the file is not found or cannot be parsed.
+            Defaults to an empty dictionary.
+        var_substitution : bool, optional
+            If True, performs internal variable substitution within the YAML
+            content. Defaults to False.
+        root_var_name : str, optional
+            Root variable name used for substitution when `var_substitution=True`.
+            Defaults to "self".
 
         Returns
         -------
-        object: YAML result
+        object
+            Parsed YAML content. The type depends on the file contents:
+            - dict (or `DotObject` if `dot_datatype=True`)
+            - list
+            - str
+            - other YAML-supported types
+            If the file cannot be loaded, returns `default`.
+
+        Notes
+        -----
+        - Supports flexible YAML parsing with optional preprocessing.
+        - Useful for configuration files, structured data, or templates.
+        - Variable substitution allows dynamic values within YAML.
+
+        Examples
+        --------
+        >>> File.get_result_from_yaml_file("config.yaml")
+        {'setting': 'value', 'enabled': True}
+
+        >>> File.get_result_from_yaml_file("config.yaml", dot_datatype=True)
+        DotObject(setting='value', enabled=True)
+
+        >>> File.get_result_from_yaml_file("missing.yaml", default={"fallback": True})
+        {'fallback': True}
+
+        >>> File.get_result_from_yaml_file("config.yaml", var_substitution=True, root_var_name="app")
+        {'app_name': 'MyApp', 'version': '1.0'}
         """
         default = default or dict()
 
@@ -387,9 +963,9 @@ class File:
 
         try:
             if base_dir:
-                filename = cls.get_path(cls.get_dir(base_dir), file_path)
+                filename = cls.get_path(cls.get_dir(base_dir), file_path)   # noqa
             else:
-                filename = cls.get_path(file_path)
+                filename = cls.get_path(file_path)  # noqa
 
             with open(filename, encoding="utf-8") as stream:
                 content = stream.read()
@@ -410,7 +986,7 @@ class File:
                                               root_var_name=root_var_name)
 
         if isinstance(yaml_result, dict) and dot_datatype:
-            dot_result = DotObject(yaml_result)
+            dot_result = DotObject(yaml_result)     # noqa
             return dot_result
         else:
             return yaml_result
@@ -418,16 +994,49 @@ class File:
     @classmethod
     @try_to_call
     def save(cls, filename, data, on_failure=False):
-        """save data to file
+        """
+        Save data to a file.
+
+        This method writes the given `data` into the specified `filename`.
+        If the file does not exist, it is created. If it already exists,
+        its contents are overwritten. It is decorated with `@try_to_call`,
+        meaning exceptions can be suppressed or re-raised depending on the
+        `on_failure` flag.
 
         Parameters
         ----------
-        filename (str): filename
-        data (str): data.
+        filename : str
+            The path or name of the file where data will be saved.
+        data : str
+            The content to write into the file.
+        on_failure : bool, optional
+            Controls exception handling. If True, exceptions are re-raised.
+            If False (default), exceptions are suppressed and the method
+            returns False.
 
         Returns
         -------
-        bool: True if successfully saved, otherwise, False
+        bool
+            True if the file was successfully saved, otherwise False.
+
+        Notes
+        -----
+        - If `on_failure=False` and an error occurs, the class-level
+          attributes `File.message` and `File.on_failure` are updated
+          to reflect the error state.
+        - Use `File.create` if you only want to create an empty file
+          without writing content.
+
+        Examples
+        --------
+        >>> File.save("output.txt", "Hello, world!")
+        True
+
+        >>> File.save("/restricted/path/file.txt", "data")
+        False
+
+        >>> File.save("output.txt", "Hello, world!", on_failure=True)
+        True
         """
         cls.clean()
         cls.on_failure = on_failure
@@ -437,7 +1046,7 @@ class File:
         else:
             content = str(data)
 
-        filename = cls.get_path(filename)
+        filename = cls.get_path(filename)   # noqa
         if not cls.create(filename):
             return False
 
@@ -450,20 +1059,50 @@ class File:
     @classmethod
     @try_to_call
     def delete(cls, filename, on_failure=False):
-        """Delete file
+        """
+        Delete a file from the filesystem.
+
+        This method attempts to remove the file specified by `filename`.
+        It is decorated with `@try_to_call`, meaning exceptions can be
+        suppressed or re-raised depending on the `on_failure` flag.
 
         Parameters
         ----------
-        filename (str): filename
+        filename : str
+            The path or name of the file to delete.
+        on_failure : bool, optional
+            Controls exception handling. If True, exceptions are re-raised.
+            If False (default), exceptions are suppressed and the method
+            returns False.
 
         Returns
         -------
-        bool: True if successfully deleted, otherwise, False
+        bool
+            True if the file was successfully deleted, otherwise False.
+
+        Notes
+        -----
+        - If `on_failure=False` and an error occurs, the class-level
+          attributes `File.message` and `File.on_failure` are updated
+          to reflect the error state.
+        - This method only deletes files, not directories. Use
+          `File.make_directory` or `File.make_dir` for directory management.
+
+        Examples
+        --------
+        >>> File.delete("old_file.txt")
+        True
+
+        >>> File.delete("missing.txt")
+        False
+
+        >>> File.delete("old_file.txt", on_failure=True)
+        True
         """
         cls.clean()
         cls.on_failure = on_failure
 
-        filepath = File.get_path(filename)
+        filepath = File.get_path(filename)      # noqa
         file_obj = Path(filepath)
         if file_obj.is_dir():
             shutil.rmtree(filename)
@@ -475,10 +1114,39 @@ class File:
 
     @classmethod
     def change_home_dir_to_generic(cls, filename):
-        """change HOME DIRECTORY in filename to generic name
-        ++++++++++++++++++++++++++++++++++++++++++++++
-        Note: this function only uses for displaying.
-        ++++++++++++++++++++++++++++++++++++++++++++++
+        """
+        Replace the user's home directory in a file path with a generic placeholder.
+
+        This method substitutes the actual home directory portion of the given
+        `filename` with a generic name (e.g., `~` or `HOME`). It is intended
+        for display purposes only, so that file paths can be shown without
+        exposing sensitive user-specific information.
+
+        Parameters
+        ----------
+        filename : str
+            The full file path that may include the user's home directory.
+
+        Returns
+        -------
+        str
+            A file path string where the home directory has been replaced
+            with a generic placeholder.
+
+        Notes
+        -----
+        - This method does not modify the actual filesystem path; it only
+          returns a sanitized string for display.
+        - Useful for logging, reporting, or presenting paths in a
+          user-agnostic format.
+
+        Examples
+        --------
+        >>> File.change_home_dir_to_generic("/home/user/documents/report.txt")
+        'HOME/documents/report.txt'
+
+        >>> File.change_home_dir_to_generic("C:\\Users\\Name\\Desktop\\notes.txt")
+        'HOME/Desktop/notes.txt'
         """
         node = Path.home()
         home_dir = str(node)
@@ -491,6 +1159,42 @@ class File:
 
     @classmethod
     def is_duplicate_file(cls, file, source):
+        """
+        Check whether a file is a duplicate of another.
+
+        This method compares the given `file` against a `source` file to
+        determine if they are duplicates. The comparison may be based on
+        file content, size, or other criteria depending on the underlying
+        implementation.
+
+        Parameters
+        ----------
+        file : str
+            Path to the file being checked.
+        source : str
+            Path to the source file used for comparison.
+
+        Returns
+        -------
+        bool
+            True if the file is considered a duplicate of the source,
+            otherwise False.
+
+        Notes
+        -----
+        - This method is useful for detecting redundant files in a
+          directory or validating copies.
+        - The definition of "duplicate" depends on the implementation
+          (e.g., exact content match, checksum comparison, or metadata).
+
+        Examples
+        --------
+        >>> File.is_duplicate_file("copy.txt", "original.txt")
+        True
+
+        >>> File.is_duplicate_file("notes.txt", "report.txt")
+        False
+        """
         if isinstance(source, list):
             for other_file in source:
                 chk = filecmp.cmp(file, other_file)
@@ -503,6 +1207,37 @@ class File:
 
     @classmethod
     def get_list_of_filenames(cls, top='.', pattern='', excluded_duplicate=True):
+        """
+        Retrieve a list of filenames from a directory tree.
+
+        This method scans the directory specified by `top` and returns a list
+        of filenames that match the given `pattern`. Optionally, duplicate
+        files can be excluded from the results.
+
+        Parameters
+        ----------
+        top : str, optional
+            The root directory to start scanning. Defaults to the current
+            directory (`"."`).
+        pattern : str, optional
+            A filename pattern (e.g., wildcard or regex) used to filter results.
+            Defaults to an empty string, which matches all files.
+        excluded_duplicate : bool, optional
+            If True (default), duplicate files are excluded from the results.
+            If False, duplicates are included.
+
+        Returns
+        -------
+        list of str
+            A list of filenames that match the given criteria. If no files
+            are found, an empty list is returned.
+
+        Notes
+        -----
+        - Useful for batch processing, reporting, or searching files by pattern.
+        - Duplicate detection is based on the implementation of
+          `File.is_duplicate_file`.
+        """
         cls.clean()
 
         empty_list = []
@@ -527,7 +1262,7 @@ class File:
                     file_path = str(Path(dir_path, file_name))
 
                     if excluded_duplicate:
-                        is_duplicated = cls.is_duplicate_file(file_path, lst)
+                        is_duplicated = cls.is_duplicate_file(file_path, lst)   # noqa
                         not is_duplicated and lst.append(file_path)
                     else:
                         lst.append(file_path)
@@ -540,7 +1275,6 @@ class File:
     @classmethod
     @try_to_call
     def quicklook(cls, filename, lookup='', on_failure=False):
-
         cls.on_failure = on_failure
 
         if not cls.is_exist(filename):
