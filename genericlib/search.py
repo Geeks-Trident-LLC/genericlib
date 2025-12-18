@@ -1,12 +1,12 @@
 import re
 
-from .utils import Misc
-from .constant import STRING
-from .constnum import NUMBER
-from .constsymbol import SYMBOL
-from .constpattern import PATTERN
+from genericlib.utils import Misc
+from genericlib.constant import STRING
+from genericlib.constnum import NUMBER
+from genericlib.constsymbol import SYMBOL
+from genericlib.constpattern import PATTERN
 
-from .conststruct import SLICE
+from genericlib.conststruct import SLICE
 
 
 class Wildcard:

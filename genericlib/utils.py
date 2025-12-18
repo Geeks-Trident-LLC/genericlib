@@ -48,10 +48,10 @@ from pprint import pprint
 import typing
 from collections import abc
 
-from .constant import ECODE
-from .constant import STRING
-from .text import Text
-from .collection import DotObject
+from genericlib.constant import ECODE
+from genericlib.constant import STRING
+from genericlib.text import Text
+from genericlib.collection import DotObject
 
 from time import time
 

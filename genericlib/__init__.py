@@ -1,37 +1,37 @@
-from .collection import DictObject
-from .collection import DotObject
-from .collection import substitute_variable
+from genericlib.collection import DictObject
+from genericlib.collection import DotObject
+from genericlib.collection import substitute_variable
 
-from .text import Text
-from .file import File
+from genericlib.text import Text
+from genericlib.file import File
 
-from .search import Wildcard
+from genericlib.search import Wildcard
 
-from .constant import ICSValue
-from .constant import ICSStripValue
-from .constant import ECODE
-from .constant import STRING
-from .constant import STR
-from .constant import TEXT
-from .constnum import NUMBER
-from .constnum import INDEX
-from .constsymbol import SYMBOL
-from .constpattern import PATTERN
-from .conststruct import STRUCT
-from .conststruct import SLICE
+from genericlib.constant import ICSValue
+from genericlib.constant import ICSStripValue
+from genericlib.constant import ECODE
+from genericlib.constant import STRING
+from genericlib.constant import STR
+from genericlib.constant import TEXT
+from genericlib.constnum import NUMBER
+from genericlib.constnum import INDEX
+from genericlib.constsymbol import SYMBOL
+from genericlib.constpattern import PATTERN
+from genericlib.conststruct import STRUCT
+from genericlib.conststruct import SLICE
 
-from .utils import Printer
-from .utils import Misc
-from .utils import MiscOutput
-from .utils import MiscFunction
-from .utils import MiscObject
-from .utils import Tabular
-from .utils import get_data_as_tabular
-from .utils import print_data_as_tabular
+from genericlib.utils import Printer
+from genericlib.utils import Misc
+from genericlib.utils import MiscOutput
+from genericlib.utils import MiscFunction
+from genericlib.utils import MiscObject
+from genericlib.utils import Tabular
+from genericlib.utils import get_data_as_tabular
+from genericlib.utils import print_data_as_tabular
 
-from .config import version
+from genericlib.config import version
 
-from .robotframeworklib import RFFile
+from genericlib.robotframeworklib import RFFile
 
 __all__ = [
     'DictObject',

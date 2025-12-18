@@ -1,4 +1,4 @@
-from .constnum import NUMBER
+from genericlib.constnum import NUMBER
 
 
 class STRUCT:

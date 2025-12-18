@@ -17,7 +17,7 @@ from genericlib import Text
 from genericlib import DotObject
 from genericlib import substitute_variable
 
-from .constant import STRING
+from genericlib.constant import STRING
 
 
 def try_to_call(func):
@@ -594,17 +594,17 @@ class File:
 
         if cls.is_exist(file_path):
             if cls.is_dir(file_path):
-                cls.message = Text.format('%r directory is already existed.', file_path)
+                cls.message = Text.format('%r directory is already existed.', file_path)    # noqa
                 return True
             else:
-                cls.message = Text.format('Existing %r IS NOT a directory.', file_path)
+                cls.message = Text.format('Existing %r IS NOT a directory.', file_path)     # noqa
                 return False
 
         file_obj = Path(file_path)
         file_obj.mkdir(parents=True, exist_ok=True)
         fmt = '{:%Y-%m-%d %H:%M:%S.%f} - {} folder is created.'
         showed and print(fmt.format(datetime.now(), file_path))
-        cls.message = Text.format('{} folder is created.', file_path)
+        cls.message = Text.format('{} folder is created.', file_path)       # noqa
         return True
 
     @classmethod
@@ -718,7 +718,7 @@ class File:
         file_obj.touch()
         fmt = '{:%Y-%m-%d %H:%M:%S.%f} - {} file is created.'
         showed and print(fmt.format(datetime.now(), filename))
-        cls.message = Text.format('{} file is created.', filename)
+        cls.message = Text.format('{} file is created.', filename)      # noqa
         return True
 
     @classmethod
@@ -789,7 +789,7 @@ class File:
             return str(file_obj.parent)
         else:
             fmt = 'FileNotFoundError: No such file or directory "{}"'
-            cls.message = Text.format(fmt, file_path)
+            cls.message = Text.format(fmt, file_path)       # noqa
             return ''
 
     @classmethod
@@ -974,9 +974,9 @@ class File:
 
                 if content:
                     yaml_result = yaml.safe_load(content)
-                    cls.message = Text.format('loaded {}', filename)
+                    cls.message = Text.format('loaded {}', filename)        # noqa
                 else:
-                    cls.message = Text.format('"{}" file is empty.', filename)
+                    cls.message = Text.format('"{}" file is empty.', filename)  # noqa
 
         except Exception as ex:
             cls.message = Text(ex)
@@ -1053,7 +1053,7 @@ class File:
         file_obj = Path(filename)
         file_obj.touch()
         file_obj.write_text(content)
-        cls.message = Text.format('Successfully saved data to "{}" file', filename)
+        cls.message = Text.format('Successfully saved data to "{}" file', filename)     # noqa
         return True
 
     @classmethod
@@ -1106,10 +1106,10 @@ class File:
         file_obj = Path(filepath)
         if file_obj.is_dir():
             shutil.rmtree(filename)
-            cls.message = Text.format('Successfully deleted "{}" folder', filename)
+            cls.message = Text.format('Successfully deleted "{}" folder', filename)     # noqa
         else:
             file_obj.unlink()
-            cls.message = Text.format('Successfully deleted "{}" file', filename)
+            cls.message = Text.format('Successfully deleted "{}" file', filename)       # noqa
         return True
 
     @classmethod
@@ -1278,7 +1278,7 @@ class File:
         cls.on_failure = on_failure
 
         if not cls.is_exist(filename):
-            cls.message = Text.format('%r file is not existed.', filename)
+            cls.message = Text.format('%r file is not existed.', filename)  # noqa
             return False
 
         content = cls.get_content(filename)

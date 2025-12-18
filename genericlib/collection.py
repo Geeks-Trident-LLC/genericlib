@@ -2,8 +2,8 @@
 import re
 from copy import deepcopy
 
-from .constnum import NUMBER
-from .constant import STRING
+from genericlib.constnum import NUMBER
+from genericlib.constant import STRING
 
 
 class DictObject(dict):

@@ -1,9 +1,9 @@
-from .constant import STRING
+
 import re
 import string
 
-from .exceptions import LineArgumentError
-
+from genericlib.exceptions import LineArgumentError
+from genericlib.constant import STRING
 
 class BaseText(str):
     """
@@ -858,7 +858,7 @@ class Line(BaseLine):
         --------
         >>> line = Line("Hello   World")
         >>> segments = line.do_finditer_split("Hello   World", pattern=r'\\s+')
-        >>> [type(item).__name__ for item in segments]
+        >>> [type(item).__name__ for item in segments]      # noqa
         ['PreMatchedObject', 'MatchedObject', 'PostMatchedObject']
 
         >>> line.do_finditer_split("PlainText", pattern=r'\\s+')
