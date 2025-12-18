@@ -20,68 +20,68 @@ class TestPrinter:
         "data,width,header,footer,failure_msg,expected_result",
         [
             (
-                TEST_DATA.printer.case1.data,
-                TEST_DATA.printer.case1.width,
-                TEST_DATA.printer.case1.header,
-                TEST_DATA.printer.case1.footer,
-                TEST_DATA.printer.case1.failure_msg,
-                TEST_DATA.printer.case1.expected_result
+                TEST_DATA.printer.case1.data,               # noqa
+                TEST_DATA.printer.case1.width,              # noqa
+                TEST_DATA.printer.case1.header,             # noqa
+                TEST_DATA.printer.case1.footer,             # noqa
+                TEST_DATA.printer.case1.failure_msg,        # noqa
+                TEST_DATA.printer.case1.expected_result     # noqa
             ),
             (
-                TEST_DATA.printer.case2.data,
-                TEST_DATA.printer.case2.width,
-                TEST_DATA.printer.case2.header,
-                TEST_DATA.printer.case2.footer,
-                TEST_DATA.printer.case2.failure_msg,
-                TEST_DATA.printer.case2.expected_result
+                TEST_DATA.printer.case2.data,               # noqa
+                TEST_DATA.printer.case2.width,              # noqa
+                TEST_DATA.printer.case2.header,             # noqa
+                TEST_DATA.printer.case2.footer,             # noqa
+                TEST_DATA.printer.case2.failure_msg,        # noqa
+                TEST_DATA.printer.case2.expected_result     # noqa
             ),
             (
-                TEST_DATA.printer.case3.data,
-                TEST_DATA.printer.case3.width,
-                TEST_DATA.printer.case3.header,
-                TEST_DATA.printer.case3.footer,
-                TEST_DATA.printer.case3.failure_msg,
-                TEST_DATA.printer.case3.expected_result
+                TEST_DATA.printer.case3.data,               # noqa
+                TEST_DATA.printer.case3.width,              # noqa
+                TEST_DATA.printer.case3.header,             # noqa
+                TEST_DATA.printer.case3.footer,             # noqa
+                TEST_DATA.printer.case3.failure_msg,        # noqa
+                TEST_DATA.printer.case3.expected_result     # noqa
             ),
             (
-                TEST_DATA.printer.case4.data,
-                TEST_DATA.printer.case4.width,
-                TEST_DATA.printer.case4.header,
-                TEST_DATA.printer.case4.footer,
-                TEST_DATA.printer.case4.failure_msg,
-                TEST_DATA.printer.case4.expected_result
+                TEST_DATA.printer.case4.data,               # noqa
+                TEST_DATA.printer.case4.width,              # noqa
+                TEST_DATA.printer.case4.header,             # noqa
+                TEST_DATA.printer.case4.footer,             # noqa
+                TEST_DATA.printer.case4.failure_msg,        # noqa
+                TEST_DATA.printer.case4.expected_result     # noqa
             ),
             (
-                TEST_DATA.printer.case5.data,
-                TEST_DATA.printer.case5.width,
-                TEST_DATA.printer.case5.header,
-                TEST_DATA.printer.case5.footer,
-                TEST_DATA.printer.case5.failure_msg,
-                TEST_DATA.printer.case5.expected_result
+                TEST_DATA.printer.case5.data,               # noqa
+                TEST_DATA.printer.case5.width,              # noqa
+                TEST_DATA.printer.case5.header,             # noqa
+                TEST_DATA.printer.case5.footer,             # noqa
+                TEST_DATA.printer.case5.failure_msg,        # noqa
+                TEST_DATA.printer.case5.expected_result     # noqa
             ),
             (
-                TEST_DATA.printer.case6.data,
-                TEST_DATA.printer.case6.width,
-                TEST_DATA.printer.case6.header,
-                TEST_DATA.printer.case6.footer,
-                TEST_DATA.printer.case6.failure_msg,
-                TEST_DATA.printer.case6.expected_result
+                TEST_DATA.printer.case6.data,               # noqa
+                TEST_DATA.printer.case6.width,              # noqa
+                TEST_DATA.printer.case6.header,             # noqa
+                TEST_DATA.printer.case6.footer,             # noqa
+                TEST_DATA.printer.case6.failure_msg,        # noqa
+                TEST_DATA.printer.case6.expected_result     # noqa
             ),
             (
-                TEST_DATA.printer.case7.data,
-                TEST_DATA.printer.case7.width,
-                TEST_DATA.printer.case7.header,
-                TEST_DATA.printer.case7.footer,
-                TEST_DATA.printer.case7.failure_msg,
-                TEST_DATA.printer.case7.expected_result
+                TEST_DATA.printer.case7.data,               # noqa
+                TEST_DATA.printer.case7.width,              # noqa
+                TEST_DATA.printer.case7.header,             # noqa
+                TEST_DATA.printer.case7.footer,             # noqa
+                TEST_DATA.printer.case7.failure_msg,        # noqa
+                TEST_DATA.printer.case7.expected_result     # noqa
             ),
             (
-                TEST_DATA.printer.case8.data,
-                TEST_DATA.printer.case8.width,
-                TEST_DATA.printer.case8.header,
-                TEST_DATA.printer.case8.footer,
-                TEST_DATA.printer.case8.failure_msg,
-                TEST_DATA.printer.case8.expected_result
+                TEST_DATA.printer.case8.data,               # noqa
+                TEST_DATA.printer.case8.width,              # noqa
+                TEST_DATA.printer.case8.header,             # noqa
+                TEST_DATA.printer.case8.footer,             # noqa
+                TEST_DATA.printer.case8.failure_msg,        # noqa
+                TEST_DATA.printer.case8.expected_result     # noqa
             )
         ]
     )
@@ -238,9 +238,9 @@ class TestMisc:
         assert Misc.is_iterable('abc') is True
 
     def test_join_string(self):
-        assert Misc.join_string('Jack', 'Brown') == 'JackBrown'
-        assert Misc.join_string('Jack', 'Brown', sep=' ') == 'Jack Brown'
-        assert Misc.join_string('Jack', 'Brown', separator='.') == 'Jack.Brown'
+        assert Misc.join_string('Jack', 'Brown') == 'JackBrown'                 # noqa
+        assert Misc.join_string('Jack', 'Brown', sep=' ') == 'Jack Brown'       # noqa
+        assert Misc.join_string('Jack', 'Brown', separator='.') == 'Jack.Brown' # noqa
 
     def test_get_instance_class_name(self):
         class Foo:
@@ -274,60 +274,60 @@ class TestMiscOutput:
     "data,columns,justify,missing,expected_result",
     [
         (
-            TEST_DATA.tabular.case1.data,
-            TEST_DATA.tabular.case1.columns,
-            TEST_DATA.tabular.case1.justify,
-            TEST_DATA.tabular.case1.missing,
-            TEST_DATA.tabular.case1.expected_result
+            TEST_DATA.tabular.case1.data,               # noqa
+            TEST_DATA.tabular.case1.columns,            # noqa
+            TEST_DATA.tabular.case1.justify,            # noqa
+            TEST_DATA.tabular.case1.missing,            # noqa
+            TEST_DATA.tabular.case1.expected_result     # noqa
         ),
         (
-            TEST_DATA.tabular.case2.data,
-            TEST_DATA.tabular.case2.columns,
-            TEST_DATA.tabular.case2.justify,
-            TEST_DATA.tabular.case2.missing,
-            TEST_DATA.tabular.case2.expected_result
+            TEST_DATA.tabular.case2.data,               # noqa
+            TEST_DATA.tabular.case2.columns,            # noqa
+            TEST_DATA.tabular.case2.justify,            # noqa
+            TEST_DATA.tabular.case2.missing,            # noqa
+            TEST_DATA.tabular.case2.expected_result     # noqa
         ),
         (
-            TEST_DATA.tabular.case3.data,
-            TEST_DATA.tabular.case3.columns,
-            TEST_DATA.tabular.case3.justify,
-            TEST_DATA.tabular.case3.missing,
-            TEST_DATA.tabular.case3.expected_result
+            TEST_DATA.tabular.case3.data,               # noqa
+            TEST_DATA.tabular.case3.columns,            # noqa
+            TEST_DATA.tabular.case3.justify,            # noqa
+            TEST_DATA.tabular.case3.missing,            # noqa
+            TEST_DATA.tabular.case3.expected_result     # noqa
         ),
         (
-            TEST_DATA.tabular.case4.data,
-            TEST_DATA.tabular.case4.columns,
-            TEST_DATA.tabular.case4.justify,
-            TEST_DATA.tabular.case4.missing,
-            TEST_DATA.tabular.case4.expected_result
+            TEST_DATA.tabular.case4.data,               # noqa
+            TEST_DATA.tabular.case4.columns,            # noqa
+            TEST_DATA.tabular.case4.justify,            # noqa
+            TEST_DATA.tabular.case4.missing,            # noqa
+            TEST_DATA.tabular.case4.expected_result     # noqa
         ),
         (
-            TEST_DATA.tabular.case5.data,
-            TEST_DATA.tabular.case5.columns,
-            TEST_DATA.tabular.case5.justify,
-            TEST_DATA.tabular.case5.missing,
-            TEST_DATA.tabular.case5.expected_result
+            TEST_DATA.tabular.case5.data,               # noqa
+            TEST_DATA.tabular.case5.columns,            # noqa
+            TEST_DATA.tabular.case5.justify,            # noqa
+            TEST_DATA.tabular.case5.missing,            # noqa
+            TEST_DATA.tabular.case5.expected_result     # noqa
         ),
         (
-            TEST_DATA.tabular.case6.data,
-            TEST_DATA.tabular.case6.columns,
-            TEST_DATA.tabular.case6.justify,
-            TEST_DATA.tabular.case6.missing,
-            TEST_DATA.tabular.case6.expected_result
+            TEST_DATA.tabular.case6.data,               # noqa
+            TEST_DATA.tabular.case6.columns,            # noqa
+            TEST_DATA.tabular.case6.justify,            # noqa
+            TEST_DATA.tabular.case6.missing,            # noqa
+            TEST_DATA.tabular.case6.expected_result     # noqa
         ),
         (
-            TEST_DATA.tabular.case7.data,
-            TEST_DATA.tabular.case7.columns,
-            TEST_DATA.tabular.case7.justify,
-            TEST_DATA.tabular.case7.missing,
-            TEST_DATA.tabular.case7.expected_result
+            TEST_DATA.tabular.case7.data,               # noqa
+            TEST_DATA.tabular.case7.columns,            # noqa
+            TEST_DATA.tabular.case7.justify,            # noqa
+            TEST_DATA.tabular.case7.missing,            # noqa
+            TEST_DATA.tabular.case7.expected_result     # noqa
         ),
         (
-            TEST_DATA.tabular.case8.data,
-            TEST_DATA.tabular.case8.columns,
-            TEST_DATA.tabular.case8.justify,
-            TEST_DATA.tabular.case8.missing,
-            TEST_DATA.tabular.case8.expected_result
+            TEST_DATA.tabular.case8.data,               # noqa
+            TEST_DATA.tabular.case8.columns,            # noqa
+            TEST_DATA.tabular.case8.justify,            # noqa
+            TEST_DATA.tabular.case8.missing,            # noqa
+            TEST_DATA.tabular.case8.expected_result     # noqa
         ),
     ]
 )
@@ -370,6 +370,3 @@ class TestMiscObject:
     def test_cleanup_list_of_dict(self, data, expected_result):
         result = MiscObject.cleanup_list_of_dict(data)
         assert result == expected_result
-
-
-

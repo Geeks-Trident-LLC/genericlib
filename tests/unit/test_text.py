@@ -26,20 +26,20 @@ class TestText:
         assert node == 'FooException: exception from foo instance'
 
     def test_format_case1(self):
-        node = Text.format('%s %s', 'Jack', 'Brown')
+        node = Text.format('%s %s', 'Jack', 'Brown')    # noqa
         assert node == 'Jack Brown'
 
-        node = Text.format('{} {}', 'Jack', 'Brown')
+        node = Text.format('{} {}', 'Jack', 'Brown')    # noqa
         assert node == 'Jack Brown'
 
     def test_format_case2(self):
         fmt = '%(first_name)s %(last_name)s'
         data = dict(first_name='Jack', last_name='Brown')
-        node = Text.format(fmt, data)
+        node = Text.format(fmt, data)   # noqa
         assert node == 'Jack Brown'
 
         fmt = '{first_name} {last_name}'
-        node = Text.format(fmt, first_name='Jack', last_name='Brown')
+        node = Text.format(fmt, first_name='Jack', last_name='Brown')   # noqa
         assert node == 'Jack Brown'
 
     def test_format_case3(self):
@@ -50,15 +50,15 @@ class TestText:
         )
 
         fmt1 = '{0.person1.first_name} {0.person1.last_name}, {0.person2.first_name} {0.person2.last_name}'
-        node = Text.format(fmt1, data)
+        node = Text.format(fmt1, data)      # noqa
         assert node == 'Jack Brown, Linda Wilson'
 
         fmt2 = '{p1.first_name} {p1.last_name}, {p2.first_name} {p2.last_name}'
-        node = Text.format(fmt2, p1=data.person1, p2=data.person2)
+        node = Text.format(fmt2, p1=data.person1, p2=data.person2)  # noqa
         assert node == 'Jack Brown, Linda Wilson'
 
         fmt3 = '{p2[first_name]} {p2[last_name]}, {p1[first_name]} {p1[last_name]}'
-        node = Text.format(fmt3, p1=data.person1, p2=data.person2)
+        node = Text.format(fmt3, p1=data.person1, p2=data.person2)  # noqa
         assert node == 'Linda Wilson, Jack Brown'
 
     @pytest.mark.parametrize(

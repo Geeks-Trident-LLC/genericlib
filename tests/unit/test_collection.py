@@ -11,32 +11,32 @@ class TestDictObject:
     """Test class for DictObject."""
     def test_initialization1(self):
         """Test dict object initialization 1"""
-        node = DictObject({'first': 'cherry', 'last time': 'berry'})
+        node = DictObject({'first': 'cherry', 'last time': 'berry'})    # noqa
         assert node
 
     def test_initialization2(self):
         """Test dict object initialization 2"""
-        node = DictObject({'last time': 'berry'}, first='cherry')
+        node = DictObject({'last time': 'berry'}, first='cherry')   # noqa
         assert node
 
     def test_initialization3(self):
         """Test dict object initialization 3"""
-        node = DictObject([('first', 'cherry'), ('last time', 'berry')])
+        node = DictObject([('first', 'cherry'), ('last time', 'berry')])    # noqa
         assert node
 
     def test_initialization4(self):
         """Test dict object initialization 4"""
-        node = DictObject([('True', True), ('False', False)])
+        node = DictObject([('True', True), ('False', False)])   # noqa
         assert node
 
     def test_getter(self):
         """Test getter"""
         data = {'first': 'cherry', 'last item': 'berry', 'True': True, 'False': False}
-        node = DictObject(data)
+        node = DictObject(data)         # noqa
 
-        assert node.first == 'cherry'
-        assert node.True_ is True
-        assert node.False_ is False
+        assert node.first == 'cherry'   # noqa
+        assert node.True_ is True       # noqa
+        assert node.False_ is False     # noqa
 
     def test_setter(self):
         """Test setter"""
@@ -45,7 +45,7 @@ class TestDictObject:
         assert node['first'] == 'cherry'
 
         node['last_item'] = 'berry'
-        assert node.last_item == 'berry'
+        assert node.last_item == 'berry'    # noqa
 
 
 class TestDotObject:
@@ -73,12 +73,12 @@ class TestDotObject:
         node.person2 = dict(name='Mary Smith', location='USA', gender='Female')
         node.person3 = dict(name='Linda Johnson', location='USA', gender='Female')
 
-        assert node.person1.name == 'Jack Brown'
-        assert node.person1.gender == 'Male'
-        assert node.person2.name == 'Mary Smith'
-        assert node.person2.gender == 'Female'
-        assert node.person3.name == 'Linda Johnson'
-        assert node.person3.gender == 'Female'
+        assert node.person1.name == 'Jack Brown'    # noqa
+        assert node.person1.gender == 'Male'        # noqa
+        assert node.person2.name == 'Mary Smith'    # noqa
+        assert node.person2.gender == 'Female'      # noqa
+        assert node.person3.name == 'Linda Johnson' # noqa
+        assert node.person3.gender == 'Female'      # noqa
 
 
 class TestSubstitutingVariable:
@@ -92,7 +92,7 @@ class TestSubstitutingVariable:
         """
 
         node = safe_load(data)
-        result = DotObject(substitute_variable(node))
+        result = DotObject(substitute_variable(node))   # noqa
 
         assert result.full_name == 'Jack Brown'
         assert result.other_full_name == 'Brown, Jack'
@@ -113,7 +113,7 @@ class TestSubstitutingVariable:
         """
 
         node = safe_load(data)
-        result = DotObject(substitute_variable(node))
+        result = DotObject(substitute_variable(node))   # noqa
 
         assert result.employee1.name == 'Jack Brown'
         assert result.employee1.location == 'San Jose, CA'

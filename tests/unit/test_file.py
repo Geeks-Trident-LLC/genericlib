@@ -77,7 +77,7 @@ class TestFile:
         ]
     )
     def test_copy_files(self, src, dst):
-        result = File.copy_files(src, dst)
+        result = File.copy_files(src, dst)  # noqa
         assert result != ''
 
     @pytest.mark.parametrize(
@@ -92,7 +92,7 @@ class TestFile:
         ]
     )
     def test_copy_files(self, src, dst):
-        result = File.copy_files(src, dst)
+        result = File.copy_files(src, dst)  # noqa
         assert result
 
     @pytest.mark.parametrize(
@@ -163,7 +163,7 @@ class TestFile:
         assert result
 
     def test_change_home_dir_to_generic(self):
-        file_name = File.get_path('file1', is_home=True)
+        file_name = File.get_path('file1', is_home=True)    # noqa
 
         result = File.change_home_dir_to_generic(file_name)
         assert result
@@ -183,7 +183,7 @@ class TestFile:
 
         total = 3
         for i in range(1, total + 1):
-            file_name = File.get_path(tmp_dir, 'file%s' % i)
+            file_name = File.get_path(tmp_dir, 'file%s' % i)    # noqa
             File.save(file_name, str(datetime.now()))
             time.sleep(0.001)
 
@@ -202,10 +202,10 @@ class TestFile:
         File.save(file_name, sample_yaml_data)
 
         result = File.get_result_from_yaml_file(file_name)
-        assert result['location']['main'] == 'San Jose, CA'
-        assert result['location']['branch'] == 'Milpitas, CA'
-        assert result['employees']['employee1']['name'] == 'Jack Brown'
-        assert result['employees']['employee2']['name'] == 'Linda Wilson'
+        assert result['location']['main'] == 'San Jose, CA'                 # noqa
+        assert result['location']['branch'] == 'Milpitas, CA'               # noqa
+        assert result['employees']['employee1']['name'] == 'Jack Brown'     # noqa
+        assert result['employees']['employee2']['name'] == 'Linda Wilson'   # noqa
 
     def test_get_result_from_yaml_file_case2(self):
         file_name = get_temp_file() + '.yaml'
@@ -213,10 +213,10 @@ class TestFile:
         File.save(file_name, sample_yaml_data)
 
         result = File.get_result_from_yaml_file(file_name, dot_datatype=True)
-        assert result.location.main == 'San Jose, CA'
-        assert result.location.branch == 'Milpitas, CA'
-        assert result.employees.employee1.name == 'Jack Brown'
-        assert result.employees.employee2.name == 'Linda Wilson'
+        assert result.location.main == 'San Jose, CA'               # noqa
+        assert result.location.branch == 'Milpitas, CA'             # noqa
+        assert result.employees.employee1.name == 'Jack Brown'      # noqa
+        assert result.employees.employee2.name == 'Linda Wilson'    # noqa
 
     def test_get_result_from_yaml_file_case3(self):
         file_name = get_temp_file() + '.yaml'
@@ -226,14 +226,14 @@ class TestFile:
         result = File.get_result_from_yaml_file(
             file_name, dot_datatype=True, var_substitution=True
         )
-        assert result.location.main == 'San Jose, CA'
-        assert result.location.branch == 'Milpitas, CA'
+        assert result.location.main == 'San Jose, CA'       # noqa
+        assert result.location.branch == 'Milpitas, CA'     # noqa
 
-        assert result.employees.employee1.name == 'Jack Brown'
-        assert result.employees.employee1.office_location == 'San Jose, CA'
+        assert result.employees.employee1.name == 'Jack Brown'              # noqa
+        assert result.employees.employee1.office_location == 'San Jose, CA' # noqa
 
-        assert result.employees.employee2.name == 'Linda Wilson'
-        assert result.employees.employee2.office_location == 'Milpitas, CA'
+        assert result.employees.employee2.name == 'Linda Wilson'            # noqa
+        assert result.employees.employee2.office_location == 'Milpitas, CA' # noqa
 
     @pytest.mark.parametrize(
         "filename,new_name,prefix,postfix,new_extension,expected_result",
