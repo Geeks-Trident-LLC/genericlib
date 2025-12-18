@@ -56,7 +56,7 @@ with open("README.md", encoding="utf-8") as f:
 
 setup(
     name="genericlib",
-    version="0.6.0a0",  # alpha versioning
+    version="0.6.1a2",  # alpha versioning
     license="BSD-3-Clause",
     license_files=["LICENSE"],
     description="The Generic Python Library accelerates development with "

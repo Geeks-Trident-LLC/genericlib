@@ -46,8 +46,7 @@ pip install genericlib
 ## 📦 Dependencies  
 
 This project relies on the following Python packages to ensure smooth functionality and seamless integration:  
-
-- [**python-dateutil**](https://pypi.org/project/python-dateutil/) – Extensions to Python’s `datetime` module for advanced parsing, formatting, and date manipulation.  
+ 
 - [**PyYAML**](https://pypi.org/project/PyYAML/) – YAML parser and emitter, enabling structured configuration management in Python applications.
 
 ---
