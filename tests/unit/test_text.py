@@ -1,4 +1,5 @@
-import pytest
+import pytest   # noqa
+
 from genericlib import Text
 from genericlib import DotObject
 

@@ -1,6 +1,6 @@
-import re
+import pytest   # noqa
 
-import pytest
+import re
 from genericlib import Wildcard
 
 

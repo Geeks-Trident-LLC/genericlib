@@ -1,3 +1,5 @@
+import pytest   # noqa
+
 from genericlib import DictObject
 from genericlib import DotObject
 from genericlib import substitute_variable

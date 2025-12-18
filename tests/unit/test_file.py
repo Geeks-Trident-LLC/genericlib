@@ -1,4 +1,4 @@
-import pytest
+import pytest   # noqa
 from datetime import datetime
 import time
 from textwrap import dedent
@@ -6,8 +6,8 @@ from textwrap import dedent
 from genericlib import File
 from genericlib import Misc
 
-from . import get_temp_file
-from . import get_temp_dir
+from . import get_temp_file  # Imported from tests/unit/__init__.py
+from . import get_temp_dir   # Imported from tests/unit/__init__.py
 
 sample_yaml_data = dedent("""
     location:

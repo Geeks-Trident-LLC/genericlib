@@ -1,4 +1,4 @@
-import pytest
+import pytest   # noqa
 
 from genericlib import ECODE
 from genericlib import ICSValue
