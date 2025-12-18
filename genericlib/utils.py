@@ -1,35 +1,63 @@
 """
-Utility module providing helper classes and functions for data formatting,
-validation, platform inspection, and structured output.
+genericlib.utils
+================
 
-This module consolidates a variety of reusable utilities designed to simplify
-common programming tasks. It includes tools for:
+General-purpose utility classes and functions for data formatting,
+validation, platform inspection, object manipulation, and structured output.
 
-- **Formatted printing**: Classes like `Printer` and `Tabular` make it easier
-  to display structured data (lists, dictionaries, tabular results) in a
-  human-readable format with support for headers, footers, justification, and
-  missing-value handling.
-- **Type checking and validation**: The `Misc` class provides safe checks for
-  strings, lists, dictionaries, and other built-in types, reducing repetitive
-  boilerplate code when working with heterogeneous data.
-- **Shell command execution**: `MiscOutput` offers a structured interface for
-  running system commands and capturing their output, exit codes, and success
-  status in a convenient `DotObject`.
-- **Platform and environment metadata**: `MiscPlatform` retrieves details about
-  the operating system, Python runtime, and documentation URLs, useful for
-  diagnostics and logging.
-- **Function invocation and error handling**: `MiscFunction` simplifies calling
-  functions while capturing stdout/stderr, and supports dynamic exception
-  creation tied to specific objects.
-- **Object manipulation**: `MiscObject` provides helpers for copying objects
-  (shallow or deep) and cleaning up collections, ensuring consistency when
-  handling mixed data structures.
-- **Tabular data presentation**: The `Tabular` class and its wrapper functions
-  (`get_data_as_tabular`, `print_data_as_tabular`) convert structured data into
-  readable tables for reporting or console output.
+This module consolidates a variety of reusable helpers designed to simplify
+common programming tasks. It includes tools for formatted printing, type
+checking, shell command execution, platform metadata retrieval, safe function
+invocation, object manipulation, and tabular data presentation.
 
-Overall, this module serves as a foundation of general-purpose utilities that
-promote cleaner, more maintainable code across applications.
+Key Components
+--------------
+Classes
+-------
+- Printer:
+    Provides methods for formatted printing of structured data with optional
+    headers, footers, failure messages, and width constraints.
+
+- Misc:
+    Offers type-checking and validation helpers for Python’s built-in types.
+    Reduces boilerplate when verifying heterogeneous data structures.
+
+- MiscOutput:
+    Executes shell commands and captures results (output, exit code, success
+    status) in a structured `DotObject`.
+
+- MiscPlatform:
+    Retrieves platform and Python environment information, including kernel
+    details and documentation URLs. Useful for diagnostics and logging.
+
+- MiscFunction:
+    Safely invokes callables while capturing stdout/stderr. Supports dynamic
+    error handling and custom exception generation.
+
+- MiscObject:
+    Provides object manipulation helpers, including shallow/deep copying and
+    cleanup of lists of dictionaries.
+
+- Tabular:
+    Formats dictionaries or lists of dictionaries into human-readable tables
+    with column selection, justification, and missing-value handling.
+
+Functions
+---------
+- get_data_as_tabular(data, columns=None, justify='left', missing='not_found'):
+    Converts structured data into a tabular string representation.
+
+- print_data_as_tabular(data, columns=None, justify='left', missing='not_found'):
+    Prints structured data in a tabular format directly to stdout.
+
+Use Cases
+---------
+- Improve readability of logs, reports, and console output.
+- Validate and manipulate heterogeneous data structures safely.
+- Execute shell commands with structured error handling.
+- Retrieve environment metadata for debugging or reporting.
+- Present structured data (e.g., query results) in tabular form.
+
 """
 
 import platform

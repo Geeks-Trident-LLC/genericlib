@@ -1,3 +1,43 @@
+"""
+genericlib.search
+=================
+
+Wildcard parsing and regex conversion utilities.
+
+This module provides tools for interpreting shell-style wildcard expressions
+and converting them into valid regular expression (regex) patterns. It is
+designed to simplify text matching scenarios where users supply flexible
+patterns containing wildcards, bracket expansions, numeric ranges, POSIX
+character classes, and whitespace variations.
+
+Key Components
+--------------
+- Wildcard:
+    A parser and converter that transforms wildcard expressions into regex
+    patterns. Supports case-insensitivity, relaxed whitespace handling,
+    anchoring, and multi-line input. Useful for building search utilities,
+    text parsers, and validation logic.
+
+Dependencies
+------------
+- `re`: Used for regex compilation and matching.
+- `genericlib.utils.Misc`: Provides helper functions for type checking and
+  validation.
+- `genericlib.constant.STRING`, `genericlib.constnum.NUMBER`,
+  `genericlib.constsymbol.SYMBOL`, `genericlib.constpattern.PATTERN`,
+  `genericlib.conststruct.SLICE`: Shared constants used for parsing and
+  pattern construction.
+
+Use Cases
+---------
+- Converting user-friendly wildcard input into regex for text search.
+- Supporting flexible matching in configuration files or command-line tools.
+- Parsing structured input with bracket expansions or numeric ranges.
+- Handling whitespace variations in user-supplied patterns.
+
+"""
+
+
 import re
 
 from genericlib.utils import Misc

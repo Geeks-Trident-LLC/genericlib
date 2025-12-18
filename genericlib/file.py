@@ -1,3 +1,50 @@
+"""
+genericlib.file
+===============
+
+File and directory utilities for the `genericlib` package.
+
+This module provides decorators and a utility class for handling common
+filesystem operations with built-in error management. It centralizes tasks
+such as file creation, deletion, copying, path manipulation, and content
+loading (text, JSON, YAML, CSV), while offering consistent error-handling
+strategies through decorators.
+
+Key Components
+--------------
+- try_to_call:
+    A decorator that wraps methods in a try/except block. On failure, it
+    returns `False` unless `on_failure=True` is passed, in which case the
+    exception is re-raised. It also updates the calling object's `message`
+    and `on_failure` attributes when exceptions are suppressed.
+
+- try_to_other_call:
+    Similar to `try_to_call`, but returns an empty string (`""`) instead of
+    `False` when exceptions are suppressed. Useful for methods expected to
+    return string values.
+
+- File:
+    A utility class that consolidates common file and directory operations.
+    It includes methods for checking existence, copying, creating, deleting,
+    and loading files in multiple formats. It also provides helpers for
+    building paths, extracting extensions, and performing quick lookups.
+
+Error Handling
+--------------
+- Methods decorated with `@try_to_call` or `@try_to_other_call` provide
+  flexible error management controlled by the `on_failure` flag.
+- When exceptions are suppressed, the `File` class updates its `message`
+  and `on_failure` attributes to reflect the error state.
+
+Use Cases
+---------
+- Safely perform file operations without breaking application flow.
+- Load structured data (JSON, YAML, CSV) with consistent error handling.
+- Simplify directory creation, file copying, and path manipulation.
+- Integrate with Robot Framework for automated testing and reporting.
+
+"""
+
 import csv
 import re
 import os

@@ -1,4 +1,7 @@
 """
+genericlib.constant
+===================
+
 Constants and utility classes for genericlib.
 
 This module centralizes constant definitions and supporting logic

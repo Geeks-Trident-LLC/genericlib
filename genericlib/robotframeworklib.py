@@ -1,3 +1,45 @@
+"""
+genericlib.robotframeworklib
+============================
+
+Integration utilities for Robot Framework.
+
+This module provides helpers to adapt Python functions and classes from
+`genericlib` into Robot Framework–compatible libraries. It focuses on
+transforming Python docstrings into Robot Framework documentation style
+and dynamically attaching functions to Robot Framework library classes.
+
+Key Components
+--------------
+- to_robotframework_doc_str:
+    Converts a Python function or method docstring into Robot Framework
+    documentation style (pipe-prefixed lines). Updates the target Robot
+    Framework function with the transformed docstring.
+
+- update_robot_framework_lib:
+    Scans a Python class or module for functions matching a given regex
+    pattern (default: `"rf_?generic_?lib_?"`). Wraps their docstrings
+    into Robot Framework style and attaches them to the specified Robot
+    Framework library class.
+
+- RFFile:
+    A Robot Framework library class that exposes file-related operations
+    from `genericlib.File`. Methods are dynamically attached using
+    `update_robot_framework_lib`.
+
+Design Notes
+------------
+- Docstrings are reformatted to align with Robot Framework's table-style
+  documentation, improving readability in Robot Framework test suites.
+- Functions are dynamically bound to Robot Framework library classes,
+  allowing seamless reuse of `genericlib` utilities in Robot Framework
+  environments.
+- The default regex pattern ensures only functions intended for Robot
+  Framework integration are included.
+
+"""
+
+
 from genericlib import File
 from textwrap import dedent
 import re

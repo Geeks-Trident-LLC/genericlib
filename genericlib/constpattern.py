@@ -1,3 +1,36 @@
+"""
+genericlib.constpattern
+=======================
+
+Regular expression pattern constants for text parsing and validation.
+
+This module centralizes reusable regex strings that are frequently used
+throughout the `genericlib` package. By defining named constants for common
+patterns (whitespace, digits, words, punctuation, etc.), it avoids scattering
+hardcoded regex literals across the codebase and improves readability,
+maintainability, and consistency.
+
+Key Components
+--------------
+- PATTERN:
+    A class containing categorized regex constants for general wildcards,
+    whitespace, line breaks, digits, letters, punctuation, words, phrases,
+    mixed content, and non-whitespace groups. These constants are defined as
+    raw regex strings and can be used directly with Python's `re` module.
+
+- get_ref_pattern_by_name:
+    A helper function that retrieves a regex pattern constant from `PATTERN`
+    by name (case-insensitive). Provides a default fallback if the requested
+    pattern is not found.
+
+Use Cases
+---------
+- Simplifying regex usage in parsing and validation tasks.
+- Providing consistent patterns for whitespace handling, tokenization, and
+  text normalization.
+- Reducing duplication of regex literals across modules.
+"""
+
 
 class PATTERN:
     """

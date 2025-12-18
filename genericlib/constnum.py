@@ -1,3 +1,31 @@
+"""
+genericlib.constnum
+===================
+
+Numeric and index constants for the `genericlib` package.
+
+This module defines commonly used integer values as named constants to improve
+readability and reduce the need for hardcoded numbers throughout the codebase.
+It provides two complementary classes:
+
+- NUMBER:
+    General-purpose numeric constants (digits, teens, multiples of ten, and
+    larger values such as hundred and thousand). These constants are useful
+    wherever explicit numeric values are required.
+
+- INDEX:
+    Mirrored numeric constants intended specifically for indexing contexts
+    (e.g., array positions, loop counters, or ordered identifiers). By using
+    named constants instead of raw integers, code becomes more descriptive
+    and self-documenting.
+
+Use Cases
+---------
+- Replace "magic numbers" with descriptive constants.
+- Improve clarity in loops, ranges, and indexing operations.
+- Provide consistent numeric references across the package.
+"""
+
 
 class NUMBER:
     """

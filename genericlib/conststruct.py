@@ -1,3 +1,37 @@
+"""
+genericlib.conststruct
+======================
+
+Structural and slice constants for the `genericlib` package.
+
+This module centralizes reusable empty data structures and commonly used
+slice objects. By defining these constants in one place, it reduces
+duplication, improves readability, and provides a consistent way to
+reference frequently used structures and sequence operations.
+
+Key Components
+--------------
+- STRUCT:
+    Provides reusable empty data structures such as an empty list and
+    empty dictionary. These constants help avoid repeatedly instantiating
+    new empty objects throughout the codebase.
+
+- SLICE:
+    Defines commonly used slice objects for indexing lists, strings, and
+    other sequence types. Centralizing slice definitions improves clarity
+    when accessing sequence elements and reduces reliance on "magic slice"
+    literals scattered across the code.
+
+Use Cases
+---------
+- Replace inline `[]` or `dict()` with descriptive constants for clarity.
+- Use predefined slices (`[:1]`, `[-1:]`, `[1:]`, etc.) to make indexing
+  operations more self-documenting.
+- Simplify code that frequently manipulates sequences by using named slice
+  constants instead of hardcoded slice expressions.
+"""
+
+
 from genericlib.constnum import NUMBER
 
 

@@ -1,3 +1,54 @@
+"""
+genericlib.collection
+=====================
+
+Enhanced dictionary and object-like data structures with dot-notation access.
+
+This module provides specialized dictionary subclasses that make working with
+structured or nested data more intuitive. By supporting both traditional
+key-based indexing and attribute-style dot notation, these classes reduce
+boilerplate and improve readability when handling JSON-like data, configuration
+objects, or API responses.
+
+Key Components
+--------------
+- DictObject:
+    A dictionary subclass that synchronizes keys with attributes. Values can be
+    accessed or updated interchangeably via `obj['key']` or `obj.key`. Reserved
+    Python keywords are automatically suffixed with an underscore to avoid
+    conflicts.
+
+    Behavior:
+    - Setting an attribute also updates the dictionary.
+    - Setting a dictionary key also updates the corresponding attribute.
+    - Reserved keywords (e.g., `class`, `def`, `return`) are renamed with a
+      trailing underscore when used as attributes.
+
+- DotObject:
+    A recursive extension of DictObject that wraps nested dictionaries as
+    DotObject instances. This enables deep attribute-style access to complex,
+    hierarchical data structures without manual conversion.
+
+    Behavior:
+    - Accessing a nested dictionary returns a DotObject.
+    - Both attribute-style and key-based access are supported at all levels.
+
+Dependencies
+------------
+- `re`: Used for keyword handling and pattern matching.
+- `deepcopy`: Ensures safe copying of nested structures.
+- `genericlib.constant.STRING` and `genericlib.constnum.NUMBER`: Provide shared
+  constants used for validation and type handling.
+
+Use Cases
+---------
+- Simplifying access to JSON-like data structures.
+- Building configuration objects that can be navigated with dot notation.
+- Improving readability when working with nested dictionaries in applications
+  such as data parsing, configuration management, or API responses.
+
+"""
+
 
 import re
 from copy import deepcopy

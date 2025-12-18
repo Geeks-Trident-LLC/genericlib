@@ -1,7 +1,7 @@
 
 # 📖 Overview
 
-The **Generic Python Library** is a foundational toolkit designed to accelerate development and simplify common programming tasks. It provides essential support for the **regexgenerator** and **textfsmgenerator** packages, ensuring smooth integration and reliable functionality.  
+The **Generic Python Library** is a foundational toolkit designed to accelerate development and simplify common programming tasks. It provides essential support for the **regexapp** and **textfsmgen** packages, ensuring smooth integration and reliable functionality.  
 
 Beyond package‑specific utilities, the library includes a wide range of **generic classes**, **methods**, and **functions** that developers can reuse across projects. These building blocks reduce repetitive coding, streamline workflows, and promote cleaner, more maintainable applications.  
 
@@ -12,7 +12,7 @@ By focusing on **efficiency**, **adaptability**, and **reusability**, the Generi
 ## ✨ Features
 
 - 🧩 **Reusable Components** – Generic classes and functions designed for cross‑project use.  
-- 🔄 **Integration Support** – Smooth compatibility with regexgenerator and textfsmgenerator.  
+- 🔄 **Integration Support** – Smooth compatibility with regexapp and textfsmgen.  
 - ⚡ **Workflow Efficiency** – Reduces repetitive coding and accelerates development cycles.  
 - 📚 **Maintainability** – Encourages clean, consistent, and scalable application design.  
 - 🤝 **Collaboration Ready** – Shared utilities that improve teamwork across development and QA.  
