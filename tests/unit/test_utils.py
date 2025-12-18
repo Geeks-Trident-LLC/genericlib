@@ -109,7 +109,7 @@ class TestMisc:
         assert result is True
 
     def test_is_mutable_sequence(self):
-        for cls in [list, tuple, set]:
+        for cls in [list]:
             obj = cls()
             result = Misc.is_mutable_sequence(obj)
             assert result is True
