@@ -169,11 +169,11 @@ class Text(BaseText):
 
         Parameters
         ----------
-        *args : tuple
+        *args : arguments
             Positional arguments used for formatting. The first argument is
             treated as the format string, and subsequent arguments are values
             to substitute.
-        **kwargs : dict
+        **kwargs : keyword arguments
             Keyword arguments used for new-style (`str.format`) formatting.
 
         Returns
@@ -235,7 +235,7 @@ class Text(BaseText):
         data : str
             The text content to wrap inside the tag. If empty, a self-closing
             tag is generated.
-        *args : str
+        *args : arguments
             Optional attribute strings (e.g., "class='highlight'", "id='main'").
             Multiple attributes are joined with spaces.
 

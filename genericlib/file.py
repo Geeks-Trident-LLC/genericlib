@@ -779,7 +779,7 @@ class File:
 
         Parameters
         ----------
-        *args : tuple
+        *args : arguments
             One or more strings representing path components (e.g.,
             directory names, filenames).
         is_home : bool, optional
@@ -854,7 +854,7 @@ class File:
 
         Parameters
         ----------
-        *args : tuple
+        *args : arguments
             One or more strings representing path components (e.g.,
             directories, subdirectories).
         prefix : str, optional

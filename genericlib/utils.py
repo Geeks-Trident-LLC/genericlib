@@ -276,7 +276,7 @@ class Printer:
         fmt : str
             The format string to interpolate. Can contain placeholders
             compatible with either `.format` or `%` depending on `style`.
-        *args : tuple
+        *args : arguments
             Positional arguments to substitute into the format string.
         style : str, optional
             The formatting style to use:
@@ -316,7 +316,7 @@ class Printer:
         fmt : str
             The format string to interpolate. Can contain placeholders
             compatible with either `.format` or `%` depending on `style`.
-        *args : tuple
+        *args : arguments
             Positional arguments to substitute into the format string.
         style : str, optional
             The formatting style to use:
@@ -1209,7 +1209,7 @@ class Misc:
 
         Parameters
         ----------
-        *args : Any
+        *args : arguments
             One or more objects to be combined into a string. Each object is
             converted to a string and split into lines before joining.
         width : int, optional
@@ -1260,7 +1260,7 @@ class Misc:
 
         Parameters
         ----------
-        *args : Any
+        *args : arguments
             One or more objects to be combined into a string. Each object is
             converted to a string and split into lines before joining.
         width : int, optional
@@ -2465,12 +2465,12 @@ class MiscFunction:
         ----------
         callable_obj : Callable
             The function or callable object to be invoked.
-        *args : tuple
+        *args : arguments
             Positional arguments to pass to the callable.
         filename : str, optional
             Path to a file where the combined stdout and stderr output will be
             written. Defaults to an empty string (no file written).
-        **kwargs : dict
+        **kwargs : keyword arguments
             Keyword arguments to pass to the callable.
 
         Returns

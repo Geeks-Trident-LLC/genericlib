@@ -85,9 +85,9 @@ class DictObject(dict):
 
         Parameters
         ----------
-        *args : tuple
+        *args : arguments
             Positional arguments passed to the base `dict` constructor.
-        **kwargs : dict
+        **kwargs : keyword arguments
             Keyword arguments passed to the base `dict` constructor. These
             become both dictionary keys and object attributes.
 
@@ -172,12 +172,12 @@ class DictObject(dict):
 
         Parameters
         ----------
-        *args : tuple
+        *args : arguments
             Positional arguments passed to the base `dict.update`.
         is_updated_attr : bool, optional
             Flag indicating whether attributes should be updated alongside
             dictionary keys. Defaults to True.
-        **kwargs : dict
+        **kwargs : keyword arguments
             Keyword arguments passed to the base `dict.update`.
 
         Notes
@@ -330,7 +330,7 @@ def substitute_variable(data, root_var_name='self'):
         ----------
         txt : str
             The input text containing placeholders.
-        **kwargs : dict
+        **kwargs : keywords arguments
             Mapping of variable names to values used for substitution.
             If a single variable is provided, the regex pattern is scoped
             to that variable name. Otherwise, a general pattern is used.
