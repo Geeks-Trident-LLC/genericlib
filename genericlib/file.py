@@ -64,6 +64,8 @@ from genericlib import Text
 from genericlib import DotObject
 from genericlib import substitute_variable
 
+from genericlib.exceptions import raise_exception
+
 from genericlib.constant import STRING
 
 
@@ -137,14 +139,14 @@ def try_to_call(func):
             return result
         except Exception as ex:
             if kwargs.get('on_failure', False):
-                raise ex
+                raise_exception(ex)
             else:
                 if len(args) >= 1:
                     args[0].message = Text(ex)
                     args[0].on_failure = False
                     return False
                 else:
-                    raise ex
+                    raise_exception(ex)
     return wrapper_func
 
 
@@ -222,14 +224,14 @@ def try_to_other_call(func):
             return result
         except Exception as ex:
             if kwargs.get('on_failure', False):
-                raise ex
+                raise_exception(ex)
             else:
                 if len(args) >= 1:
                     args[0].message = Text(ex)
                     args[0].on_failure = False
                     return ''
                 else:
-                    raise ex
+                    raise_exception(ex)
     return wrapper_func
 
 
