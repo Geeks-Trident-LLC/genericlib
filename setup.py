@@ -85,7 +85,9 @@ setup(
         "Source": "https://github.com/Geeks-Trident-LLC/genericlib",
         "Tracker": "https://github.com/Geeks-Trident-LLC/genericlib/issues",
     },
+    python_requires=">=3.9",
     include_package_data=True,
+    package_data={"": ["LICENSE", "README.md"]},
     classifiers=[
         # development status
         "Development Status :: 3 - Alpha",
