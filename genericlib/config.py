@@ -27,7 +27,7 @@ Use Cases
 - Facilitating automated checks for compatibility or upgrades.
 """
 
-__version__ = '0.6.1a2'
+__version__ = '0.6.1a3'
 version = __version__
 
 __all__ = [
