@@ -41,7 +41,7 @@ Design Notes
 
 
 from genericlib import File
-from textwrap import dedent
+from genericlib.text import dedent_and_strip
 import re
 import types
 
@@ -56,9 +56,9 @@ def to_robotframework_doc_str(py_func, rf_func=None):
     rf_func (FunctionType, Method): function or method.  Default is None.
     """
     if hasattr(py_func, '__func__'):
-        doc_str = dedent(py_func.__func__.__doc__ or '').strip()
+        doc_str = dedent_and_strip(py_func.__func__.__doc__ or '')
     elif hasattr(py_func, '__doc__'):
-        doc_str = dedent(py_func.__doc__ or '').strip()
+        doc_str = dedent_and_strip(py_func.__doc__ or '')
     else:
         return
 

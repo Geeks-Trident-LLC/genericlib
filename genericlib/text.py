@@ -10,64 +10,6 @@ pattern generation, and controlled escaping. It is designed to simplify
 common text manipulation tasks while providing consistent error handling
 and metadata preservation.
 
-Key Components
---------------
-Classes
--------
-- BaseText:
-    A string subclass that gracefully handles exceptions. If initialized
-    with a `BaseException`, it formats the exception into a readable string.
-
-- Text:
-    Extends `BaseText` with additional utilities for safe formatting,
-    HTML wrapping, and regex-based splitting.
-
-- BaseLine:
-    A string subclass enforcing single-line input. Captures both raw content
-    and metadata such as trailing newline characters.
-
-- Line:
-    Extends `BaseLine` with utilities for whitespace handling, validation,
-    emptiness checks, and regex-based tokenization.
-
-- BaseMatchedObject:
-    Represents a fragment of matched text and converts it into the most
-    appropriate regex pattern (whitespace, repeated punctuation, literal text).
-
-- MatchedObject:
-    Specialized wrapper that always derives its content from a regex
-    `re.Match` object.
-
-- PreMatchedObject:
-    Captures the substring immediately before a regex match, useful for
-    reconstructing leading context.
-
-- PostMatchedObject:
-    Captures the substring immediately after a regex match, useful for
-    trailing context analysis.
-
-Functions
----------
-- get_generic_error_msg(instance, fmt, *other):
-    Constructs a standardized error message string prefixed with the
-    instance’s class name.
-
-- get_whitespace_chars(k=8, to_list=True):
-    Returns all Unicode characters in the range `0..2**k` recognized as
-    whitespace by the regex engine.
-
-- get_non_whitespace_chars(k=8, to_list=True):
-    Returns all Unicode characters in the range `0..2**k` *not* recognized
-    as whitespace by the regex engine.
-
-- do_soft_regex_escape(pattern):
-    Performs controlled escaping for regex usage, leaving non-metacharacter
-    punctuation unescaped for readability.
-
-- enclose_string(text, quote='\"', is_new_line=False):
-    Wraps text in single or triple quotes, with optional newline formatting
-    for multi-line content.
-
 Use Cases
 ---------
 - Safely represent exceptions as strings for logging or debugging.
@@ -82,6 +24,8 @@ Use Cases
 
 import re
 import string
+
+from textwrap import dedent
 
 from genericlib.exceptions import LineArgumentError
 from genericlib.constant import STRING
@@ -1436,3 +1380,30 @@ def enclose_string(text, quote='"', is_new_line=False):
     else:
         enclosed_txt = f'{quote}{reformat_txt}{quote}'
         return enclosed_txt
+
+
+def dedent_and_strip(txt):
+    """
+    Convert input to string, remove common leading indentation, and strip
+    leading/trailing whitespace.
+
+    Parameters
+    ----------
+    txt : str
+        The input object to process. It will be converted to a string
+        before unindenting and stripping.
+
+    Returns
+    -------
+    str
+        A new string with common leading indentation removed and
+        leading/trailing whitespace stripped.
+
+    Notes
+    -----
+    This function is useful for normalizing multi-line text blocks
+    (e.g., docstrings, templates) so they can be compared or displayed
+    consistently.
+    """
+    new_txt = dedent(str(txt)).strip()
+    return new_txt

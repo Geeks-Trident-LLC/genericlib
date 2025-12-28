@@ -4,6 +4,7 @@ from genericlib import Text
 from genericlib import DotObject
 
 from genericlib.text import BaseMatchedObject
+from genericlib.text import dedent_and_strip
 
 
 class FooException(Exception):
@@ -100,3 +101,25 @@ class TestBaseMatchedObject:
         node = BaseMatchedObject(data)
         result = node.to_pattern()
         assert result == expected_result
+
+
+class TestDedentAndStripFunction:
+    def test_dedent_and_strip_removes_indentation_and_whitespace(self):
+        txt = "    line1\n    line2\n"
+        result = dedent_and_strip(txt)
+        assert result == "line1\nline2"
+
+    def test_dedent_and_strip_trims_leading_and_trailing_spaces(self):
+        txt = "   hello world   "
+        result = dedent_and_strip(txt)
+        assert result == "hello world"
+
+    def test_dedent_and_strip_handles_multiline_with_mixed_indent(self):
+        txt = """
+            line1
+              line2
+            line3
+        """
+        result = dedent_and_strip(txt)
+        # dedent removes common leading whitespace, strip removes outer blank lines
+        assert result == "line1\n  line2\nline3"
