@@ -1577,3 +1577,42 @@ def get_file_stream(
         return stream
     except OSError as ex:
         raise_exception(ex, msg=f"Failed to open file {filename}: {ex}")
+
+
+def read(filename: str, encoding: str="utf-8"):
+    """
+    Read and return the full content of a file.
+
+    This method opens the specified file using `get_file_stream` in
+    read mode, reads its entire content into memory, and returns it
+    as a string. By default, the file is read with UTF‑8 encoding.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the file to read.
+    encoding : str, default "utf-8"
+        Text encoding used to decode the file content.
+
+    Returns
+    -------
+    str
+        The complete contents of the file as a string.
+
+    Raises
+    ------
+    ValueError
+        If `filename` is empty after normalization.
+    OSError
+        If the file cannot be opened or read.
+
+    Notes
+    -----
+    - This method reads the entire file into memory at once. For
+      very large files, consider using a streaming approach instead.
+    - Relies on `get_file_stream` for consistent error handling and
+      filename normalization.
+    """
+    stream = get_file_stream(filename, mode="r", encoding=encoding)
+    content = stream.read()
+    return content
