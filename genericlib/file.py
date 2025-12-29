@@ -67,6 +67,7 @@ from genericlib import DotObject
 from genericlib import substitute_variable
 
 from genericlib.exceptions import raise_exception
+from genericlib.misc import sys_exit
 
 from genericlib.constant import STRING
 
@@ -1616,3 +1617,44 @@ def read(filename: str, encoding: str="utf-8"):
     stream = get_file_stream(filename, mode="r", encoding=encoding)
     content = stream.read()
     return content
+
+
+def read_with_exit(filename: str, encoding: str="utf-8"):
+    """
+    Read a file and exit the program on failure.
+
+    Attempts to read the contents of the given file using `cls.read`.
+    If an error occurs (e.g., file not found, permission denied, or
+    encoding issues), the exception is printed to stderr and the
+    program terminates with exit code 1`.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the file to be read.
+    encoding : str, default "utf-8"
+        Text encoding used to open the file.
+
+    Returns
+    -------
+    str
+        The file contents as a string if reading succeeds.
+
+    Raises
+    ------
+    Exception
+        Always raised if any exception occurs while reading the file.
+        The exit code is 1.
+
+    Notes
+    -----
+    - This method is intended for command-line tools or scripts where
+      failure to read a file should immediately terminate execution.
+    - For safer error handling without exiting, use `FileUtils.read`
+      directly instead.
+    """
+    try:
+        content = read(filename, encoding=encoding)
+        return content
+    except Exception as ex:
+        sys_exit(success=False, msg=f'*** {type(ex).__name__}: {ex}')

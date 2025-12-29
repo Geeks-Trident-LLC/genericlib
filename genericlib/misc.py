@@ -20,7 +20,7 @@ Notes
 import sys
 from platform import python_version as py_version
 
-from genericlib import ECODE
+from genericlib.constant import ECODE
 from genericlib.text import decorate_list_of_line
 
 
