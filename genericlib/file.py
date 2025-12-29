@@ -1702,3 +1702,37 @@ def write(filename: str, content: str, encoding: str="utf-8"):
     """
     stream = get_file_stream(filename, mode="w", encoding=encoding)
     stream.write(content)
+
+
+def safe_load_yaml(filename: str):
+    """
+    Load and parse a YAML file safely.
+
+    Reads the file contents using `cls.read`, parses them with
+    `yaml.safe_load`, and returns the corresponding Python object.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the YAML file to be loaded.
+
+    Returns
+    -------
+    Any
+        Parsed Python object. Typically a dict, list, scalar, or None
+        depending on the YAML content.
+
+    Raises
+    ------
+    ValueError
+        If `filename` is empty after normalization.
+    OSError
+        If the file cannot be read.
+    yaml.YAMLError
+        If the YAML content is invalid or cannot be parsed.
+    """
+    stream = read(filename)
+    try:
+        return yaml.safe_load(stream)
+    except yaml.YAMLError as ex:
+        raise_exception(ex, msg=f"Failed to parse YAML file {filename}: {ex}")
