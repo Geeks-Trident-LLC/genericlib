@@ -45,6 +45,8 @@ Use Cases
 
 """
 
+from typing import Optional
+
 import csv
 import re
 import os
@@ -1267,7 +1269,7 @@ class File:
         ----------
         top : str, optional
             The root directory to start scanning. Defaults to the current
-            directory (`"."`).
+            directory (`.`).
         pattern : str, optional
             A filename pattern (e.g., wildcard or regex) used to filter results.
             Defaults to an empty string, which matches all files.
@@ -1516,3 +1518,62 @@ class File:
         return lst
 
     rf_generic_lib_file_load_csv = load_csv
+
+
+def get_file_stream(
+    filename: str,
+    mode: str = "r",
+    buffering: int = -1,
+    encoding: Optional[str] = None,
+    errors: Optional[str] = None,
+    newline: Optional[str] = None,
+    closefd: bool = True,
+    opener=None
+):
+    """
+    Open a file and return its stream.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the file to open.
+    mode : str, default 'r'
+        File mode (e.g., 'r', 'w', 'a', 'rb').
+    buffering : int, default -1
+        Buffering policy (-1 uses system default).
+    encoding : str, optional
+        Encoding to use for text mode.
+    errors : str, optional
+        Error handling scheme for encoding/decoding.
+    newline : str, optional
+        Controls universal newlines mode.
+    closefd : bool, default True
+        If False, the underlying file descriptor is kept open.
+    opener : callable, optional
+        Custom opener; must return an open file descriptor.
+
+    Returns
+    -------
+    IOBase
+        An open file stream ready for reading or writing.
+
+    Raises
+    ------
+    ValueError
+        If `filename` is empty after normalization.
+    OSError
+        If the file cannot be opened.
+    """
+    filename = str(filename)
+    if not filename:
+        raise ValueError("Filename cannot be empty.")
+
+    try:
+        kwargs = dict(
+            mode=mode, buffering=buffering, encoding=encoding,
+            errors=errors, newline=newline, closefd=closefd, opener=opener
+        )
+        stream = open(filename, **kwargs)
+        return stream
+    except OSError as ex:
+        raise_exception(ex, msg=f"Failed to open file {filename}: {ex}")

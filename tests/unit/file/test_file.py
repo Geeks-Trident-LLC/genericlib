@@ -6,8 +6,8 @@ from genericlib import File
 from genericlib import Misc
 from genericlib.text import dedent_and_strip
 
-from . import get_temp_file  # Imported from tests/unit/__init__.py
-from . import get_temp_dir   # Imported from tests/unit/__init__.py
+from tests.unit import get_temp_file  # Imported from tests/unit/__init__.py
+from tests.unit import get_temp_dir   # Imported from tests/unit/__init__.py
 
 sample_yaml_data = dedent_and_strip("""
     location:
