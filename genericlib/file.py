@@ -1658,3 +1658,47 @@ def read_with_exit(filename: str, encoding: str="utf-8"):
         return content
     except Exception as ex:
         sys_exit(success=False, msg=f'*** {type(ex).__name__}: {ex}')
+
+
+def write(filename: str, content: str, encoding: str="utf-8"):
+    """
+    Write text content to a file.
+
+    This method opens the specified file in write mode using
+    `get_file_stream`, writes the provided string into it, and
+    returns once the operation is complete. By default, the file
+    is written with UTF‑8 encoding.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the file to write. If the file does not exist,
+        it will be created. If it exists, its contents will be
+        overwritten.
+    content : str
+        The text content to write into the file.
+    encoding : str, default "utf-8"
+        Text encoding used to encode the file content.
+
+    Returns
+    -------
+    None
+        This method performs a side effect (writing to disk) but
+        does not return a value.
+
+    Raises
+    ------
+    ValueError
+        If `filename` is empty after normalization.
+    OSError
+        If the file cannot be opened or written to.
+
+    Notes
+    -----
+    - The file is opened in text mode with write access (`"w"`),
+      which overwrites any existing content.
+    - For appending instead of overwriting, use `"a"` mode with
+      `get_file_stream`.
+    """
+    stream = get_file_stream(filename, mode="w", encoding=encoding)
+    stream.write(content)
