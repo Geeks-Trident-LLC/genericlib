@@ -1407,3 +1407,23 @@ def dedent_and_strip(txt):
     """
     new_txt = dedent(str(txt)).strip()
     return new_txt
+
+
+def decorate_list_of_line(items: list[str]) -> str:
+    """
+    Create a framed message from a list of text lines.
+
+    Parameters
+    ----------
+    items : list of str
+        The lines of text to include in the framed message.
+
+    Returns
+    -------
+    str
+        A string containing the framed message with borders.
+    """
+    max_len = max(len(item) for item in items)
+    border = f"+-{'-' * max_len}-+"
+    rows = [f"| {item.ljust(max_len)} |" for item in items]
+    return "\n".join([border] + rows + [border])

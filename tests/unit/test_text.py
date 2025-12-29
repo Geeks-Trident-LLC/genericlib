@@ -6,6 +6,8 @@ from genericlib import DotObject
 from genericlib.text import BaseMatchedObject
 from genericlib.text import dedent_and_strip
 
+from genericlib.text import decorate_list_of_line
+
 
 class FooException(Exception):
     """Foo Exception"""
@@ -104,6 +106,14 @@ class TestBaseMatchedObject:
 
 
 class TestDedentAndStripFunction:
+    """
+    Unit tests for the `dedent_and_strip` utility function.
+
+    This test suite verifies that text normalization works correctly by
+    converting input to string, removing common leading indentation, and
+    stripping leading/trailing whitespace. It ensures consistent behavior
+    across single-line, multi-line, and mixed-indentation inputs.
+    """
     def test_dedent_and_strip_removes_indentation_and_whitespace(self):
         txt = "    line1\n    line2\n"
         result = dedent_and_strip(txt)
@@ -123,3 +133,68 @@ class TestDedentAndStripFunction:
         result = dedent_and_strip(txt)
         # dedent removes common leading whitespace, strip removes outer blank lines
         assert result == "line1\n  line2\nline3"
+
+
+class TestDecorateListOfLineFunction:
+    """
+    Unit tests for the `decorate_list_of_line` function.
+
+    This test suite validates that framed text messages are generated
+    correctly from lists of strings. It ensures proper alignment,
+    border construction, and whitespace handling across a variety
+    of input scenarios.
+    """
+    def test_single_line(self):
+        expected = dedent_and_strip("""
+            +--------------+
+            | Hello Python |
+            +--------------+
+        """)
+        lst_of_line = ["Hello Python"]
+        result = decorate_list_of_line(lst_of_line)
+        assert result == expected
+
+    def test_multiple_lines(self):
+        expected = dedent_and_strip("""
+            +------------------+
+            | Short            |
+            | Much longer line |
+            | Mid              |
+            +------------------+
+        """)
+        lst_of_line = ["Short", "Much longer line", "Mid"]
+        result = decorate_list_of_line(lst_of_line)
+        assert result == expected
+
+    def test_empty_string_line(self):
+        expected = dedent_and_strip("""
+            +-----+
+            |     |
+            | abc |
+            +-----+
+        """)
+        lst_of_line = ["", "abc"]
+        result = decorate_list_of_line(lst_of_line)
+        assert result == expected
+
+    def test_all_empty_lines(self):
+        expected = dedent_and_strip("""
+            +--+
+            |  |
+            |  |
+            +--+
+        """)
+        lst_of_line = ["", ""]
+        result = decorate_list_of_line(lst_of_line)
+        assert result == expected
+
+    def test_preserves_whitespace(self):
+        expected = dedent_and_strip("""
+            +----+
+            | a  |
+            | b  |
+            +----+
+        """)
+        lst_of_line = ["a ", "b"]
+        result = decorate_list_of_line(lst_of_line)
+        assert result == expected
