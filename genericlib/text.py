@@ -1427,3 +1427,29 @@ def decorate_list_of_line(items: list[str]) -> str:
     border = f"+-{'-' * max_len}-+"
     rows = [f"| {item.ljust(max_len)} |" for item in items]
     return "\n".join([border] + rows + [border])
+
+
+def list_to_text(*args) -> str:
+    """
+    Convert one or more items into a newline-separated string.
+
+    Parameters
+    ----------
+    *args : str, list, or tuple
+        One or more items to convert. Each argument may be:
+        - A string
+        - A list or tuple of strings (or objects convertible to string)
+
+    Returns
+    -------
+    str
+        A single string where all items are joined by newline characters.
+        Returns an empty string if no arguments are provided.
+    """
+    result = []
+    for item in args:
+        if isinstance(item, (list, tuple)):
+            result.extend(map(str, item))
+        else:
+            result.append(str(item))
+    return "\n".join(result)
