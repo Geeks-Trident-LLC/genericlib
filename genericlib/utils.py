@@ -68,6 +68,7 @@ import copy
 import subprocess
 
 from io import StringIO
+from contextlib import redirect_stdout, redirect_stderr
 
 from textwrap import wrap
 from textwrap import indent
@@ -2492,37 +2493,28 @@ class MiscFunction:
           console output, allowing you to capture and inspect their output
           programmatically.
         """
-        stdout_bak = sys.stdout
-        stderr_bak = sys.stderr
-        sys.stdout = StringIO()
-        sys.stderr = StringIO()
+        stdout_buffer, stderr_buffer = StringIO(), StringIO()
 
-        ret_result = callable_obj(*args, **kwargs)
+        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+            ret_result = callable_obj(*args, **kwargs)
 
-        sys.stdout.seek(0)
-        sys.stderr.seek(0)
+        stdout_result = stdout_buffer.getvalue()
+        stderr_result = stderr_buffer.getvalue()
 
-        stdout_result = sys.stdout.read()
-        stderr_result = sys.stderr.read()
-
-        if stderr_result:
-            output_and_error = '%s\n%s' % (stdout_result, stderr_result)
-        else:
-            output_and_error = stdout_result
+        output_and_error = (
+            f"{stdout_result}\n{stderr_result}" if stderr_result else stdout_result
+        )
 
         result = DotObject(
             result=ret_result,
-            output=stdout_result,               # noqa
-            error=stderr_result,                # noqa
-            output_and_error=output_and_error   # noqa
+            output=stdout_result,
+            error=stderr_result,
+            output_and_error=output_and_error,
         )
 
         if filename:
-            with open(filename, 'w') as stream:
+            with open(filename, "w", encoding="utf-8") as stream:
                 stream.write(result.output_and_error)
-
-        sys.stdout = stdout_bak
-        sys.stderr = stderr_bak
 
         return result
 
@@ -2563,11 +2555,18 @@ class MiscFunction:
             ...
         CustomError: Something went wrong
         """
-        cls_name = obj.__class__.__name__
-        exc_cls_name = obj if cls_name == 'str' else '%sRTError' % cls_name
+        if obj is None:
+            exc_cls_name = "RuntimeError"
+        elif isinstance(obj, str):
+            exc_cls_name = obj
+        else:
+            exc_cls_name = f"{obj.__class__.__name__}RTError"
+
+        exc_cls_name = str(exc_cls_name)
+        exc_cls_name = exc_cls_name[0].upper() + exc_cls_name[1:]
         exc_cls = type(exc_cls_name, (Exception,), {})
-        exc_obj = exc_cls(msg)
-        return exc_obj
+        return exc_cls(msg)
+
 
     @classmethod
     def raise_runtime_error(cls, obj=None, msg=''):
