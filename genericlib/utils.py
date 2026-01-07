@@ -10,46 +10,6 @@ common programming tasks. It includes tools for formatted printing, type
 checking, shell command execution, platform metadata retrieval, safe function
 invocation, object manipulation, and tabular data presentation.
 
-Key Components
---------------
-Classes
--------
-- Printer:
-    Provides methods for formatted printing of structured data with optional
-    headers, footers, failure messages, and width constraints.
-
-- Misc:
-    Offers type-checking and validation helpers for Python’s built-in types.
-    Reduces boilerplate when verifying heterogeneous data structures.
-
-- MiscOutput:
-    Executes shell commands and captures results (output, exit code, success
-    status) in a structured `DotObject`.
-
-- MiscPlatform:
-    Retrieves platform and Python environment information, including kernel
-    details and documentation URLs. Useful for diagnostics and logging.
-
-- MiscFunction:
-    Safely invokes callables while capturing stdout/stderr. Supports dynamic
-    error handling and custom exception generation.
-
-- MiscObject:
-    Provides object manipulation helpers, including shallow/deep copying and
-    cleanup of lists of dictionaries.
-
-- Tabular:
-    Formats dictionaries or lists of dictionaries into human-readable tables
-    with column selection, justification, and missing-value handling.
-
-Functions
----------
-- get_data_as_tabular(data, columns=None, justify='left', missing='not_found'):
-    Converts structured data into a tabular string representation.
-
-- print_data_as_tabular(data, columns=None, justify='left', missing='not_found'):
-    Prints structured data in a tabular format directly to stdout.
-
 Use Cases
 ---------
 - Improve readability of logs, reports, and console output.
@@ -59,6 +19,8 @@ Use Cases
 - Present structured data (e.g., query results) in tabular form.
 
 """
+
+from typing import Any
 
 import platform
 import sys
@@ -81,6 +43,8 @@ from genericlib.constant import ECODE
 from genericlib.constant import STRING
 from genericlib.text import Text
 from genericlib.collection import DotObject
+
+from genericlib.exceptions import create_runtime_error
 
 from time import time
 
@@ -1899,21 +1863,26 @@ class Misc:
         return chk
 
     @classmethod
-    def get_list_of_lines(cls, *lines):
+    def get_list_of_lines(cls, *lines: Any) -> list[str]:
         """
         Convert one or more inputs into a list of text lines.
 
-        This method takes any number of input values, converts each to a string
+        This method accepts any number of input values, converts each to a string
         (substituting an empty string if the value is None), and splits them into
-        lines based on common newline delimiters (`\n`, `\r\n`, or `\r`). The
-        resulting list contains all lines from all inputs. If the only result is
-        a single empty string, it is normalized to an empty list.
+        lines based on common newline delimiters (``\n``, ``\r\n``, or ``\r``).
+        The resulting list contains all lines from all inputs. If the only result
+        is a single empty string, it is normalized to an empty list.
 
         Parameters
         ----------
         *lines : Any
             One or more values to be processed. Each value is converted to a
             string (or treated as empty if None) before splitting into lines.
+            Supported types include:
+            - str: split directly on newline delimiters
+            - bytes: decoded as UTF‑8 before splitting
+            - list/tuple: recursively processed by this method
+            - other types: converted to string
 
         Returns
         -------
@@ -1921,16 +1890,29 @@ class Misc:
             A list of text lines derived from the input values. Returns an empty
             list if all inputs are None or empty.
         """
-        result = []
+        lst_of_lines: list[str] = []
 
         for line in lines:
-            line = STRING.EMPTY if line is None else str(line)
-            result.extend(re.split(r'\r?\n|\r', line))
+            if isinstance(line, str):
+                text = line
+            elif line is None:
+                text = STRING.EMPTY
+            elif isinstance(line, bytes):
+                text = line.decode("utf-8")
+            elif isinstance(line, (list, tuple)):
+                # Recursively process nested sequences
+                lst_of_lines.extend(cls.get_list_of_lines(*line))
+                continue
+            else:
+                text = str(line)
 
-        if result == [STRING.EMPTY]:
-            result = []
+            lst_of_lines.extend(re.split(r"\r?\n|\r", text))
 
-        return result
+        # Normalize single empty string to empty list
+        if lst_of_lines == [STRING.EMPTY]:
+            return []
+
+        return lst_of_lines
 
     @classmethod
     def get_list_of_readonly_lines(cls, *lines):
@@ -1989,23 +1971,6 @@ class Misc:
             A string containing the leading whitespace characters (spaces or
             tabs) from the specified substring. Returns an empty string if no
             leading whitespace is present.
-
-        Examples
-        --------
-        >>> Misc.get_leading_line("    indented text")
-        '    '
-
-        >>> Misc.get_leading_line("\t\tTabbed line")
-        '\\t\\t'
-
-        >>> Misc.get_leading_line("NoIndent")
-        ''  # no leading whitespace
-
-        >>> Misc.get_leading_line("   spaced text", start=1)
-        ''  # substring starts at index 1, so no leading whitespace
-
-        >>> Misc.get_leading_line(None)
-        ''  # converted to "None", which has no leading whitespace
         """
         match = re.match(r'([^\S\r\n]+)?', str(line)[start:end])
         leading_spaces = match.group()
@@ -2040,23 +2005,6 @@ class Misc:
             A string containing the trailing whitespace characters (spaces or
             tabs) from the specified substring. Returns an empty string if no
             trailing whitespace is present.
-
-        Examples
-        --------
-        >>> Misc.get_trailing_line("text    ")
-        '    '
-
-        >>> Misc.get_trailing_line("Tabbed\t")
-        '\\t'
-
-        >>> Misc.get_trailing_line("NoTrailing")
-        ''  # no trailing whitespace
-
-        >>> Misc.get_trailing_line("abc   def   ", start=0, end=7)
-        ''  # substring "abc   d" has no trailing whitespace
-
-        >>> Misc.get_trailing_line(None)
-        ''  # converted to "None", which has no trailing whitespace
         """
         match = re.search(r'([^\S\r\n]+)?$', str(line)[start:end])
         trailing_spaces = match.group()
@@ -2089,26 +2037,6 @@ class Misc:
         bool
             True if the line contains non-whitespace characters and begins with
             leading spaces or tabs. False otherwise.
-
-        Examples
-        --------
-        >>> Misc.is_leading_line("    indented text")
-        True  # has leading spaces and non-whitespace content
-
-        >>> Misc.is_leading_line("NoIndent")
-        False  # no leading whitespace
-
-        >>> Misc.is_leading_line("    ")
-        False  # only whitespace, no data
-
-        >>> Misc.is_leading_line("")
-        False  # empty string
-
-        >>> Misc.is_leading_line(None)
-        False  # not a string
-
-        >>> Misc.is_leading_line("   spaced text", start=1)
-        False  # substring starts at index 1, so no leading whitespace
         """
         if not Misc.is_string(line):
             return False
@@ -2146,26 +2074,6 @@ class Misc:
         bool
             True if the line contains non-whitespace characters and ends with
             trailing spaces or tabs. False otherwise.
-
-        Examples
-        --------
-        >>> Misc.is_trailing_line("text    ")
-        True  # has trailing spaces and non-whitespace content
-
-        >>> Misc.is_trailing_line("NoTrailing")
-        False  # no trailing whitespace
-
-        >>> Misc.is_trailing_line("    ")
-        False  # only whitespace, no data
-
-        >>> Misc.is_trailing_line("")
-        False  # empty string
-
-        >>> Misc.is_trailing_line(None)
-        False  # not a string
-
-        >>> Misc.is_trailing_line("abc   def   ", start=0, end=7)
-        False  # substring "abc   d" has no trailing whitespace
         """
         if not Misc.is_string(line):
             return False
@@ -2434,20 +2342,6 @@ class MiscFunction:
     - Execute a function without polluting the console with stdout/stderr.
     - Capture and optionally persist the output and error streams.
     - Dynamically generate exception classes tied to specific objects.
-
-    Methods
-    -------
-    do_silent_invoke(callable_obj, *args, filename='', **kwargs)
-        Invoke a callable while suppressing stdout/stderr, capture its
-        output and error streams, and return a DotObject containing
-        the result and captured text. Optionally write combined output
-        and error to a file.
-    create_runtime_error(obj=None, msg='')
-        Dynamically create a custom Exception subclass based on the
-        provided object and return an instance with the given message.
-    raise_runtime_error(obj=None, msg='')
-        Raise a dynamically created runtime error with the specified
-        message, using `create_runtime_error` internally.
     """
     @classmethod
     def do_silent_invoke(cls, callable_obj, *args, filename='', **kwargs):
@@ -2521,14 +2415,7 @@ class MiscFunction:
     @classmethod
     def create_runtime_error(cls, obj=None, msg=''):
         """
-        Dynamically create a custom runtime exception instance.
-
-        This method generates a new Exception subclass at runtime,
-        naming it based on the provided object. If `obj` is a string,
-        that string is used directly as the exception class name.
-        Otherwise, the class name of `obj` is suffixed with "RTError"
-        to form the new exception type. An instance of this dynamically
-        created exception is then returned with the specified message.
+        Convenience wrapper for `exceptions.create_runtime_error`.
 
         Parameters
         ----------
@@ -2536,7 +2423,7 @@ class MiscFunction:
             The object or string used to derive the exception class name.
             - If a string, it is used directly as the exception class name.
             - If another object, its class name is suffixed with "RTError".
-            Defaults to None.
+            - If None, defaults to "RuntimeError".
         msg : str, optional
             The error message to associate with the exception instance.
             Defaults to an empty string.
@@ -2546,26 +2433,8 @@ class MiscFunction:
         Exception
             An instance of the dynamically created exception class,
             initialized with the provided message.
-
-        Examples
-        --------
-        >>> exc = MiscFunction.create_runtime_error("CustomError", "Something went wrong")
-        >>> raise exc
-        Traceback (most recent call last):
-            ...
-        CustomError: Something went wrong
         """
-        if obj is None:
-            exc_cls_name = "RuntimeError"
-        elif isinstance(obj, str):
-            exc_cls_name = obj
-        else:
-            exc_cls_name = f"{obj.__class__.__name__}RTError"
-
-        exc_cls_name = str(exc_cls_name)
-        exc_cls_name = exc_cls_name[0].upper() + exc_cls_name[1:]
-        exc_cls = type(exc_cls_name, (Exception,), {})
-        return exc_cls(msg)
+        return create_runtime_error(obj=obj, msg=msg)
 
 
     @classmethod

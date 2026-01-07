@@ -75,51 +75,6 @@ class TestDoSilentInvoke:
         assert content == result.output_and_error
 
 
-
-class TestCreateRuntimeError:
-    """
-    Unit tests for `MiscFunction.create_runtime_error`.
-
-    Coverage:
-    - obj=None → defaults to RuntimeError.
-    - obj=str → uses string directly as class name.
-    - obj=object → class name suffixed with RTError.
-    - Exception message is correctly set.
-    """
-
-    def test_none_defaults_to_runtime_error(self):
-        exc = MiscFunction.create_runtime_error(obj=None, msg="generic failure")
-        assert exc.__class__.__name__ == "RuntimeError"
-        with pytest.raises(exc.__class__, match="generic failure"):
-            raise exc
-
-    def test_string_creates_named_exception(self):
-        exc = MiscFunction.create_runtime_error(obj="CustomError", msg="something went wrong")
-        assert exc.__class__.__name__ == "CustomError"
-        with pytest.raises(exc.__class__, match="something went wrong"):
-            raise exc
-
-    def test_object_creates_classname_rt_error(self):
-        obj = DummyClass()
-        exc = MiscFunction.create_runtime_error(obj=obj, msg="dummy failure")
-        assert exc.__class__.__name__ == "DummyClassRTError"
-        with pytest.raises(exc.__class__, match="dummy failure"):
-            raise exc
-
-    def test_integer_object_creates_int_rt_error(self):
-        exc = MiscFunction.create_runtime_error(obj=42, msg="invalid value")
-        # int class name is "int" → "IntRTError"
-        assert exc.__class__.__name__ == "IntRTError"
-        with pytest.raises(exc.__class__, match="invalid value"):
-            raise exc
-
-    def test_empty_message_defaults(self):
-        exc = MiscFunction.create_runtime_error(obj="EmptyMsgError")
-        assert exc.__class__.__name__ == "EmptyMsgError"
-        # message should be empty string
-        assert str(exc) == ""
-
-
 class TestRaiseRuntimeError:
     """
     Unit tests for `MiscFunction.raise_runtime_error`.

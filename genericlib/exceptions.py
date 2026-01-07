@@ -87,3 +87,43 @@ def raise_exception(
         except Exception as other_ex:
             other_failure = f"{type(other_ex).__name__} - {other_ex}"
             raise other_ex.__class__(other_failure)
+
+def create_runtime_error(obj=None, msg=''):
+    """
+    Dynamically create a custom runtime exception instance.
+
+    This method generates a new Exception subclass at runtime,
+    naming it based on the provided object. If `obj` is a string,
+    that string is used directly as the exception class name.
+    Otherwise, the class name of `obj` is suffixed with "RTError"
+    to form the new exception type. An instance of this dynamically
+    created exception is then returned with the specified message.
+
+    Parameters
+    ----------
+    obj : Any, optional
+        The object or string used to derive the exception class name.
+        - If a string, it is used directly as the exception class name.
+        - If another object, its class name is suffixed with "RTError".
+        Defaults to None.
+    msg : str, optional
+        The error message to associate with the exception instance.
+        Defaults to an empty string.
+
+    Returns
+    -------
+    Exception
+        An instance of the dynamically created exception class,
+        initialized with the provided message.
+    """
+    if obj is None:
+        exc_cls_name = "RuntimeError"
+    else:
+        exc_cls_name = obj if isinstance(obj, str) else f"{type(obj).__name__}RTError"
+
+    # Normalize class name: ensure first character is uppercase
+    exc_cls_name = str(exc_cls_name)
+    exc_cls_name = exc_cls_name[0].upper() + exc_cls_name[1:]
+
+    exc_cls = type(exc_cls_name, (Exception,), {})
+    return exc_cls(msg)
