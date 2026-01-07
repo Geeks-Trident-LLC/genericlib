@@ -127,3 +127,35 @@ def create_runtime_error(obj=None, msg=''):
 
     exc_cls = type(exc_cls_name, (Exception,), {})
     return exc_cls(msg)
+
+
+def raise_runtime_error(obj=None, msg=''):
+    """
+    Raise a dynamically created runtime exception.
+
+    This method builds on `create_runtime_error` by generating a
+    custom Exception subclass at runtime and immediately raising
+    an instance of it. The exception class name is derived from
+    the provided object:
+    - If `obj` is a string, that string is used directly as the
+      exception class name.
+    - If `obj` is another object, its class name is suffixed with
+      "RTError" to form the new exception type.
+
+    Parameters
+    ----------
+    obj : Any, optional
+        The object or string used to derive the exception class name.
+        Defaults to None.
+    msg : str, optional
+        The error message to associate with the raised exception.
+        Defaults to an empty string.
+
+    Raises
+    ------
+    Exception
+        A dynamically created exception instance with the specified
+        message.
+    """
+    exc_obj = create_runtime_error(obj=obj, msg=msg)
+    raise exc_obj

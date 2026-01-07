@@ -45,6 +45,7 @@ from genericlib.text import Text
 from genericlib.collection import DotObject
 
 from genericlib.exceptions import create_runtime_error
+from genericlib.exceptions import raise_runtime_error
 
 from time import time
 
@@ -2440,16 +2441,7 @@ class MiscFunction:
     @classmethod
     def raise_runtime_error(cls, obj=None, msg=''):
         """
-        Raise a dynamically created runtime exception.
-
-        This method builds on `create_runtime_error` by generating a
-        custom Exception subclass at runtime and immediately raising
-        an instance of it. The exception class name is derived from
-        the provided object:
-        - If `obj` is a string, that string is used directly as the
-          exception class name.
-        - If `obj` is another object, its class name is suffixed with
-          "RTError" to form the new exception type.
+        Convenience wrapper for `exceptions.raise_runtime_error`.
 
         Parameters
         ----------
@@ -2465,16 +2457,8 @@ class MiscFunction:
         Exception
             A dynamically created exception instance with the specified
             message.
-
-        Examples
-        --------
-        >>> MiscFunction.raise_runtime_error("CustomError", "Something went wrong")
-        Traceback (most recent call last):
-            ...
-        CustomError: Something went wrong
         """
-        exc_obj = cls.create_runtime_error(obj=obj, msg=msg)
-        raise exc_obj
+        raise_runtime_error(obj=obj, msg=msg)
 
 
 class MiscObject:

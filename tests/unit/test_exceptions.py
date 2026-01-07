@@ -3,52 +3,9 @@ import pytest
 from genericlib.exceptions import raise_exception
 from genericlib.exceptions import InvalidExceptionType
 from genericlib.exceptions import create_runtime_error
+from genericlib.exceptions import raise_runtime_error
 
 from tests.unit import DummyClass
-
-class FooTestExceptionCls(Exception):
-    """
-    Custom exception class used for testing `raise_exception`.
-
-    This class serves as a lightweight stand‑in for real exception types
-    during unit tests. It allows validation of how `raise_exception`
-    behaves when raising, formatting, or handling exceptions.
-
-    Notes
-    -----
-    - Defined only for testing purposes; not intended for production use.
-    """
-
-class BarTestExceptionCls(Exception):
-    class BarTestExceptionCls(Exception):
-        """
-        Custom exception class used for testing `raise_exception`.
-
-        This class acts as an alternate test exception type to validate
-        how `raise_exception` behaves when a different exception class
-        is explicitly passed via the `cls` keyword argument.
-
-        Notes
-        -----
-        - Defined only for testing purposes; not intended for production use.
-        """
-
-class FooBarCls:
-    """
-    Dummy class used for testing `raise_exception`.
-
-    This class is intentionally not derived from `Exception` and serves
-    as a negative test case. It allows validation that `raise_exception`
-    correctly rejects non‑exception types when passed via the `cls`
-    keyword argument.
-
-    Notes
-    -----
-    - Defined only for testing purposes; not intended for production use.
-    """
-    def __init__(self):
-        self.var1 = "value 1"
-        self.var2 = "value 2"
 
 class TestRaiseExceptionFunction:
     """
@@ -67,27 +24,30 @@ class TestRaiseExceptionFunction:
       both valid and invalid inputs.
     """
 
+    def setup_method(self):
+        self.foo_exc_instance = create_runtime_error(
+            "FooTestExceptionCls",
+            msg="a instance of sample runtime creation - FooTestExceptionCls"
+        )
+        self.foo_exc_class = type(self.foo_exc_instance)
+
+        self.bar_exc_instance = create_runtime_error(
+            "BarTestExceptionCls",
+            msg="a instance of sample runtime creation - BarTestExceptionCls"
+        )
+        self.bar_exc_class = type(self.foo_exc_instance)
+
+
     def test_arg_ex_is_exception_instance(self):
         """
         Verify that `raise_exception` correctly handles a valid Exception instance.
-
-        This test ensures that when an actual Exception object is passed as
-        the `ex` argument, the function raises that same exception type as
-        expected. It validates the core behavior of `raise_exception` when
-        used with proper inputs.
         """
-        with pytest.raises(FooTestExceptionCls):
-            ex = FooTestExceptionCls('a instance of SampleTestException')
-            raise_exception(ex)
+        with pytest.raises(self.foo_exc_class):
+            raise_exception(self.foo_exc_instance)
 
     def test_arg_ex_is_not_exception_instance(self):
         """
         Verify that `raise_exception` rejects non-Exception inputs.
-
-        This test ensures that when objects or types that are not instances
-        of `Exception` are passed to `raise_exception`, the function raises
-        `InvalidExceptionType` as expected. It validates the defensive
-        behavior of the utility against improper usage.
 
         Notes
         -----
@@ -95,7 +55,7 @@ class TestRaiseExceptionFunction:
           * a generic object instance
           * a float value
           * a string
-          * a non-Exception class (`FooBarCls`)
+          * a non-Exception class (`DummyClass`)
         - Confirms that `raise_exception` enforces type safety by requiring
           an actual Exception instance.
         - Uses `pytest.raises` to assert that `InvalidExceptionType` is
@@ -114,7 +74,7 @@ class TestRaiseExceptionFunction:
             raise_exception(data)       # noqa
 
         with pytest.raises(InvalidExceptionType):
-            raise_exception(FooBarCls)       # noqa
+            raise_exception(DummyClass)       # noqa
 
     def test_kwarg_is_skipped(self):
         """
@@ -125,8 +85,7 @@ class TestRaiseExceptionFunction:
         the skip‑logic branch of `raise_exception`, confirming that exception
         raising can be conditionally bypassed.
         """
-        ex = FooTestExceptionCls('a instance of SampleTestException')
-        result = raise_exception(ex, is_skipped=True)   # noqa
+        result = raise_exception(self.foo_exc_instance, is_skipped=True)
         assert result is None
 
     def test_kwarg_msg(self):
@@ -138,35 +97,23 @@ class TestRaiseExceptionFunction:
         instead of formatting the original exception. It validates the
         message‑override branch of `raise_exception`.
         """
-        with pytest.raises(FooTestExceptionCls):
-            ex = FooTestExceptionCls('a instance of SampleTestException')
-            failure = f"Failure happened at {ex}"
-            raise_exception(ex, msg=failure)
+        with pytest.raises(self.foo_exc_class):
+            failure = f"Failure happened at {self.foo_exc_instance}"
+            raise_exception(self.foo_exc_instance, msg=failure)
 
     def test_kwarg_cls_is_passing_type_of_exception(self):
         """
         Verify that `raise_exception` raises the specified exception class when `cls` is provided.
-
-        This test ensures that when a valid Exception subclass is passed via
-        the `cls` keyword argument, the function raises that class instead of
-        the type of the original exception instance. It validates the
-        override behavior of `raise_exception`.
         """
-        with pytest.raises(BarTestExceptionCls):
-            ex = FooTestExceptionCls('a instance of SampleTestException')
-            raise_exception(ex, cls=BarTestExceptionCls)
+        with pytest.raises(self.bar_exc_class):
+            raise_exception(self.foo_exc_instance, cls=self.bar_exc_class)
 
     def test_kwarg_cls_is_passing_incorrect_type_of_exception(self):
         """
         Verify that `raise_exception` ignores an invalid `cls` argument.
-
-        This test ensures that when a non-Exception type is passed via the
-        `cls` keyword argument, the function does not raise that type. Instead,
-        it falls back to raising the type of the original exception instance.
         """
-        with pytest.raises(FooTestExceptionCls):
-            ex = FooTestExceptionCls('a instance of SampleTestException')
-            raise_exception(ex, cls=FooBarCls)  # noqa
+        with pytest.raises(self.foo_exc_class):
+            raise_exception(self.foo_exc_instance, cls=DummyClass)  # noqa
 
     def test_kwarg_fmt_is_passing_default_format(self):
         """
@@ -178,9 +125,8 @@ class TestRaiseExceptionFunction:
         `"{}: {}"` to construct the failure message. It validates the
         default formatting branch of `raise_exception`.
         """
-        with pytest.raises(FooTestExceptionCls):
-            ex = FooTestExceptionCls('a instance of SampleTestException')
-            raise_exception(ex)
+        with pytest.raises(self.foo_exc_class):
+            raise_exception(self.foo_exc_instance)
 
     def test_kwarg_fmt_is_passing_custom_format(self):
         """
@@ -192,10 +138,8 @@ class TestRaiseExceptionFunction:
         the failure message instead of the default `"{}: {}"` pattern. It
         validates the customization branch of `raise_exception`.
         """
-        with pytest.raises(FooTestExceptionCls):
-            ex = FooTestExceptionCls('a instance of SampleTestException')
-            custom_format = "*** {} - {}"
-            raise_exception(ex, fmt=custom_format)
+        with pytest.raises(self.foo_exc_class):
+            raise_exception(self.foo_exc_instance, fmt="*** {} - {}")
 
     def test_kwarg_fmt_is_passing_incorrect_format_index_error(self):
         """
@@ -208,9 +152,8 @@ class TestRaiseExceptionFunction:
         behavior of `raise_exception` when given an invalid format string.
         """
         with ((pytest.raises(IndexError))):
-            ex = FooTestExceptionCls('a instance of SampleTestException')
             index_error_format = "{} - {} {}"
-            raise_exception(ex, fmt=index_error_format)
+            raise_exception(self.foo_exc_instance, fmt=index_error_format)
 
     def test_kwarg_fmt_is_passing_incorrect_format_value_error(self):
         """
@@ -224,9 +167,8 @@ class TestRaiseExceptionFunction:
         format string.
         """
         with pytest.raises(ValueError):
-            ex = FooTestExceptionCls('a instance of SampleTestException')
             value_error_format = "{} - {{}"
-            raise_exception(ex, fmt=value_error_format)
+            raise_exception(self.foo_exc_instance, fmt=value_error_format)
 
     def test_kwarg_fmt_is_passing_incorrect_format_value_error_other(self):
         """
@@ -240,9 +182,8 @@ class TestRaiseExceptionFunction:
         encountering syntactically invalid format patterns.
         """
         with pytest.raises(ValueError):
-            ex = FooTestExceptionCls('a instance of SampleTestException')
             other_value_error_format = "{} - {"
-            raise_exception(ex, fmt=other_value_error_format)
+            raise_exception(self.foo_exc_instance, fmt=other_value_error_format)
 
     def test_kwarg_fmt_is_passing_incorrect_format_key_error(self):
         """
@@ -256,9 +197,8 @@ class TestRaiseExceptionFunction:
         references in format strings.
         """
         with pytest.raises(KeyError):
-            ex = FooTestExceptionCls('a instance of SampleTestException')
             key_error_format = "{} - {ab}"
-            raise_exception(ex, fmt=key_error_format)
+            raise_exception(self.foo_exc_instance, fmt=key_error_format)
 
 
 class TestCreateRuntimeError:
@@ -305,6 +245,73 @@ class TestCreateRuntimeError:
     def test_empty_message_defaults(self):
         """Verify that the default message is an empty string when not provided."""
         exc = create_runtime_error(obj="EmptyMsgError")
+        assert exc.__class__.__name__ == "EmptyMsgError"
+        # message should be empty string
+        assert str(exc) == ""
+
+
+
+class TestRaiseRuntimeError:
+    """
+    Unit tests for `raise_runtime_error`.
+
+    Coverage:
+    - obj=None → raises RuntimeError with correct message.
+    - obj=str → raises custom exception with given name.
+    - obj=object → raises exception suffixed with RTError.
+    - Message content is correctly propagated.
+    """
+
+    def test_none_raises_runtime_error(self):
+        """
+        Verify that None input raises a RuntimeError with the correct message.
+        """
+        with pytest.raises(Exception) as exc_info:
+            raise_runtime_error(obj=None, msg="generic failure")
+        exc = exc_info.value
+        assert exc.__class__.__name__ == "RuntimeError"
+        assert str(exc) == "generic failure"
+
+    def test_string_raises_custom_exception(self):
+        """
+        Verify that a string input raises a custom exception with that exact class name.
+        """
+        with pytest.raises(Exception) as exc_info:
+            raise_runtime_error(obj="CustomError", msg="something went wrong")
+        exc = exc_info.value
+        assert exc.__class__.__name__ == "CustomError"
+        assert str(exc) == "something went wrong"
+
+    def test_object_raises_classname_rt_error(self):
+        """
+        Verify that an object input raises an exception suffixed with RTError.
+        """
+        obj = DummyClass()
+        with pytest.raises(Exception) as exc_info:
+            raise_runtime_error(obj=obj, msg="dummy failure")
+        exc = exc_info.value
+        # DummyClass → DummyClassRTError
+        assert exc.__class__.__name__ == "DummyClassRTError"
+        assert str(exc) == "dummy failure"
+
+    def test_builtin_object_int_creates_int_rt_error(self):
+        """
+        Verify that a built-in int input raises an IntRTError exception.
+        """
+        with pytest.raises(Exception) as exc_info:
+            raise_runtime_error(obj=42, msg="invalid value")
+        exc = exc_info.value
+        # int → IntRTError
+        assert exc.__class__.__name__ == "IntRTError"
+        assert str(exc) == "invalid value"
+
+    def test_empty_message_defaults(self):
+        """
+        Verify that the default message is an empty string when not provided.
+        """
+        with pytest.raises(Exception) as exc_info:
+            raise_runtime_error("EmptyMsgError")
+        exc = exc_info.value
         assert exc.__class__.__name__ == "EmptyMsgError"
         # message should be empty string
         assert str(exc) == ""

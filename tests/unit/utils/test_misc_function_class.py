@@ -9,10 +9,8 @@ Run pytest in the project root to execute these tests:
     $ python -m pytest tests/unit/utils/test_misc_function_class.py
 """
 
-import pytest
 from genericlib.utils import MiscFunction
 
-from tests.unit.utils import DummyClass
 from tests.unit.utils import (
     sample_func_displaying_stdout,
     sample_func_displaying_stderr,
@@ -35,6 +33,10 @@ class TestDoSilentInvoke:
     """
 
     def test_capture_stdout_only(self):
+        """
+        Verify that stdout is captured correctly when the callable
+        prints only to stdout.
+        """
         result = MiscFunction.do_silent_invoke(sample_func_displaying_stdout)
         assert result.result == "return_value"
         assert "hello stdout" in result.output
@@ -42,6 +44,10 @@ class TestDoSilentInvoke:
         assert result.output_and_error == result.output
 
     def test_capture_stderr_only(self):
+        """
+        Verify that stderr is captured correctly when the callable
+        prints only to stderr.
+        """
         result = MiscFunction.do_silent_invoke(sample_func_displaying_stderr)
         assert result.result == 9999
         assert result.output == ""
@@ -49,6 +55,10 @@ class TestDoSilentInvoke:
         assert "hello stderr" in result.output_and_error
 
     def test_capture_both_streams(self):
+        """
+        Verify that both stdout and stderr are captured correctly
+        when the callable prints to both streams.
+        """
         result = MiscFunction.do_silent_invoke(sample_func_displaying_stdout_and_stderr)
         assert result.result == "mixed"
         assert "stdout here" in result.output
@@ -57,11 +67,19 @@ class TestDoSilentInvoke:
         assert "stderr here" in result.output_and_error
 
     def test_with_arguments(self):
+        """
+        Verify that positional and keyword arguments are passed correctly
+        to the callable and that stdout is captured.
+        """
         result = MiscFunction.do_silent_invoke(sample_func_args, 3, y=4)
         assert result.result == 7
         assert "sum=7" in result.output
 
     def test_write_to_file(self, tmp_path):
+        """
+        Verify that combined stdout and stderr output is written to a file
+        when a filename is provided.
+        """
         file_path = tmp_path / "output.txt"
         result = MiscFunction.do_silent_invoke(
             sample_func_displaying_stdout_and_stderr,
@@ -73,54 +91,3 @@ class TestDoSilentInvoke:
         assert "stdout here" in content
         assert "stderr here" in content
         assert content == result.output_and_error
-
-
-class TestRaiseRuntimeError:
-    """
-    Unit tests for `MiscFunction.raise_runtime_error`.
-
-    Coverage:
-    - obj=None → raises RuntimeError with correct message.
-    - obj=str → raises custom exception with given name.
-    - obj=object → raises exception suffixed with RTError.
-    - Message content is correctly propagated.
-    """
-
-    def test_none_raises_runtime_error(self):
-        with pytest.raises(Exception) as exc_info:
-            MiscFunction.raise_runtime_error(obj=None, msg="generic failure")
-        exc = exc_info.value
-        assert exc.__class__.__name__ == "RuntimeError"
-        assert str(exc) == "generic failure"
-
-    def test_string_raises_custom_exception(self):
-        with pytest.raises(Exception) as exc_info:
-            MiscFunction.raise_runtime_error(obj="CustomError", msg="something went wrong")
-        exc = exc_info.value
-        assert exc.__class__.__name__ == "CustomError"
-        assert str(exc) == "something went wrong"
-
-    def test_object_raises_classname_rt_error(self):
-        obj = DummyClass()
-        with pytest.raises(Exception) as exc_info:
-            MiscFunction.raise_runtime_error(obj=obj, msg="dummy failure")
-        exc = exc_info.value
-        # DummyClass → DummyClassRTError
-        assert exc.__class__.__name__ == "DummyClassRTError"
-        assert str(exc) == "dummy failure"
-
-    def test_builtin_object_int_creates_int_rt_error(self):
-        with pytest.raises(Exception) as exc_info:
-            MiscFunction.raise_runtime_error(obj=42, msg="invalid value")
-        exc = exc_info.value
-        # int → IntRTError
-        assert exc.__class__.__name__ == "IntRTError"
-        assert str(exc) == "invalid value"
-
-    def test_empty_message_defaults(self):
-        with pytest.raises(Exception) as exc_info:
-            MiscFunction.raise_runtime_error("EmptyMsgError")
-        exc = exc_info.value
-        assert exc.__class__.__name__ == "EmptyMsgError"
-        # message should be empty string
-        assert str(exc) == ""

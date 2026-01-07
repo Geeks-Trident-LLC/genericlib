@@ -17,6 +17,15 @@ import tempfile
 
 class DummyClass:
     """A placeholder class used for testing dynamic exception naming."""
+    def __init__(self):
+        self.var1 = "value 1"
+        self.var2 = "value 2"
+
+class DummyDataClass:
+    """Dummy class used for negative test cases in `raise_exception`."""
+    def __init__(self):
+        self.var1 = "value 1"
+        self.var2 = "value 2"
 
 
 def get_temp_file():
