@@ -21,6 +21,7 @@ Design Notes
 """
 
 from typing import Type, Optional
+import re
 
 
 class LineError(Exception):
@@ -33,6 +34,10 @@ class LineArgumentError(LineError):
 
 class InvalidExceptionType(Exception):
     """Raised when an invalid exception type is encountered."""
+
+
+class EscapePatternError(re.PatternError):
+    """Custom exception raised when regex pattern validation fails."""
 
 
 def raise_exception(
@@ -87,6 +92,7 @@ def raise_exception(
         except Exception as other_ex:
             other_failure = f"{type(other_ex).__name__} - {other_ex}"
             raise other_ex.__class__(other_failure)
+
 
 def create_runtime_error(obj=None, msg=''):
     """

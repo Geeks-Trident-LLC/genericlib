@@ -29,6 +29,7 @@ import string
 from textwrap import dedent
 
 from genericlib.exceptions import LineArgumentError
+from genericlib.exceptions import EscapePatternError
 from genericlib.constant import STRING
 
 
@@ -1252,46 +1253,64 @@ NON_WHITESPACE_CHARS = get_non_whitespace_chars(k=16, to_list=True)
 NON_WHITESPACE_STRING = get_non_whitespace_chars(k=16, to_list=False)
 
 
-def do_soft_regex_escape(pattern):
+def do_soft_regex_escape(pattern: Any) -> str:
     """
-    Performs a controlled, "soft" escaping of characters for use in regular
-    expressions.
+    Perform a controlled, "soft" escaping of characters for use in regular expressions.
 
-    Unlike ``re.escape()``, which escapes nearly all non‑alphanumeric
-    characters, this function selectively escapes only those characters that
-    must be escaped for safe regex usage. Characters that appear in
-    ``string.punctuation`` but are not regex metacharacters are left
-    unescaped, preserving readability and producing more concise patterns.
+    Unlike ``re.escape()``, which escapes nearly all non‑alphanumeric characters,
+    this function selectively escapes only those characters that must be escaped
+    for safe regex usage. Characters that appear in ``string.punctuation`` but are
+    not regex metacharacters are left unescaped, preserving readability and producing
+    more concise patterns.
 
-    The function iterates through each character in the input string,
-    conditionally escaping it based on two checks:
-        • Characters that are true regex metacharacters (e.g., ``^ $ . ? * + | { } [ ] ( )``)
-          are always escaped.
-        • Other punctuation characters are left as‑is unless ``re.escape`` is
-          required for correctness.
+    The resulting pattern is validated by compiling it with ``re.compile`` to ensure
+    it is syntactically valid.
 
-    The resulting pattern is validated by compiling it with ``re.compile`` to
-    ensure it is syntactically valid.
+    Parameters
+    ----------
+    pattern : Any
+        The raw text to be converted into a safely usable regex fragment.
+        Will be coerced to string if not already.
 
-    Args:
-        pattern (str): The raw text to be converted into a safely usable
-            regular‑expression fragment.
+    Returns
+    -------
+    str
+        A regex‑safe version of the input string with only the necessary characters escaped.
 
-    Returns:
-        str: A regex‑safe version of the input string with only the necessary
-        characters escaped.
+    Raises
+    ------
+    EscapePatternError
+        If the resulting pattern cannot be compiled into a valid regex.
+
+    Notes
+    -----
+    - Regex metacharacters (``^ $ . ? * + | { } [ ] ( ) \\``) are always escaped.
+    - Other punctuation characters are left as‑is for readability.
+    - Non‑string inputs are converted to string before processing.
     """
-    chk1 = f'{string.punctuation} '
-    chk2 = '^$.?*+|{}[]()\\'
-    result = []
-    for char in pattern:
-        escape_char = re.escape(char)
-        if char in chk1:
-            result.append(escape_char if char in chk2 else char)
+    if isinstance(pattern, bytes):
+        pattern = pattern.decode("utf-8")
+
+    text = str(pattern)
+
+    all_punct = string.punctuation + " "
+    regex_metachars = "^$.?*+|{}[]()\\"
+
+    result: list[str] = []
+    for char in text:
+        escaped = re.escape(char)
+        if char in all_punct:
+            result.append(escaped if char in regex_metachars else char)
         else:
-            result.append(escape_char)
-    new_pattern = ''.join(result)
-    re.compile(new_pattern)
+            result.append(escaped)
+
+    new_pattern = "".join(result)
+
+    try:
+        re.compile(new_pattern)
+    except re.error as e:
+        raise EscapePatternError(f"Invalid escaped pattern: {new_pattern}") from e
+
     return new_pattern
 
 
