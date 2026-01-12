@@ -1,24 +1,6 @@
 """
 Unit tests for the `list_to_text` function in `genericlib.text`.
 
-This test suite verifies that `list_to_text` correctly converts strings,
-lists, and tuples into a newline-separated string representation. It ensures
-robust handling of edge cases such as empty inputs, mixed argument types,
-and non-string values.
-
-Test Coverage
--------------
-- No arguments: returns an empty string.
-- Single string: returns the string itself.
-- Multiple strings: joins arguments with newline separators.
-- List or tuple inputs: flattens and converts elements to strings.
-- Mixed inputs: handles combinations of strings, lists, and tuples.
-- Non-string items: converts objects (e.g., int, bool, None) to string form.
-- Empty lists/tuples: ignored unless containing empty strings.
-- Empty strings: preserved as blank lines in the output.
-
-The tests are written with `pytest` for readability and maintainability.
-
 Usage
 -----
 Run pytest in the project root to execute these tests:
@@ -29,10 +11,10 @@ Run pytest in the project root to execute these tests:
 """
 
 from genericlib.text import list_to_text
-from genericlib.text import dedent_and_strip
+from textwrap import dedent
 
 
-class TestListToTextFunc:
+class TestListToText:
     """Unit tests for the list_to_text function."""
 
     def test_no_arguments(self):
@@ -45,60 +27,51 @@ class TestListToTextFunc:
 
     def test_multiple_strings(self):
         """It should join multiple string arguments with newlines."""
-        expected = dedent_and_strip("""\
+        expected = dedent("""\
             apple
             banana
             cherry
-        """)
+        """).strip()
         assert list_to_text("apple", "banana", "cherry") == expected
+
+    def test_bytes_argument(self):
+        """It should decode bytes as UTF-8 before joining."""
+        assert list_to_text(b"dog") == "dog"
 
     def test_list_argument(self):
         """It should flatten a list of strings into newline-separated text."""
-        expected = dedent_and_strip("""
-            cat
-            dog
-            bird
-        """)
+        expected = "cat\ndog\nbird"
         assert list_to_text(["cat", "dog", "bird"]) == expected
 
     def test_tuple_argument(self):
         """It should flatten a tuple of strings into newline-separated text."""
-        expected = dedent_and_strip("""
-            red
-            green
-            blue
-        """)
+        expected = "red\ngreen\nblue"
         assert list_to_text(("red", "green", "blue")) == expected
 
+    def test_nested_lists_and_tuples(self):
+        """It should recursively flatten nested lists/tuples."""
+        expected = "a\nb\nc\nd"
+        assert list_to_text(["a", ("b", ["c", ("d",)])]) == expected
+
     def test_mixed_arguments(self):
-        """It should handle strings, lists, and tuples together."""
-        expected = dedent_and_strip("""
-            one
-            two
-            three
-            four
-        """)
-        assert list_to_text("one", ["two", "three"], ("four",)) == expected
+        """It should handle strings, lists, tuples, and bytes together."""
+        expected = "one\ntwo\nthree\nfour\nfive"
+        assert list_to_text("one", ["two", "three"], ("four",), b"five") == expected
 
     def test_non_string_items(self):
         """It should convert non-string items to strings before joining."""
-        expected = dedent_and_strip("""
-            123
-            True
-            None
-        """)
+        expected = "123\nTrue\nNone"
         assert list_to_text(123, True, None) == expected
 
     def test_empty_list_and_tuple(self):
-        """It should ignore empty lists/tuples and
-        return empty string if nothing else."""
+        """It should ignore empty lists/tuples and return empty string if nothing else."""
         assert list_to_text([], ()) == ""
 
     def test_list_with_empty_strings(self):
         """It should preserve empty strings as blank lines."""
-        expected = dedent_and_strip("""
+        expected = dedent("""\
             first
 
             third
-        """)
+        """).strip()
         assert list_to_text(["first", "", "third"]) == expected

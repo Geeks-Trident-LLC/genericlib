@@ -21,6 +21,7 @@ Use Cases
 
 """
 
+from typing import Any
 
 import re
 import string
@@ -462,15 +463,6 @@ class Line(BaseLine):
           the line for logging, debugging, or reconstruction.
         - For a trimmed version of the line, use the `clean_line`
           property instead.
-
-        Examples
-        --------
-        >>> line = Line("   Hello world\\n")
-        >>> line.raw_data
-        '   Hello world\\n'
-
-        >>> line.clean_line
-        'Hello world'
         """
         return self._raw_data
 
@@ -599,17 +591,6 @@ class Line(BaseLine):
         - Useful for analyzing indentation or formatting in structured text.
         - For a boolean check, use the `is_leading` property to determine
           whether the line has leading whitespace.
-
-        Examples
-        --------
-        >>> Line("    Hello").leading
-        '    '
-
-        >>> Line("Hello").leading
-        ''
-
-        >>> Line("\\tIndented").leading
-        '\\t'
         """
         leading_chars = re.match(r'(\s+)?', self).group()
         return leading_chars
@@ -635,17 +616,6 @@ class Line(BaseLine):
           extraneous spaces in structured text.
         - For a boolean check, use the `is_trailing` property to determine
           whether the line has trailing whitespace.
-
-        Examples
-        --------
-        >>> Line("Hello    ").trailing
-        '    '
-
-        >>> Line("Hello").trailing
-        ''
-
-        >>> Line("Hello\\t").trailing
-        '\\t
         """
         trailing_chars = re.search(r'(\s+)?$', self).group().rstrip('\r\n')
         return trailing_chars
@@ -669,17 +639,6 @@ class Line(BaseLine):
         - Use `leading` to retrieve the actual whitespace characters.
         - This property is useful for detecting indentation or formatting
           in structured text.
-
-        Examples
-        --------
-        >>> Line("    Hello").is_leading
-        True
-
-        >>> Line("Hello").is_leading
-        False
-
-        >>> Line("\\tIndented").is_leading
-        True
         """
         return len(self.leading) > 0
 
@@ -702,17 +661,6 @@ class Line(BaseLine):
         - Use `trailing` to retrieve the actual whitespace characters.
         - This property is useful for detecting formatting issues such as
           unnecessary spaces at the end of a line.
-
-        Examples
-        --------
-        >>> Line("Hello    ").is_trailing
-        True
-
-        >>> Line("Hello").is_trailing
-        False
-
-        >>> Line("Hello\\t").is_trailing
-        True
         """
         return len(self.trailing) > 0
 
@@ -1247,7 +1195,7 @@ def get_whitespace_chars(k=8, to_list=True):
     recognized as whitespace by the regular‑expression engine.
 
     The function scans the first 2**k code points and collects every character
-    for which ``re.search(r"\\s", char)`` succeeds. This is useful for
+    for which ``re.search(r'\s', char)`` succeeds. This is useful for
     determining which whitespace characters Python's regex engine treats as
     whitespace in a given Unicode range.
 
@@ -1278,7 +1226,7 @@ def get_non_whitespace_chars(k=8, to_list=True):
     recognized as whitespace by the regular‑expression engine.
 
     The function scans the first 2**k code points and collects every character
-    for which ``re.search(r"\\s", char)`` fails. This provides a quick way to
+    for which ``re.search(r'\s', char)`` fails. This provides a quick way to
     inspect which characters Python's regex engine treats as non‑whitespace
     within a given Unicode slice.
 
@@ -1429,27 +1377,44 @@ def decorate_list_of_line(items: list[str]) -> str:
     return "\n".join([border] + rows + [border])
 
 
-def list_to_text(*args) -> str:
+def list_to_text(*args: Any) -> str:
     """
     Convert one or more items into a newline-separated string.
 
     Parameters
     ----------
-    *args : str, list, or tuple
+    *args : Any
         One or more items to convert. Each argument may be:
         - A string
-        - A list or tuple of strings (or objects convertible to string)
+        - A bytes object (decoded as UTF-8)
+        - A list or tuple containing nested items of any supported type
+        - Any other object convertible to string
 
     Returns
     -------
     str
         A single string where all items are joined by newline characters.
         Returns an empty string if no arguments are provided.
+
+    Notes
+    -----
+    - Nested lists/tuples are flattened recursively.
+    - Empty inputs yield an empty string.
     """
-    result = []
-    for item in args:
+    result: list[str] = []
+
+    def flatten(item: Any) -> None:
         if isinstance(item, (list, tuple)):
-            result.extend(map(str, item))
+            for sub_item in item:
+                flatten(sub_item)
+        elif isinstance(item, bytes):
+            result.append(item.decode("utf-8"))
+        elif isinstance(item, str):
+            result.append(item)
         else:
             result.append(str(item))
+
+    for arg in args:
+        flatten(arg)
+
     return "\n".join(result)
