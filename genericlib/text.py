@@ -291,19 +291,6 @@ class BaseLine(str):
       both the content and newline information.
     - Metadata attributes (`_raw_data`, `_data`, `_joiner`) are stored at
       the class level, not the instance level.
-
-    Examples
-    --------
-    >>> line = BaseLine("Hello world\\n")
-    >>> isinstance(line, str)
-    True
-    >>> line
-    'Hello world\\n'
-
-    >>> BaseLine("Line1\\nLine2")
-    Traceback (most recent call last):
-        ...
-    LineArgumentError: data argument is multi-lines. MUST be a single line.
     """
     def __new__(cls, data, *args):
         new_base_line_obj = str.__new__(cls, data)
@@ -385,28 +372,6 @@ class Line(BaseLine):
     - This class is useful for parsing structured text files where whitespace
       and punctuation patterns are significant.
     - The regex-based splitting allows fine-grained analysis of line content.
-
-    Examples
-    --------
-    >>> line = Line("   Hello world      ")
-    >>> line.clean_line
-    'Hello world'
-    >>> line.leading
-    '   '
-    >>> line.trailing
-    '      '
-    >>> line.is_empty
-    False
-    >>> Line.is_line("Single line")
-    True
-    >>> Line.is_line("Line1\\nLine2", on_failure=False)
-    False
-    >>> Line.is_line("Line1\\nLine2", on_failure=True)
-    Traceback (most recent call last):
-        ...
-    LineArgumentError: data argument is multi-lines. MUST be a single line.
-    >>> line.convert_to_regex_pattern()
-    '(Hello)(\\s+)(world)'
     """
     @property
     def joiner(self):
@@ -429,16 +394,6 @@ class Line(BaseLine):
           reformatting text files.
         - The value is derived from the regex match performed during
           `BaseLine` initialization.
-
-        Examples
-        --------
-        >>> line = Line("Hello world\\n")
-        >>> line.joiner
-        '\\n'
-
-        >>> line = Line("Hello world")
-        >>> line.joiner is ""
-        True
         """
         return self._joiner
 
@@ -487,17 +442,6 @@ class Line(BaseLine):
         - Unlike `raw_data`, which preserves the original formatting,
           `clean_line` provides a normalized version of the text.
         - This is equivalent to calling `self.strip()`.
-
-        Examples
-        --------
-        >>> line = Line("   Hello world   \\n")
-        >>> line.raw_data
-        '   Hello world   \\n'
-        >>> line.clean_line
-        'Hello world'
-
-        >>> Line("").clean_line
-        ''
         """
         return self.strip()
 
@@ -520,17 +464,6 @@ class Line(BaseLine):
         - Use `is_empty` to detect truly blank lines.
         - Use `is_optional_empty` to detect lines that contain only
           whitespace characters (spaces, tabs, etc.).
-
-        Examples
-        --------
-        >>> Line("").is_empty
-        True
-
-        >>> Line("   ").is_empty
-        False
-
-        >>> Line("Hello").is_empty
-        False
         """
         return self == ""
 
@@ -555,20 +488,6 @@ class Line(BaseLine):
           technically contain whitespace.
         - This is useful for text parsing where whitespace-only lines should
           be treated as optional or ignorable.
-
-        Examples
-        --------
-        >>> Line("").is_optional_empty
-        False
-
-        >>> Line("   ").is_optional_empty
-        True
-
-        >>> Line("\\t\\t").is_optional_empty
-        True
-
-        >>> Line("Hello").is_optional_empty
-        False
         """
         return bool(re.match(r"\s+$", self))
 
@@ -701,19 +620,6 @@ class Line(BaseLine):
           when split with `splitlines(keepends=True)`.
         - This method is useful for enforcing single-line constraints before
           constructing `Line` or `BaseLine` objects.
-
-        Examples
-        --------
-        >>> Line.is_line("Hello world")
-        True
-
-        >>> Line.is_line("Hello\\nWorld")
-        False
-
-        >>> Line.is_line("Hello\\nWorld", on_failure=True)
-        Traceback (most recent call last):
-            ...
-        LineArgumentError: data argument is multi-lines. MUST be a single line.
         """
         lines = str(data).splitlines(keepends=True)
         if len(lines) == 1:
@@ -761,20 +667,6 @@ class Line(BaseLine):
         - Relies on helper classes (`BaseMatchedObject`, `PreMatchedObject`,
           `MatchedObject`, `PostMatchedObject`) to represent different
           segments of the line.
-
-        Examples
-        --------
-        >>> line = Line("Hello   World")
-        >>> line.convert_to_regex_pattern()
-        '(Hello)(\\s+)(World)'
-
-        >>> line = Line("...   ...")
-        >>> line.convert_to_regex_pattern()
-        '(\\.\\.\\. +)(\\1+)'
-
-        >>> line = Line("PlainText")
-        >>> line.convert_to_regex_pattern()
-        '(PlainText)'
         """
         result = []
         punct_pat = BaseMatchedObject.punctuation_pattern
@@ -828,16 +720,6 @@ class Line(BaseLine):
           tokenize a line into regex-compatible components.
         - The returned objects expose methods like `to_pattern()` for
           converting segments into regex strings.
-
-        Examples
-        --------
-        >>> line = Line("Hello   World")
-        >>> segments = line.do_finditer_split("Hello   World", pattern=r'\\s+')
-        >>> [type(item).__name__ for item in segments]      # noqa
-        ['PreMatchedObject', 'MatchedObject', 'PostMatchedObject']
-
-        >>> line.do_finditer_split("PlainText", pattern=r'\\s+')
-        [BaseMatchedObject('PlainText')]
         """
         result = []
         start = 0
@@ -1172,9 +1054,6 @@ def get_generic_error_msg(instance, fmt, *other):
     string `fmt` along with any additional arguments. This produces a
     consistent error‑message structure across different classes.
 
-    Example output:
-        "MyClassError - invalid value: 42"
-
     Args:
         instance: The object whose class name is used as the error prefix.
         fmt (str): A format string describing the error message body.
@@ -1379,6 +1258,8 @@ def dedent_and_strip(txt):
     (e.g., docstrings, templates) so they can be compared or displayed
     consistently.
     """
+    if isinstance(txt, bytes):
+        txt = txt.decode("utf-8")
     new_txt = dedent(str(txt)).strip()
     return new_txt
 
