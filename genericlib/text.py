@@ -1314,39 +1314,46 @@ def do_soft_regex_escape(pattern: Any) -> str:
     return new_pattern
 
 
-def enclose_string(text, quote='"', is_new_line=False):
+def enclose_string(text: Any, quote: str = '"', is_new_line: bool = False) -> str:
     """
-    Wraps the given text in either single quotes or triple quotes, with
-    optional newline formatting for multi‑line content.
+    Enclose the given text in single or triple quotes, with optional newline formatting.
 
-    The function first escapes any occurrences of the chosen quote character
-    within the text. If the input contains multiple lines, it is enclosed in
-    triple quotes (e.g., `'''text'''`). When `is_new_line` is True, the
-    enclosed text is placed on its own line between the opening and closing
-    triple quotes. Single‑line input is enclosed using a single pair of the
-    specified quote character.
+    This function escapes occurrences of the chosen quote character inside the text.
+    - If the text contains multiple lines, it is enclosed in triple quotes.
+    - If `is_new_line` is True, the enclosed text is placed on its own line between
+      the opening and closing triple quotes.
+    - Single-line input is enclosed using a single pair of the specified quote character.
 
-    Args:
-        text (str): The text to enclose.
-        quote (str): The quote character to use (default is `"`). This
-            character is repeated three times for triple‑quoted output.
-        is_new_line (bool): If True, multi‑line text is placed on a new line
-            inside the triple‑quoted block.
+    Parameters
+    ----------
+    text : Any
+        The text to enclose. Non-string inputs are converted to string.
+        Bytes are decoded as UTF-8.
+    quote : str, optional
+        The quote character to use (default is `"`). Must be either `'` or `"`.
+        For multi-line input, this character is repeated three times for triple-quoted output.
+    is_new_line : bool, optional
+        If True, multi-line text is placed on a new line inside the triple-quoted block.
 
-    Returns:
-        str: The text wrapped in either single or triple quotes, with internal
-        quote characters escaped as needed.
+    Returns
+    -------
+    str
+        The text wrapped in either single or triple quotes, with internal quote
+        characters escaped as needed.
     """
+    if quote not in {"'", '"'}:
+        quote = '"'
+
+    if isinstance(text, bytes):
+        text = text.decode("utf-8")
+
     text = str(text)
-    reformat_txt = text.replace(quote, '\\' + quote)
+    escaped_text = text.replace(quote, "\\" + quote)
 
-    if len(re.split(r'\r?\n|\r', text)) > 1:
-        fmt = f'{quote*3}\n%s\n{quote*3}' if is_new_line else f'{quote*3}%s{quote*3}'
-        enclosed_txt = fmt % reformat_txt
-        return enclosed_txt
-    else:
-        enclosed_txt = f'{quote}{reformat_txt}{quote}'
-        return enclosed_txt
+    if "\n" in text or "\r" in text:
+        fmt = f"{quote*3}\n%s\n{quote*3}" if is_new_line else f"{quote*3}%s{quote*3}"
+        return fmt % escaped_text
+    return f"{quote}{escaped_text}{quote}"
 
 
 def dedent_and_strip(txt):
