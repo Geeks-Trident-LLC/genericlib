@@ -120,104 +120,10 @@ class TestMisc:
             result = Misc.is_sequence(obj)
             assert result is True
 
-    @pytest.mark.parametrize(
-        "data,return_type,expected_result",
-        [
-            (1, None, (True, 1)),
-            ('1', None, (True, 1)),
-            ('1.0', None, (True, 1.0)),
-            (' .1', None, (True, 0.1)),
-            (False, None, (True, False)),
-            ('true', None, (True, True)),
-            ('  tRue  ', None, (True, True)),
-            ('  tRue  ', int, (True, 1)),
-            ('  faLse  ', float, (True, 0.0)),
-            ('  2.3  ', float, (True, 2.3)),
-            ('  2.3  ', int, (True, 2)),
-            ('  2.3  ', bool, (True, 1)),
-            ('1.0 2.0', None, (False, '1.0 2.0')),
-
-        ]
-    )
-    def test_try_to_get_number(self, data, return_type, expected_result):
-        result = Misc.try_to_get_number(data, return_type=return_type)
-        assert result == expected_result
-
-    @pytest.mark.parametrize(
-        "data,expected_result",
-        [
-            (1, True),
-            ('1', True),
-            (' 1.0 ', False),
-            ('.0', False),
-
-        ]
-    )
-    def test_is_integer(self, data, expected_result):
-        result = Misc.is_integer(data)
-        assert result == expected_result
-
-    @pytest.mark.parametrize(
-        "data,expected_result",
-        [
-            (1, True),
-            (1.1, True),
-            ('1', True),
-            (' 1.0 ', True),
-            ('.0', True),
-            ('1.0 2.0', False)
-
-        ]
-    )
-    def test_is_float(self, data, expected_result):
-        result = Misc.is_float(data)
-        assert result == expected_result
-
-    @pytest.mark.parametrize(
-        "data,expected_result",
-        [
-            (True, True),
-            (False, True),
-            (1, True),
-            (0, True),
-            (1.0, True),
-            (0.0, True),
-            (' true ', True),
-            (' false ', True),
-            (0.1, False),
-            ('0', False),
-
-        ]
-    )
-    def test_is_boolean(self, data, expected_result):
-        result = Misc.is_boolean(data)
-        assert result == expected_result
-
-    @pytest.mark.parametrize(
-        "data,expected_result",
-        [
-            (True, True),
-            (False, True),
-            (1, True),
-            (0, True),
-            (1.0, True),
-            (0.0, True),
-            (' true ', True),
-            (' false ', True),
-            (0.1, True),
-            ('0', True),
-            ('0 0', False)
-
-        ]
-    )
-    def test_is_number(self, data, expected_result):
-        result = Misc.is_number(data)
-        assert result == expected_result
-
     def test_is_class(self):
         assert Misc.is_class(int) is True
         assert Misc.is_class(File) is True
-        assert Misc.is_class(Misc.is_number) is False
+        assert Misc.is_class(int.is_integer) is False
 
     def test_is_callable(self):
         assert Misc.is_callable(print) is True
