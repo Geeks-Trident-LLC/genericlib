@@ -6,47 +6,6 @@ This package consolidates commonly used components into a single namespace,
 making it easier to import and work with them across applications. It exposes
 a curated set of classes, functions, and constants through `__all__` for
 convenient access.
-
-Available components include:
-
-- **Collection utilities**
-  - `DictObject`: Dictionary wrapper with attribute-style access.
-  - `DotObject`: Object-like interface for nested dictionaries.
-  - `substitute_variable`: Helper for variable substitution in strings.
-
-- **Text and file utilities**
-  - `Text`: String manipulation and formatting helpers.
-  - `File`: File I/O abstraction.
-  - `RFFile`: Robot Framework–specific file utilities.
-
-- **Search**
-  - `Wildcard`: Pattern matching with wildcard support.
-
-- **Constants**
-  - `ECODE`: Error codes.
-  - `ICSValue`, `ICSStripValue`: Specialized constant values.
-  - `STRING`, `STR`, `TEXT`: String-related constants.
-  - `NUMBER`, `INDEX`: Numeric constants.
-  - `SYMBOL`: Symbolic constants.
-  - `PATTERN`: Regular expression patterns.
-  - `STRUCT`, `SLICE`: Structural constants.
-
-- **Utilities**
-  - `Printer`: Formatted printing of structured data.
-  - `Misc`: General-purpose type checking and validation.
-  - `MiscFunction`: Safe function invocation and error handling.
-  - `MiscOutput`: Shell command execution with captured results.
-  - `MiscObject`: Object manipulation and cleanup helpers.
-  - `Tabular`: Tabular data formatting.
-  - `get_data_as_tabular`, `print_data_as_tabular`: Convenience functions
-    for tabular display.
-
-- **Configuration**
-  - `version`: Current package version.
-
-The `__all__` list defines the public API of this package, ensuring that only
-the most relevant and stable components are exported when using
-`from genericlib import *`.
 """
 
 from genericlib.collection import DictObject
@@ -72,8 +31,6 @@ from genericlib.conststruct import STRUCT
 from genericlib.conststruct import SLICE
 
 from genericlib.utils import Printer
-from genericlib.utils import MiscOutput
-from genericlib.utils import MiscFunction
 from genericlib.utils import Tabular
 from genericlib.utils import get_data_as_tabular
 from genericlib.utils import print_data_as_tabular
@@ -105,9 +62,6 @@ __all__ = [
     'RFFile',
 
     'Wildcard',
-
-    'MiscFunction',
-    'MiscOutput',
 
     'Printer',
 

@@ -9,7 +9,7 @@ Run pytest in the project root to execute these tests:
     $ python -m pytest tests/unit/utils/test_misc_function_class.py
 """
 
-from genericlib.utils import MiscFunction
+from genericlib.utils import do_silent_invoke
 
 from tests.unit.utils import (
     sample_func_displaying_stdout,
@@ -21,7 +21,7 @@ from tests.unit.utils import (
 
 class TestDoSilentInvoke:
     """
-    Unit tests for `MiscFunction.do_silent_invoke`.
+    Unit tests for `do_silent_invoke`.
 
     Coverage:
     - Captures stdout only.
@@ -37,7 +37,7 @@ class TestDoSilentInvoke:
         Verify that stdout is captured correctly when the callable
         prints only to stdout.
         """
-        result = MiscFunction.do_silent_invoke(sample_func_displaying_stdout)
+        result = do_silent_invoke(sample_func_displaying_stdout)
         assert result.result == "return_value"
         assert "hello stdout" in result.output
         assert result.error == ""
@@ -48,7 +48,7 @@ class TestDoSilentInvoke:
         Verify that stderr is captured correctly when the callable
         prints only to stderr.
         """
-        result = MiscFunction.do_silent_invoke(sample_func_displaying_stderr)
+        result = do_silent_invoke(sample_func_displaying_stderr)
         assert result.result == 9999
         assert result.output == ""
         assert "hello stderr" in result.error
@@ -59,7 +59,7 @@ class TestDoSilentInvoke:
         Verify that both stdout and stderr are captured correctly
         when the callable prints to both streams.
         """
-        result = MiscFunction.do_silent_invoke(sample_func_displaying_stdout_and_stderr)
+        result = do_silent_invoke(sample_func_displaying_stdout_and_stderr)
         assert result.result == "mixed"
         assert "stdout here" in result.output
         assert "stderr here" in result.error
@@ -71,7 +71,7 @@ class TestDoSilentInvoke:
         Verify that positional and keyword arguments are passed correctly
         to the callable and that stdout is captured.
         """
-        result = MiscFunction.do_silent_invoke(sample_func_args, 3, y=4)
+        result = do_silent_invoke(sample_func_args, 3, y=4)
         assert result.result == 7
         assert "sum=7" in result.output
 
@@ -81,7 +81,7 @@ class TestDoSilentInvoke:
         when a filename is provided.
         """
         file_path = tmp_path / "output.txt"
-        result = MiscFunction.do_silent_invoke(
+        result = do_silent_invoke(
             sample_func_displaying_stdout_and_stderr,
             filename=str(file_path)
         )

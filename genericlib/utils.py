@@ -20,9 +20,6 @@ Use Cases
 
 """
 
-import platform
-import sys
-
 import subprocess
 
 from io import StringIO
@@ -38,8 +35,6 @@ from genericlib.constant import STRING
 from genericlib.text import Text
 from genericlib.collection import DotObject
 
-from genericlib.exceptions import create_runtime_error
-from genericlib.exceptions import raise_runtime_error
 
 
 class Printer:
@@ -295,330 +290,6 @@ class Printer:
         message = cls.get_message(fmt, *args, style=style, prefix=prefix)
         print_func = print_func if callable(print_func) else print
         print_func(message)
-
-class MiscOutput:
-    """
-    Utility class for executing shell commands and capturing results.
-
-    MiscOutput provides a structured way to run system commands from
-    within Python and collect their output, exit code, and success
-    status in a convenient `DotObject`. This makes it easier to
-    integrate shell execution into applications without manually
-    handling subprocess details.
-
-    Methods
-    -------
-    execute_shell_command(cmdline)
-        Run a shell command, capture its output and exit code, and
-        return a `DotObject` containing:
-        - output : str
-            The captured stdout/stderr text from the command.
-        - exit_code : int
-            The numeric exit status returned by the shell.
-        - is_success : bool
-            True if the exit code equals `ECODE.SUCCESS`, False otherwise.
-
-    Use Cases
-    ---------
-    - Automating system tasks from Python.
-    - Capturing command output for logging or diagnostics.
-    - Checking success/failure of shell operations in a structured way.
-    """
-    @classmethod
-    def execute_shell_command(cls, cmdline):
-        """
-        Execute a shell command and capture its result.
-
-        This method runs the specified command line string in the system shell
-        using `subprocess.getstatusoutput`. It collects both the exit code and
-        the command's output, then wraps them in a `DotObject` for convenient
-        access. A success flag is also included for quick checks.
-
-        Parameters
-        ----------
-        cmdline : str
-            The shell command to execute, provided as a single string.
-
-        Returns
-        -------
-        DotObject
-            An object containing:
-            - output : str
-                The captured stdout and stderr output from the command.
-            - exit_code : int
-                The exit status code returned by the shell.
-            - is_success : bool
-                True if the exit code equals `ECODE.SUCCESS`, False otherwise.
-
-        Notes
-        -----
-        - This method is useful for programmatically running shell commands
-          while capturing their results in a structured way.
-        - The `is_success` flag depends on the definition of `ECODE.SUCCESS`
-          in your environment (commonly 0).
-        """
-        exit_code, output = subprocess.getstatusoutput(cmdline)
-        result = DotObject(
-            output=output,                          # noqa
-            exit_code=exit_code,                    # noqa
-            is_success=exit_code == ECODE.SUCCESS   # noqa
-        )
-        return result
-
-
-class MiscPlatform:
-    """
-    Utility class for retrieving platform and Python environment information.
-    """
-
-    @classmethod
-    def is_window_os(cls):
-        """
-        Check whether the current operating system is Windows.
-        """
-        chk = platform.system().lower() == 'windows'
-        return chk
-
-    @classmethod
-    def is_mac_os(cls):
-        """
-        Check whether the current operating system is macOS.
-        """
-        chk = platform.system().lower() == 'darwin'
-        return chk
-
-    @classmethod
-    def is_linux_os(cls):
-        """
-        Check whether the current operating system is Linux.
-        """
-        chk = platform.system().lower() == 'linux'
-        return chk
-
-    @classmethod
-    def is_nix_os(cls):
-        """
-        Check whether the current operating system is Unix-like system,
-        such as Linux or macOS.
-        """
-        chk = cls.is_linux_os() or cls.is_mac_os()
-        return chk
-
-    @classmethod
-    def get_kernel_info(cls):
-        """
-        Retrieve basic operating system kernel information.
-
-        This method queries the underlying platform using
-        `platform.uname()` and returns a string containing the
-        system name and kernel release version. It is useful for
-        logging, diagnostics, or displaying environment metadata.
-
-        Returns
-        -------
-        str
-            A string in the format "<system> <release>", where:
-            - <system> is the operating system name (e.g., "Linux",
-              "Windows", "Darwin").
-            - <release> is the kernel or OS release version
-              (e.g., "5.15.0", "10.0.22621").
-
-        Examples
-        --------
-        >>> MiscPlatform.get_kernel_info()
-        'Linux 5.15.0'
-
-        >>> MiscPlatform.get_kernel_info()
-        'Windows 10.0.22621'
-        """
-        result = '{0.system} {0.release}'.format(platform.uname())
-        return result
-
-    @classmethod
-    def get_python_info(cls):
-        """
-        Retrieve the current Python interpreter version.
-
-        This method queries the runtime environment using
-        `platform.python_version()` and returns a string that
-        identifies the active Python version. It is useful for
-        logging, diagnostics, or displaying environment metadata
-        in applications.
-
-        Returns
-        -------
-        str
-            A string in the format "Python <version>", where
-            <version> is the full version number (e.g., "3.11.6").
-
-        Examples
-        --------
-        >>> MiscPlatform.get_python_info()
-        'Python 3.11.6'
-        """
-        result = 'Python {}'.format(platform.python_version())
-        return result
-
-    @classmethod
-    def get_python_docs_url(cls):
-        """
-        Retrieve the official Python documentation URL for the current runtime version.
-
-        This method constructs a URL pointing to the Python documentation site
-        that matches the major and minor version of the interpreter currently
-        in use. It ensures that developers are directed to the correct set of
-        docs for their environment.
-
-        Returns
-        -------
-        str
-            A URL string in the format:
-            "https://docs.python.org/<major>.<minor>/"
-            where <major> and <minor> correspond to the active Python version.
-
-        Examples
-        --------
-        >>> MiscPlatform.get_python_docs_url()
-        'https://docs.python.org/3.11/'
-
-        Notes
-        -----
-        - The patch version (e.g., 3.11.6) is not included in the URL.
-        - Useful for linking users directly to the correct documentation
-          for their Python environment.
-        """
-        fmt = 'https://docs.python.org/{0.major}.{0.minor}/'
-        result = fmt.format(sys.version_info)
-        return result
-
-
-class MiscFunction:
-    """
-    Utility class for function invocation and dynamic error handling.
-
-    MiscFunction provides helper methods for safely invoking callables
-    while capturing their output, as well as for creating and raising
-    custom runtime errors. It is designed to simplify scenarios where
-    you need to:
-    - Execute a function without polluting the console with stdout/stderr.
-    - Capture and optionally persist the output and error streams.
-    - Dynamically generate exception classes tied to specific objects.
-    """
-    @classmethod
-    def do_silent_invoke(cls, callable_obj, *args, filename='', **kwargs):
-        """
-        Invoke a callable while capturing and suppressing its stdout/stderr output.
-
-        This method executes the given callable object with the provided arguments,
-        redirecting `sys.stdout` and `sys.stderr` to in-memory buffers so that any
-        printed output or error messages are captured instead of displayed. The
-        captured streams, along with the callable's return value, are packaged into
-        a `DotObject` for convenient access.
-
-        Optionally, the combined output and error text can be written to a file.
-
-        Parameters
-        ----------
-        callable_obj : Callable
-            The function or callable object to be invoked.
-        *args : arguments
-            Positional arguments to pass to the callable.
-        filename : str, optional
-            Path to a file where the combined stdout and stderr output will be
-            written. Defaults to an empty string (no file written).
-        **kwargs : keyword arguments
-            Keyword arguments to pass to the callable.
-
-        Returns
-        -------
-        DotObject
-            An object containing:
-            - result : The return value of the callable.
-            - output : Captured stdout text.
-            - error : Captured stderr text.
-            - output_and_error : Combined stdout and stderr text.
-
-        Notes
-        -----
-        - Standard output and error streams are restored to their original state
-          after invocation.
-        - If `filename` is provided, the combined output and error are written
-          to that file.
-        - This method is useful for safely invoking functions that produce
-          console output, allowing you to capture and inspect their output
-          programmatically.
-        """
-        stdout_buffer, stderr_buffer = StringIO(), StringIO()
-
-        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
-            ret_result = callable_obj(*args, **kwargs)
-
-        stdout_result = stdout_buffer.getvalue()
-        stderr_result = stderr_buffer.getvalue()
-
-        output_and_error = (
-            f"{stdout_result}\n{stderr_result}" if stderr_result else stdout_result
-        )
-
-        result = DotObject(
-            result=ret_result,
-            output=stdout_result,
-            error=stderr_result,
-            output_and_error=output_and_error,
-        )
-
-        if filename:
-            with open(filename, "w", encoding="utf-8") as stream:
-                stream.write(result.output_and_error)
-
-        return result
-
-    @classmethod
-    def create_runtime_error(cls, obj=None, msg=''):
-        """
-        Convenience wrapper for `exceptions.create_runtime_error`.
-
-        Parameters
-        ----------
-        obj : Any, optional
-            The object or string used to derive the exception class name.
-            - If a string, it is used directly as the exception class name.
-            - If another object, its class name is suffixed with "RTError".
-            - If None, defaults to "RuntimeError".
-        msg : str, optional
-            The error message to associate with the exception instance.
-            Defaults to an empty string.
-
-        Returns
-        -------
-        Exception
-            An instance of the dynamically created exception class,
-            initialized with the provided message.
-        """
-        return create_runtime_error(obj=obj, msg=msg)
-
-
-    @classmethod
-    def raise_runtime_error(cls, obj=None, msg=''):
-        """
-        Convenience wrapper for `exceptions.raise_runtime_error`.
-
-        Parameters
-        ----------
-        obj : Any, optional
-            The object or string used to derive the exception class name.
-            Defaults to None.
-        msg : str, optional
-            The error message to associate with the raised exception.
-            Defaults to an empty string.
-
-        Raises
-        ------
-        Exception
-            A dynamically created exception instance with the specified
-            message.
-        """
-        raise_runtime_error(obj=obj, msg=msg)
 
 
 class Tabular:
@@ -1091,3 +762,113 @@ def print_data_as_tabular(data, columns=None, justify='left', missing='not_found
     """
     node = Tabular(data, columns=columns, justify=justify, missing=missing)
     node.print()
+
+
+def execute_shell_command(cmdline):
+    """
+    Execute a shell command and capture its result.
+
+    This method runs the specified command line string in the system shell
+    using `subprocess.getstatusoutput`. It collects both the exit code and
+    the command's output, then wraps them in a `DotObject` for convenient
+    access. A success flag is also included for quick checks.
+
+    Parameters
+    ----------
+    cmdline : str
+        The shell command to execute, provided as a single string.
+
+    Returns
+    -------
+    DotObject
+        An object containing:
+        - output : str
+            The captured stdout and stderr output from the command.
+        - exit_code : int
+            The exit status code returned by the shell.
+        - is_success : bool
+            True if the exit code equals `ECODE.SUCCESS`, False otherwise.
+
+    Notes
+    -----
+    - This method is useful for programmatically running shell commands
+      while capturing their results in a structured way.
+    - The `is_success` flag depends on the definition of `ECODE.SUCCESS`
+      in your environment (commonly 0).
+    """
+    exit_code, output = subprocess.getstatusoutput(cmdline)
+    result = DotObject(
+        output=output,                          # noqa
+        exit_code=exit_code,                    # noqa
+        is_success=exit_code == ECODE.SUCCESS   # noqa
+    )
+    return result
+
+
+def do_silent_invoke(callable_obj, *args, filename='', **kwargs):
+    """
+    Invoke a callable while capturing and suppressing its stdout/stderr output.
+
+    This method executes the given callable object with the provided arguments,
+    redirecting `sys.stdout` and `sys.stderr` to in-memory buffers so that any
+    printed output or error messages are captured instead of displayed. The
+    captured streams, along with the callable's return value, are packaged into
+    a `DotObject` for convenient access.
+
+    Optionally, the combined output and error text can be written to a file.
+
+    Parameters
+    ----------
+    callable_obj : Callable
+        The function or callable object to be invoked.
+    *args : arguments
+        Positional arguments to pass to the callable.
+    filename : str, optional
+        Path to a file where the combined stdout and stderr output will be
+        written. Defaults to an empty string (no file written).
+    **kwargs : keyword arguments
+        Keyword arguments to pass to the callable.
+
+    Returns
+    -------
+    DotObject
+        An object containing:
+        - result : The return value of the callable.
+        - output : Captured stdout text.
+        - error : Captured stderr text.
+        - output_and_error : Combined stdout and stderr text.
+
+    Notes
+    -----
+    - Standard output and error streams are restored to their original state
+      after invocation.
+    - If `filename` is provided, the combined output and error are written
+      to that file.
+    - This method is useful for safely invoking functions that produce
+      console output, allowing you to capture and inspect their output
+      programmatically.
+    """
+    stdout_buffer, stderr_buffer = StringIO(), StringIO()
+
+    with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+        ret_result = callable_obj(*args, **kwargs)
+
+    stdout_result = stdout_buffer.getvalue()
+    stderr_result = stderr_buffer.getvalue()
+
+    output_and_error = (
+        f"{stdout_result}\n{stderr_result}" if stderr_result else stdout_result
+    )
+
+    result = DotObject(
+        result=ret_result,
+        output=stdout_result,
+        error=stderr_result,
+        output_and_error=output_and_error,
+    )
+
+    if filename:
+        with open(filename, "w", encoding="utf-8") as stream:
+            stream.write(result.output_and_error)
+
+    return result

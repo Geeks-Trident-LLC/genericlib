@@ -3,7 +3,7 @@ from datetime import datetime
 import time
 
 from genericlib import File
-from genericlib.utils import MiscPlatform
+import genericlib.platform as platform
 from genericlib.text import dedent_and_strip
 
 from tests.unit import get_temp_file  # Imported from tests/unit/__init__.py
@@ -255,7 +255,7 @@ class TestFile:
                                        prefix=prefix, postfix=postfix,
                                        new_extension=new_extension)
 
-        if MiscPlatform.is_window_os():
+        if platform.is_windows_os():
             expected_result_for_win_os = expected_result.replace('/', '\\')
             assert result == expected_result_for_win_os
         else:

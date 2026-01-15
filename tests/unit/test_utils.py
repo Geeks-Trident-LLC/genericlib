@@ -2,8 +2,8 @@ import pytest   # noqa
 
 from genericlib import Printer
 from genericlib import File
-from genericlib.utils import MiscPlatform
-from genericlib import MiscOutput
+import genericlib.platform as platform
+from genericlib.utils import execute_shell_command
 from genericlib import get_data_as_tabular
 
 TEST_DATA = File.get_result_from_yaml_file(
@@ -91,11 +91,11 @@ class TestPrinter:
 
 
 
-class TestMiscOutput:
+class TestTerminalOutput:
 
     def test_execute_shell_command(self):
-        cmdline = 'dir' if MiscPlatform.is_window_os() else 'ls'
-        result = MiscOutput.execute_shell_command(cmdline)
+        cmdline = 'dir' if platform.is_windows_os() else 'ls'
+        result = execute_shell_command(cmdline)
         assert result.exit_code == 0
         assert result.is_success is True
 

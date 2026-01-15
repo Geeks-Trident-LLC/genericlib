@@ -1,3 +1,15 @@
+"""
+genericlib.datatype
+===================
+
+Utility functions for runtime type checking and data handling.
+
+This module centralizes helpers to identify common Python types
+(e.g., dict, list, sequence, class, callable, iterator, generator,
+iterable, NoneType) and provides utilities for copying objects and
+cleaning lists of dictionaries.
+"""
+
 from collections import abc
 import copy as _copy
 
