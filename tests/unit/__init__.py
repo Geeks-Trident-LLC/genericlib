@@ -15,6 +15,10 @@ Run pytest in the project root to execute these tests:
 import tempfile
 
 
+class FooException(Exception):
+    """Foo Exception"""
+
+
 class DummyClass:
     """A placeholder class used for testing dynamic exception naming."""
     def __init__(self):

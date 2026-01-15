@@ -40,13 +40,14 @@ Use Cases
 
 import re
 
-from genericlib.utils import Misc
 from genericlib.constant import STRING
 from genericlib.constnum import NUMBER
 from genericlib.constsymbol import SYMBOL
 from genericlib.constpattern import PATTERN
 
 from genericlib.conststruct import SLICE
+
+import genericlib.text as text
 
 
 class Wildcard:
@@ -60,43 +61,6 @@ class Wildcard:
     regex patterns suitable for text matching. It supports both single-line
     and multi-line input, optional case-insensitivity, relaxed
     whitespace handling, and anchoring from start to end.
-
-    Parameters
-    ----------
-    data : str
-        The input string containing wildcard expressions to be parsed.
-    is_leading : bool, optional
-        If True, allows matching at the beginning of the string (default: False).
-    is_trailing : bool, optional
-        If True, allows matching at the end of the string (default: False).
-    ignore_case : bool, optional
-        If True, regex matching will be case-insensitive (default: True).
-    relax : bool, optional
-        If True, relaxes whitespace handling by treating multiple spaces
-        as equivalent (default: False).
-    used_whitespace : bool, optional
-        If True, preserves explicit whitespace characters in the regex
-        pattern; otherwise, normalizes them (default: False).
-    from_start_to_end : bool, optional
-        If True, anchors the regex pattern to match from start to end of
-        the input string (default: True).
-
-    Attributes
-    ----------
-    pattern : str
-        The compiled regex pattern generated from the input data.
-    is_multiline : bool
-        Indicates whether the input data contains newline characters.
-    ws_placeholder : str
-        Placeholder token for single whitespace substitution.
-    multi_ws_placeholder : str
-        Placeholder token for multiple whitespace substitution.
-    ws_repl : str
-        Regex replacement pattern for single whitespace.
-    multi_ws_repl : str
-        Regex replacement pattern for multiple whitespace.
-    failure_fmt : str
-        Format string used when integer parsing fails.
 
     Key Features
     ------------
@@ -336,10 +300,10 @@ class Wildcard:
           positive ranges.
         """
         small, large = min(v1, v2), max(v1, v2)
-        first_small = int(Misc.get_first_char(small))
-        last_small = int(Misc.get_last_char(small))
-        first_large = int(Misc.get_first_char(large))
-        last_large = int(Misc.get_last_char(large))
+        first_small = int(text.get_first_char(small))
+        last_small = int(text.get_last_char(small))
+        first_large = int(text.get_first_char(large))
+        last_large = int(text.get_last_char(large))
         small_width, large_width = len(str(small)), len(str(large))
 
         repl_pat = r'(\[(\d)-\2\])'

@@ -21,12 +21,14 @@ Use Cases
 
 """
 
-from typing import Any
+import typing
+from typing import Any, Tuple, Optional
 
 import re
 import string
+import time
 
-from textwrap import dedent
+import textwrap
 
 from genericlib.exceptions import LineArgumentError
 from genericlib.exceptions import EscapePatternError
@@ -42,16 +44,6 @@ class BaseText(str):
     automatically formats the exception into a readable string containing
     the exception type and message. Otherwise, it behaves like a normal
     string.
-
-    This is useful for consistent error reporting and logging, ensuring
-    exceptions are converted into human-readable text without requiring
-    explicit formatting.
-
-    Methods
-    -------
-    __new__(*args, **kwargs)
-        Create a new `BaseText` instance. If the first argument is an
-        exception, return a formatted string representation of it.
     """
     def __new__(cls, *args, **kwargs):
         arg0 = args[0] if args else None
@@ -97,7 +89,8 @@ class Text(BaseText):
     @classmethod
     def format(cls, *args, **kwargs):
         """
-        Safely format text using old-style (`%`) or new-style (`str.format`) string formatting.
+        Safely format text using old-style (`%`) or new-style (`str.format`)
+        string formatting.
 
         This method attempts to format a string with the provided arguments,
         supporting both positional and keyword-based formatting. It provides
@@ -302,7 +295,7 @@ class BaseLine(str):
             new_base_line_obj._joiner = re.search(r"([\r\n]+)?$", __line).group()
             return new_base_line_obj
         else:
-            error = "data argument is multi-lines.  MUST be a single line."
+            error = "The 'data' argument contains multiple lines; it must be a single line."
             raise LineArgumentError(error)
 
 
@@ -316,62 +309,6 @@ class Line(BaseLine):
     for analyzing and manipulating a single line of text. It enforces the
     single-line constraint and exposes metadata such as leading/trailing
     whitespace, emptiness checks, and regex-based tokenization.
-
-    Properties
-    ----------
-    joiner : str
-        Trailing newline characters captured from the original line.
-    raw_data : str
-        The raw line string as originally provided.
-    clean_line : str
-        The line with leading and trailing whitespace removed.
-    is_empty : bool
-        True if the line is completely empty.
-    is_optional_empty : bool
-        True if the line contains only whitespace characters.
-    leading : str
-        Leading whitespace characters at the start of the line.
-    trailing : str
-        Trailing whitespace characters at the end of the line.
-    is_leading : bool
-        True if the line has leading whitespace.
-    is_trailing : bool
-        True if the line has trailing whitespace.
-
-    Class Methods
-    -------------
-    is_line(data, on_failure=False) -> bool
-        Validate whether `data` represents a single line. Returns True if valid.
-        If invalid and `on_failure=True`, raises `LineArgumentError`.
-
-    Instance Methods
-    ----------------
-    convert_to_regex_pattern() -> str
-        Convert the line into a regex pattern string. Splits the line into
-        matched/unmatched segments using punctuation and whitespace patterns,
-        then recombines them into a regex-compatible representation.
-
-    do_finditer_split(data, pattern=r'\\s+') -> list
-        Split `data` into a sequence of matched and unmatched objects using
-        regex `finditer`. Returns a list of `PreMatchedObject`, `MatchedObject`,
-        `PostMatchedObject`, or `BaseMatchedObject` instances.
-
-    Returns
-    -------
-    Line
-        A `Line` instance wrapping a single line of text.
-
-    Raises
-    ------
-    LineArgumentError
-        If initialized with multi-line data or if `is_line` validation fails
-        with `on_failure=True`.
-
-    Notes
-    -----
-    - This class is useful for parsing structured text files where whitespace
-      and punctuation patterns are significant.
-    - The regex-based splitting allows fine-grained analysis of line content.
     """
     @property
     def joiner(self):
@@ -387,13 +324,6 @@ class Line(BaseLine):
         str
             The newline characters at the end of the line, or emtpy string if no
             newline was present.
-
-        Notes
-        -----
-        - Useful for preserving exact line endings when reconstructing or
-          reformatting text files.
-        - The value is derived from the regex match performed during
-          `BaseLine` initialization.
         """
         return self._joiner
 
@@ -402,23 +332,11 @@ class Line(BaseLine):
         """
         Get the original, unmodified line string.
 
-        This property returns the exact line content as it was provided
-        when the `Line` object was created, including any whitespace and
-        newline characters. Unlike `clean_line`, it does not strip or
-        alter the text in any way.
-
         Returns
         -------
         str
             The raw line string, identical to the input passed during
             initialization.
-
-        Notes
-        -----
-        - Useful when you need to preserve the original formatting of
-          the line for logging, debugging, or reconstruction.
-        - For a trimmed version of the line, use the `clean_line`
-          property instead.
         """
         return self._raw_data
 
@@ -427,21 +345,10 @@ class Line(BaseLine):
         """
         Get the line content with leading and trailing whitespace removed.
 
-        This property returns a "cleaned" version of the line by stripping
-        all surrounding whitespace characters (spaces, tabs, newlines).
-        It is useful when you want the meaningful text content without
-        formatting artifacts.
-
         Returns
         -------
         str
             The line string with leading and trailing whitespace removed.
-
-        Notes
-        -----
-        - Unlike `raw_data`, which preserves the original formatting,
-          `clean_line` provides a normalized version of the text.
-        - This is equivalent to calling `self.strip()`.
         """
         return self.strip()
 
@@ -450,20 +357,10 @@ class Line(BaseLine):
         """
         Check whether the line is completely empty.
 
-        This property evaluates whether the `Line` instance contains no
-        characters at all. It differs from `is_optional_empty`, which
-        considers lines consisting only of whitespace as "empty."
-
         Returns
         -------
         bool
             True if the line is an empty string (`""`), otherwise False.
-
-        Notes
-        -----
-        - Use `is_empty` to detect truly blank lines.
-        - Use `is_optional_empty` to detect lines that contain only
-          whitespace characters (spaces, tabs, etc.).
         """
         return self == ""
 
@@ -472,116 +369,33 @@ class Line(BaseLine):
         """
         Check whether the line consists only of whitespace characters.
 
-        This property evaluates whether the `Line` instance contains one or
-        more characters, but all of them are whitespace (spaces, tabs, etc.).
-        It differs from `is_empty`, which requires the line to be completely
-        blank (`""`).
-
         Returns
         -------
         bool
             True if the line contains only whitespace characters, otherwise False.
-
-        Notes
-        -----
-        - Use `is_optional_empty` to detect lines that are visually empty but
-          technically contain whitespace.
-        - This is useful for text parsing where whitespace-only lines should
-          be treated as optional or ignorable.
         """
         return bool(re.match(r"\s+$", self))
 
     @property
     def leading(self):
-        """
-        Get the leading whitespace characters at the start of the line.
-
-        This property extracts and returns any whitespace (spaces, tabs, etc.)
-        that appears at the beginning of the line. If no leading whitespace is
-        present, an empty string is returned.
-
-        Returns
-        -------
-        str
-            The leading whitespace characters at the start of the line,
-            or an empty string if none exist.
-
-        Notes
-        -----
-        - Useful for analyzing indentation or formatting in structured text.
-        - For a boolean check, use the `is_leading` property to determine
-          whether the line has leading whitespace.
-        """
+        """Extract leading whitespace characters from the given line."""
         leading_chars = re.match(r'(\s+)?', self).group()
         return leading_chars
 
     @property
     def trailing(self):
-        """
-        Get the trailing whitespace characters at the end of the line.
-
-        This property extracts and returns any whitespace (spaces, tabs, etc.)
-        that appears at the end of the line. If no trailing whitespace is
-        present, an empty string is returned.
-
-        Returns
-        -------
-        str
-            The trailing whitespace characters at the end of the line,
-            or an empty string if none exist.
-
-        Notes
-        -----
-        - Useful for analyzing formatting, alignment, or detecting
-          extraneous spaces in structured text.
-        - For a boolean check, use the `is_trailing` property to determine
-          whether the line has trailing whitespace.
-        """
+        """Extract trailing whitespace characters from the given line."""
         trailing_chars = re.search(r'(\s+)?$', self).group().rstrip('\r\n')
         return trailing_chars
 
     @property
-    def is_leading(self):
-        """
-        Check whether the line has leading whitespace.
-
-        This property evaluates whether the `Line` instance begins with one
-        or more whitespace characters (spaces, tabs, etc.). It is a boolean
-        convenience wrapper around the `leading` property.
-
-        Returns
-        -------
-        bool
-            True if the line starts with whitespace, otherwise False.
-
-        Notes
-        -----
-        - Use `leading` to retrieve the actual whitespace characters.
-        - This property is useful for detecting indentation or formatting
-          in structured text.
-        """
+    def is_leading(self) -> bool:
+        """Check if the given line contains leading whitespace."""
         return len(self.leading) > 0
 
     @property
-    def is_trailing(self):
-        """
-        Check whether the line has trailing whitespace.
-
-        This property evaluates whether the `Line` instance ends with one
-        or more whitespace characters (spaces, tabs, etc.). It is a boolean
-        convenience wrapper around the `trailing` property.
-
-        Returns
-        -------
-        bool
-            True if the line ends with whitespace, otherwise False.
-
-        Notes
-        -----
-        - Use `trailing` to retrieve the actual whitespace characters.
-        - This property is useful for detecting formatting issues such as
-          unnecessary spaces at the end of a line.
-        """
+    def is_trailing(self) -> bool:
+        """Check if the given line contains trailing whitespace."""
         return len(self.trailing) > 0
 
     @classmethod
@@ -626,12 +440,58 @@ class Line(BaseLine):
             return True
 
         if on_failure:
-            error = "data argument is multi-lines.  MUST be a single line."
+            error = "The 'data' argument contains multiple lines; it must be a single line."
             raise LineArgumentError(error)
         else:
             return False
 
-    def convert_to_regex_pattern(self):
+    @classmethod
+    def has_leading(cls, line: str, start: Optional[int] = None, end: Optional[int] = None) -> bool:
+        """Return True if line has leading whitespace."""
+        return len(cls.get_leading(line, start=start, end=end)) > 0
+
+    @classmethod
+    def has_trailing(cls, line: str, start: Optional[int] = None, end: Optional[int] = None) -> bool:
+        """Return True if line has trailing whitespace."""
+        return len(cls.get_trailing(line, start=start, end=end)) > 0
+
+    @classmethod
+    def get_leading(cls, line: str, start: Optional[int] = None, end: Optional[int] = None) -> str:
+        """Extract leading whitespace from line."""
+        _, value = try_to_str(line, allow_none=True)
+        match = re.match(r'([^\S\r\n]+)?', str(value)[start:end])
+        return match.group() if match else ""
+
+    @classmethod
+    def get_trailing(cls, line: str, start: Optional[int] = None, end: Optional[int] = None) -> str:
+        """Extract trailing whitespace from line."""
+        _, value = try_to_str(line, allow_none=True)
+        match = re.search(r'([^\S\r\n]+)?$', str(value)[start:end])
+        return match.group() if match else ""
+
+    @classmethod
+    def has_data(cls, line):
+        """
+        Check whether a line of text contains non-whitespace characters.
+        """
+        _, value = try_to_str(line, allow_none=True)
+        chk = bool(re.search(r'\S+', str(value)))
+        return chk
+
+    @classmethod
+    def has_whitespace_in_line(cls, line):
+        """
+        Check whether a line of text contains internal whitespace sequences.
+        """
+        if not is_string(line):
+            return False
+
+        ws_matches = re.findall(r'\s+', line)
+        if ws_matches:
+            return any(bool(re.search(r'[^ \r\n]+', ws)) for ws in ws_matches)
+        return False
+
+    def convert_to_regex_pattern(self) -> str:
         """
         Convert the line into a regex-compatible pattern string.
 
@@ -749,59 +609,6 @@ class BaseMatchedObject:
     regex components. Given a piece of text (either a literal string or a
     `re.Match` object), it analyzes the content and determines which category
     it belongs to:
-
-    - **Whitespace sequences**
-      Collapses runs of whitespace into a normalized pattern, optionally using
-      an user‑provided or default separator.
-
-    - **Repeated punctuation**
-      Detects sequences like "!!!", "...", or "???" and converts them into
-      quantifier‑based regex fragments such as `!{2,}` or `(\\.){2,}`.
-
-    - **Repeated punctuation + space sequences**
-      Handles patterns like ". . . " or "! ! " and produces grouped patterns
-      such as `(\\. ){2,}`.
-
-    - **Literal text**
-      Any other text is escaped and treated as a literal regex component.
-
-    The `to_pattern()` method orchestrates this classification by querying each
-    pattern‑generation method in priority order and returning the first
-    applicable regex fragment.
-
-    Attributes:
-        punctuation_pattern (str):
-            Character class used to detect punctuation.
-        repeated_punctuation_pattern (str):
-            Pattern for identifying repeated punctuation runs.
-        repeated_punctuations_space_pattern (str):
-            Pattern for identifying repeated punctuation‑plus‑space runs.
-        default_separator (str):
-            Default whitespace pattern used when normalizing whitespace.
-        user_separator (str):
-            Optional user‑provided override for whitespace normalization.
-        match (re.Match | None):
-            The original match object, if provided.
-        data (str):
-            The raw matched text content.
-
-    Properties:
-        is_empty (bool):
-            True if the matched text is an empty string.
-
-    Methods:
-        change_separator(separator, user_pattern):
-            Updates whitespace normalization behavior.
-        to_pattern():
-            Returns the regex fragment representing this matched object.
-        get_whitespace_pattern():
-            Produces a regex for whitespace sequences.
-        get_text_pattern():
-            Produces a literal‑text regex.
-        get_repeated_puncts_pattern():
-            Produces a regex for repeated punctuation.
-        get_repeated_puncts_space_pattern():
-            Produces a regex for repeated punctuation‑plus‑space sequences.
     """
     punctuation_pattern = r'[!\"#$%&\'()*+,./:;<=>?@\[\\\]\^_`{|}~-]'
     repeated_punctuation_pattern = f'({punctuation_pattern}+?)\\1+'
@@ -963,12 +770,6 @@ class BaseMatchedObject:
         Generates a regex fragment for sequences where punctuation characters are
         repeatedly followed by one or more spaces.
 
-        This method applies only when the entire matched text consists of repeated
-        units of the form "<punctuation><space>" (e.g., ". ", "!  ", "? ? "). It
-        identifies the repeated unit, escapes the punctuation portion, determines
-        whether the space portion should be represented as a single space or " +",
-        and constructs a grouped pattern such as `(\\. ){2,}` or `(\\!  ){2,}`.
-
         Returns:
             dict: A mapping of `{pattern: True}` if the text matches the repeated
             punctuation‑plus‑space structure, or `{'': False}` if it does not.
@@ -1074,11 +875,6 @@ def get_whitespace_chars(k=8, to_list=True):
     Returns all Unicode characters within the range 0 to 2**k that are
     recognized as whitespace by the regular‑expression engine.
 
-    The function scans the first 2**k code points and collects every character
-    for which ``re.search(r'\s', char)`` succeeds. This is useful for
-    determining which whitespace characters Python's regex engine treats as
-    whitespace in a given Unicode range.
-
     Args:
         k (int): The exponent defining the upper bound of the scanned Unicode
             range. Characters from 0 to 2**k (exclusive) are tested.
@@ -1104,11 +900,6 @@ def get_non_whitespace_chars(k=8, to_list=True):
     """
     Returns all Unicode characters within the range 0 to 2**k that are *not*
     recognized as whitespace by the regular‑expression engine.
-
-    The function scans the first 2**k code points and collects every character
-    for which ``re.search(r'\s', char)`` fails. This provides a quick way to
-    inspect which characters Python's regex engine treats as non‑whitespace
-    within a given Unicode slice.
 
     Args:
         k (int): The exponent defining the upper bound of the scanned Unicode
@@ -1167,10 +958,8 @@ def do_soft_regex_escape(pattern: Any) -> str:
     - Other punctuation characters are left as‑is for readability.
     - Non‑string inputs are converted to string before processing.
     """
-    if isinstance(pattern, bytes):
-        pattern = pattern.decode("utf-8")
-
-    text = str(pattern)
+    _, value = try_to_str(pattern, allow_none=True)
+    text = str(value)
 
     all_punct = string.punctuation + " "
     regex_metachars = "^$.?*+|{}[]()\\"
@@ -1223,10 +1012,8 @@ def enclose_string(text: Any, quote: str = '"', is_new_line: bool = False) -> st
     if quote not in {"'", '"'}:
         quote = '"'
 
-    if isinstance(text, bytes):
-        text = text.decode("utf-8")
-
-    text = str(text)
+    _, value = try_to_str(text, allow_none=True)
+    text = str(value)
     escaped_text = text.replace(quote, "\\" + quote)
 
     if "\n" in text or "\r" in text:
@@ -1258,9 +1045,8 @@ def dedent_and_strip(txt):
     (e.g., docstrings, templates) so they can be compared or displayed
     consistently.
     """
-    if isinstance(txt, bytes):
-        txt = txt.decode("utf-8")
-    new_txt = dedent(str(txt)).strip()
+    _, value = try_to_str(txt, allow_none=True)
+    new_txt = textwrap.dedent(str(value)).strip()
     return new_txt
 
 
@@ -1325,3 +1111,268 @@ def list_to_text(*args: Any) -> str:
         flatten(arg)
 
     return "\n".join(result)
+
+
+def get_list_of_lines(*lines: Any) -> list[str]:
+    """
+    Convert one or more lines into a flattened list of text lines.
+
+    This function accepts strings, bytes, numbers, None, or nested sequences
+    (lists/tuples). Each input is converted to a string (empty if None),
+    split into lines based on common newline delimiters, and combined into
+    a single list. Nested sequences are processed recursively.
+
+    Parameters
+    ----------
+    *lines : Any
+        One or more values to be processed. Each value may be a string,
+        bytes, None, numeric type, or a nested list/tuple of such values.
+
+    Returns
+    -------
+    list of str
+        A flattened list of text lines derived from the input values.
+        Returns an empty list if the only result is a single empty string.
+    """
+    lines_out: list[str] = []
+
+    for item in lines:
+        if isinstance(item, (list, tuple)):
+            # Recursively process nested sequences
+            lines_out.extend(get_list_of_lines(*item))
+            continue
+
+        _, text = try_to_str(item, allow_none=True)
+        lines_out.extend(re.split(r"\r?\n|\r", str(text)))
+
+    # Normalize single empty string to empty list
+    if lines_out == [""]:
+        return []
+
+    return lines_out
+
+
+def get_list_of_readonly_lines(*lines: Any) -> tuple[str, ...]:
+    """
+    Convert lines into a tuple of text lines (immutable version).
+
+    This function behaves like `get_list_of_lines` but returns a tuple
+    instead of a list, making the result read‑only.
+
+    Parameters
+    ----------
+    *lines : Any
+        One or more values to be processed. Each value may be a string,
+        bytes, None, numeric type, or a nested list/tuple of such values.
+
+    Returns
+    -------
+    tuple of str
+        A flattened tuple of text lines derived from the input values.
+    """
+    return tuple(get_list_of_lines(*lines))
+
+
+def is_string(obj):
+    """
+    Check whether the given object is a string.
+    """
+    return isinstance(obj, typing.Text)
+
+
+def is_string_or_none(obj):
+    """
+    Check whether the given object is either a string or `None`.
+    """
+    return isinstance(obj, (type(None), typing.Text))
+
+
+def try_to_str(value: Any, allow_none: bool = False) -> Tuple[bool, str]:
+    """Attempt to convert input to a string; return success flag and result."""
+    if allow_none and value is None:
+        return True, ""
+    if isinstance(value, str):
+        return True, value
+    if isinstance(value, bytes):
+        return True, value.decode("utf-8")
+    return False, value
+
+
+def join_string(*inputs: Any, separator: str = "") -> str:
+    """
+    Join one or more inputs into a single string.
+
+    This function accepts strings, bytes, None, numbers, or nested sequences
+    (lists/tuples). Each input is converted to a string (empty if None),
+    flattened recursively, and joined using the specified separator.
+
+    Parameters
+    ----------
+    *inputs : Any
+        One or more values to be joined. Each value may be a string,
+        bytes, None, numeric type, or a nested list/tuple of such values.
+    separator : str, optional
+        String used to join the flattened inputs. Defaults to an empty string.
+
+    Returns
+    -------
+    str
+        Joined string representation of the inputs. Returns an empty string
+        if the only result is a single empty string.
+    """
+    parts: list[str] = []
+
+    for item in inputs:
+        if isinstance(item, (list, tuple)):
+            # Recursively process nested sequences
+            parts.append(join_string(*item, separator=separator))
+            continue
+
+        _, text = try_to_str(item, allow_none=True)
+        parts.append(str(text))
+
+    # Normalize single empty string to empty result
+    if parts == [""]:
+        return ""
+    if len(parts) == 1:
+        return parts[0]
+
+    return separator.join(parts)
+
+
+def indent(*inputs: Any, width: int = 2) -> str:
+    """
+    Indent one or more inputs by a specified number of spaces.
+
+    Parameters
+    ----------
+    *inputs : Any
+        One or more values to be indented. Each value may be a string,
+        bytes, None, numeric type, or a nested list/tuple of such values.
+    width : int, default=2
+        Number of spaces to prepend to each line. Negative values are
+        treated as zero.
+
+    Returns
+    -------
+    str
+        A string containing the indented text block.
+    """
+    indent_width = max(width, 0)
+    text_block = "\n".join(get_list_of_lines(*inputs))
+    return textwrap.indent(text_block, " " * indent_width)
+
+
+def indent_level2(*inputs: Any, width: int = 2, start_pos: int = 1, other_width: int = 4) -> str:
+    """
+    Indent text with two different indentation levels.
+
+    This function indents the first `start_pos` lines of the input text
+    with `width` spaces, and the remaining lines with `other_width` spaces.
+    If `start_pos` is zero or `other_width` equals `width`, all lines are
+    indented uniformly.
+
+    Parameters
+    ----------
+    *inputs : Any
+        One or more values to be indented. Each value may be a string,
+        bytes, None, numeric type, or a nested list/tuple of such values.
+    width : int, default=2
+        Number of spaces to prepend to the first `start_pos` lines.
+        Negative values are treated as zero.
+    start_pos : int, default=1
+        Line index at which to switch indentation width. Must be non-negative.
+    other_width : int, default=4
+        Number of spaces to prepend to lines after `start_pos`. If less than
+        `width`, it is set equal to `width`.
+
+    Returns
+    -------
+    str
+        A string containing the indented text block.
+    """
+    start_pos = max(start_pos, 0)
+    other_width = max(other_width, width)
+
+    if start_pos == 0 or other_width == width:
+        return indent(*inputs, width=width)
+
+    lines = re.split(r"\r?\n|\r", indent(*inputs, width=0))
+
+    first_block = textwrap.indent("\n".join(lines[:start_pos]), " " * width)
+    remaining_block = textwrap.indent("\n".join(lines[start_pos:]), " " * other_width)
+
+    return f"{first_block}\n{remaining_block}"
+
+
+def is_multiline(text: Any) -> bool:
+    """
+    Check whether the given text contains multiple lines.
+    """
+    is_str, value = try_to_str(text)
+    if is_str:
+        return len(re.split(r"\r?\n|\r", value)) > 1
+    return False
+
+
+def skip_first_line(text: Any) -> str:
+    """
+    Return the input text without its first line.
+    """
+
+    is_str, value = try_to_str(text)
+    if is_str:
+        lines = re.split(r"\r?\n|\r", value)
+        return "\n".join(lines[1:])
+    return text
+
+
+def get_first_char(value: Any, force_str: bool = True) -> str:
+    """Return the first character of the input."""
+    is_str, val = try_to_str(value)
+    if is_str:
+        return val[:1]
+    return str(val)[:1] if force_str else ""
+
+
+def get_last_char(value: Any, force_str: bool = True) -> str:
+    """Return the last character of the input."""
+    is_str, val = try_to_str(value)
+    if is_str:
+        return val[-1:]
+    return str(val)[-1:] if force_str else ""
+
+
+def escape_double_quote(value: Any) -> Any:
+    """Escape double quotes in a string."""
+    is_str, val = try_to_str(value)
+    return val.replace('"', '\\"') if is_str else value
+
+
+def escape_single_quote(value: Any) -> Any:
+    """Escape single quotes in a string."""
+    is_str, val = try_to_str(value)
+    return val.replace("'", "\\'") if is_str else value
+
+
+def escape_quote(value: Any) -> Any:
+    """Escape both single and double quotes in a string."""
+    is_str, val = try_to_str(value)
+    return re.sub(r"(['\"])", r"\\\1", val) if is_str else value
+
+
+def timestamp_str(precision: int = 10, dot_char: str = "_",
+                  prefix: str = "", suffix: str = "") -> str:
+    """Return a formatted timestamp string."""
+    ts = f"{time.time():.{precision}f}"
+    ts = ts.replace(".", dot_char)
+    if prefix:
+        ts = f"{prefix}{ts}"
+    if suffix:
+        ts = f"{ts}{suffix}"
+    return ts
+
+
+def unique_id(precision: int = 10) -> str:
+    """Return a unique string based on the current timestamp."""
+    return timestamp_str(precision=precision)

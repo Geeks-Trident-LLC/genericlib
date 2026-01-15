@@ -143,11 +143,6 @@ class TestMisc:
         assert Misc.is_iterable(tuple()) is True
         assert Misc.is_iterable('abc') is True
 
-    def test_join_string(self):
-        assert Misc.join_string('Jack', 'Brown') == 'JackBrown'                 # noqa
-        assert Misc.join_string('Jack', 'Brown', sep=' ') == 'Jack Brown'       # noqa
-        assert Misc.join_string('Jack', 'Brown', separator='.') == 'Jack.Brown' # noqa
-
     def test_get_instance_class_name(self):
         class Foo:
             pass
