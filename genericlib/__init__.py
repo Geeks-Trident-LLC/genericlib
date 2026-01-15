@@ -72,10 +72,8 @@ from genericlib.conststruct import STRUCT
 from genericlib.conststruct import SLICE
 
 from genericlib.utils import Printer
-from genericlib.utils import Misc
 from genericlib.utils import MiscOutput
 from genericlib.utils import MiscFunction
-from genericlib.utils import MiscObject
 from genericlib.utils import Tabular
 from genericlib.utils import get_data_as_tabular
 from genericlib.utils import print_data_as_tabular
@@ -108,10 +106,8 @@ __all__ = [
 
     'Wildcard',
 
-    'Misc',
     'MiscFunction',
     'MiscOutput',
-    'MiscObject',
 
     'Printer',
 

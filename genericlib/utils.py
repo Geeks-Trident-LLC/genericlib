@@ -22,7 +22,6 @@ Use Cases
 
 import platform
 import sys
-import copy
 
 import subprocess
 
@@ -32,8 +31,7 @@ from contextlib import redirect_stdout, redirect_stderr
 from textwrap import wrap
 from pprint import pprint
 
-import typing
-from collections import abc
+import genericlib.datatype as datatype
 
 from genericlib.constant import ECODE
 from genericlib.constant import STRING
@@ -42,8 +40,6 @@ from genericlib.collection import DotObject
 
 from genericlib.exceptions import create_runtime_error
 from genericlib.exceptions import raise_runtime_error
-
-from time import time
 
 
 class Printer:
@@ -117,7 +113,7 @@ class Printer:
 
         headers = []
         if header:
-            if Misc.is_mutable_sequence(header):
+            if datatype.is_mutable_sequence(header):
                 for item in header:
                     for line in str(item).splitlines():
                         headers.extend(wrap(line, width=right_bound))
@@ -126,7 +122,7 @@ class Printer:
 
         footers = []
         if footer:
-            if Misc.is_mutable_sequence(footer):
+            if datatype.is_mutable_sequence(footer):
                 for item in footer:
                     for line in str(item).splitlines():
                         footers.extend(wrap(line, width=right_bound))
@@ -134,7 +130,7 @@ class Printer:
                 footers.extend(wrap(str(footer), width=right_bound))
 
         if data:
-            data = data if Misc.is_mutable_sequence(data) else [data]
+            data = data if datatype.is_mutable_sequence(data) else [data]
         else:
             data = []
 
@@ -300,150 +296,6 @@ class Printer:
         print_func = print_func if callable(print_func) else print
         print_func(message)
 
-
-class Misc:
-    """
-    General-purpose utility class for type checking and common data validations.
-
-    Notes
-    -----
-    This class is intended as a lightweight helper and does not
-    perform deep type introspection. It focuses on common, high-level
-    checks that are frequently needed in data processing workflows.
-    """
-
-    message = ''
-
-    @classmethod
-    def is_dict(cls, obj):
-        """
-        Check whether the given object is a dictionary.
-        """
-        return isinstance(obj, typing.Dict)
-
-    @classmethod
-    def is_mapping(cls, obj):
-        """
-        Check whether the given object implements the mapping protocol.
-        """
-        return isinstance(obj, typing.Mapping)
-
-    @classmethod
-    def is_list(cls, obj):
-        """
-        Check whether the given object is a list.
-        """
-        return isinstance(obj, typing.List)
-
-    @classmethod
-    def is_mutable_sequence(cls, obj):
-        """
-        Check whether the given object is a mutable sequence.
-        """
-        return isinstance(obj, abc.MutableSequence)
-
-    @classmethod
-    def is_sequence(cls, obj):
-        """
-        Check whether the given object is a sequence.
-        """
-        return isinstance(obj, typing.Sequence)
-
-    @classmethod
-    def is_class(cls, obj):
-        """
-        Check whether the given object is a class definition.
-        """
-        return isinstance(obj, typing.Type)     # noqa
-
-    @classmethod
-    def is_callable(cls, obj):
-        """
-        Check whether the given object is callable.
-        """
-        return isinstance(obj, typing.Callable)
-
-    @classmethod
-    def is_iterator(cls, obj):
-        """
-        Check whether the given object is an iterator.
-        """
-        return isinstance(obj, typing.Iterator)
-
-    @classmethod
-    def is_generator(cls, obj):
-        """
-        Check whether the given object is a generator.
-        """
-        return isinstance(obj, typing.Generator)
-
-    @classmethod
-    def is_iterable(cls, obj):
-        """
-        Check whether the given object is iterable.
-        """
-        return isinstance(obj, typing.Iterable)
-
-    @classmethod
-    def is_none_type(cls, obj):
-        """
-        Check whether the given object is of type `None`.
-        """
-        return isinstance(obj, type(None))
-
-    @classmethod
-    def is_window_os(cls):
-        """
-        Check whether the current operating system is Windows.
-        """
-        chk = platform.system().lower() == 'windows'
-        return chk
-
-    @classmethod
-    def is_mac_os(cls):
-        """
-        Check whether the current operating system is macOS.
-        """
-        chk = platform.system().lower() == 'darwin'
-        return chk
-
-    @classmethod
-    def is_linux_os(cls):
-        """
-        Check whether the current operating system is Linux.
-        """
-        chk = platform.system().lower() == 'linux'
-        return chk
-
-    @classmethod
-    def is_nix_os(cls):
-        """
-        Check whether the current operating system is Unix-like system,
-        such as Linux or macOS.
-        """
-        chk = cls.is_linux_os() or cls.is_mac_os()
-        return chk
-
-    @classmethod
-    def get_instance_class_name(cls, obj):
-        """
-        Retrieve the class name of an object's instance.
-
-        Parameters
-        ----------
-        obj : Any
-            The object whose class name should be retrieved.
-
-        Returns
-        -------
-        str
-            The name of the object's class.
-        """
-        if cls.is_class(obj):
-            return obj.__name__
-        return type(obj).__name__
-
-
 class MiscOutput:
     """
     Utility class for executing shell commands and capturing results.
@@ -517,26 +369,41 @@ class MiscOutput:
 class MiscPlatform:
     """
     Utility class for retrieving platform and Python environment information.
-
-    MiscPlatform provides helper methods to query details about the
-    underlying operating system kernel, the current Python runtime,
-    and the official documentation URL for the active Python version.
-    These methods are useful for logging, diagnostics, or displaying
-    environment metadata in applications.
-
-    Methods
-    -------
-    get_kernel_info()
-        Return a string containing the operating system name and kernel
-        release version (e.g., "Linux 5.15.0").
-    get_python_info()
-        Return a string with the current Python interpreter version
-        (e.g., "Python 3.11.6").
-    get_python_docs_url()
-        Return the URL to the official Python documentation site for
-        the current major and minor version (e.g.,
-        "https://docs.python.org/3.11/").
     """
+
+    @classmethod
+    def is_window_os(cls):
+        """
+        Check whether the current operating system is Windows.
+        """
+        chk = platform.system().lower() == 'windows'
+        return chk
+
+    @classmethod
+    def is_mac_os(cls):
+        """
+        Check whether the current operating system is macOS.
+        """
+        chk = platform.system().lower() == 'darwin'
+        return chk
+
+    @classmethod
+    def is_linux_os(cls):
+        """
+        Check whether the current operating system is Linux.
+        """
+        chk = platform.system().lower() == 'linux'
+        return chk
+
+    @classmethod
+    def is_nix_os(cls):
+        """
+        Check whether the current operating system is Unix-like system,
+        such as Linux or macOS.
+        """
+        chk = cls.is_linux_os() or cls.is_mac_os()
+        return chk
+
     @classmethod
     def get_kernel_info(cls):
         """
@@ -752,104 +619,6 @@ class MiscFunction:
             message.
         """
         raise_runtime_error(obj=obj, msg=msg)
-
-
-class MiscObject:
-    """
-    Utility class for object manipulation and data cleanup.
-
-    The MiscObject class provides helper methods for working with
-    generic Python objects and collections. It focuses on two main
-    tasks:
-    - Copying objects with support for both shallow and deep copies.
-    - Cleaning up lists of dictionaries by stripping string values
-      and safely copying non-string values.
-
-    These methods are designed to simplify common operations when
-    handling heterogeneous data structures, ensuring consistency
-    and reducing repetitive boilerplate code.
-
-    Methods
-    -------
-    copy(instance, is_deep_copy=True)
-        Create a shallow or deep copy of the given object.
-    cleanup_list_of_dict(lst_of_dict, chars=None)
-        Clean up a list of dictionaries by stripping strings and
-        copying non-string values.
-    """
-    @classmethod
-    def copy(cls, instance, is_deep_copy=True):
-        """
-        Create a copy of the given object.
-
-        This method provides a convenient wrapper around Python's
-        `copy.copy` and `copy.deepcopy` functions. It allows you to
-        choose whether to perform a shallow or deep copy of the
-        provided instance.
-
-        Parameters
-        ----------
-        instance : Any
-            The object to be copied.
-        is_deep_copy : bool, optional
-            If True (default), a deep copy of the object is created.
-            If False, a shallow copy is created.
-
-        Returns
-        -------
-        Any
-            A new object that is either a shallow or deep copy of
-            the original instance, depending on the `is_deep_copy`
-            flag.
-        """
-        if is_deep_copy:
-            new_instance = copy.deepcopy(instance)
-        else:
-            new_instance = copy.copy(instance)
-        return new_instance
-
-    @classmethod
-    def cleanup_list_of_dict(cls, lst_of_dict, chars=None):
-        """
-        Clean up a list of dictionaries by stripping strings and copying values.
-
-        This method iterates through a list of dictionaries (or other
-        objects) and performs the following:
-        - If an element is a dictionary, each string value is stripped
-          of leading/trailing characters (default: whitespace, or
-          characters specified in `chars`).
-        - Non-string values are copied (deeply by default).
-        - If an element is not a dictionary, it is copied directly.
-
-        Parameters
-        ----------
-        lst_of_dict : list
-            A list containing dictionaries or other objects to be cleaned.
-        chars : str, optional
-            A string specifying the set of characters to strip from
-            string values. Defaults to None, which strips whitespace.
-
-        Returns
-        -------
-        list
-            A new list with cleaned dictionaries and copied elements.
-            If `lst_of_dict` is not a list, the input is returned unchanged.
-        """
-        if not Misc.is_list(lst_of_dict):
-            return lst_of_dict
-        lst = []
-        for node in lst_of_dict:
-            if Misc.is_dict(node):
-                new_node = dict()
-                for key, val in node.items():
-                    if isinstance(val, typing.Text):
-                        new_node[key] = str.strip(val, chars)
-                    else:
-                        new_node[key] = cls.copy(val)
-                lst.append(new_node)
-            else:
-                lst.append(cls.copy(node))
-        return lst
 
 
 class Tabular:

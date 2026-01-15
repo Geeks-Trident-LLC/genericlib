@@ -15,6 +15,11 @@ Run pytest in the project root to execute these tests:
 import tempfile
 
 
+def dummy_generator():
+    """Dummy generator"""
+    yield 1
+
+
 class FooException(Exception):
     """Foo Exception"""
 
