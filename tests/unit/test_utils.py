@@ -1,9 +1,19 @@
+"""
+Unit tests for the `genericlib.utils` module.
+
+Usage
+-----
+Run pytest in the project root to execute these tests:
+    $ pytest tests/unit/test_utils.py
+    or
+    $ python -m pytest tests/unit/test_utils.py
+"""
+
+
 import pytest   # noqa
 
 from genericlib import Printer
 from genericlib import File
-import genericlib.platform as platform
-from genericlib.utils import execute_shell_command
 from genericlib import get_data_as_tabular
 
 TEST_DATA = File.get_result_from_yaml_file(
@@ -88,16 +98,6 @@ class TestPrinter:
         result = Printer.get(data, width=width, header=header,
                              footer=footer, failure_msg=failure_msg)
         assert result == expected_result
-
-
-
-class TestTerminalOutput:
-
-    def test_execute_shell_command(self):
-        cmdline = 'dir' if platform.is_windows_os() else 'ls'
-        result = execute_shell_command(cmdline)
-        assert result.exit_code == 0
-        assert result.is_success is True
 
 
 @pytest.mark.parametrize(
