@@ -1,31 +1,12 @@
 """
 Unit tests for `genericlib.file.write`.
 
-This test suite verifies the behavior of the `write` function, which
-opens a file in text mode using `get_file_stream`, writes the provided
-string content, and overwrites any existing data. The tests ensure
-correct handling of file creation, overwriting, encoding, and error
-conditions.
-
-Test Cases
-----------
-- test_write_creates_new_file
-    Confirms that writing to a new file creates it and stores the content.
-- test_write_overwrites_existing_file
-    Validates that writing to an existing file overwrites its previous content.
-- test_write_with_different_encoding
-    Ensures that writing with a non‑UTF‑8 encoding (Latin‑1) works correctly.
-- test_empty_filename_raises_value_error
-    Ensures that passing an empty filename raises a ValueError.
-- test_write_permission_denied_triggers_os_error
-    Confirms that attempting to write to a read‑only file raises an OSError.
-
 Usage
 -----
 Run pytest in the project root to execute these tests:
-    $ pytest /work_dir/tests/unit/file/test_write_func.py
+    $ pytest tests/unit/file/test_write_func.py
     or
-    $ python -m pytest /work_dir/tests/unit/file/test_write_func.py
+    $ python -m pytest tests/unit/file/test_write_func.py
 """
 
 import pytest

@@ -1,3 +1,14 @@
+"""
+Unit tests for the `genericlib.exceptions` module.
+
+Usage
+-----
+Run pytest in the project root to execute these tests:
+    $ pytest tests/unit/test_exceptions.py
+    or
+    $ python -m pytest tests/unit/test_exceptions.py
+"""
+
 import pytest
 
 from genericlib.exceptions import raise_exception

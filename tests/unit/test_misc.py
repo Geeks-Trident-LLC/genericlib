@@ -1,4 +1,13 @@
+"""
+Unit tests for the `genericlib.misc` module.
 
+Usage
+-----
+Run pytest in the project root to execute these tests:
+    $ pytest tests/unit/test_misc.py
+    or
+    $ python -m pytest tests/unit/test_misc.py
+"""
 
 
 import pytest

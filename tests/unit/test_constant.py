@@ -1,4 +1,15 @@
-import pytest   # noqa
+"""
+Unit tests for the `genericlib.constant` module.
+
+Usage
+-----
+Run pytest in the project root to execute these tests:
+    $ pytest tests/unit/test_constant.py
+    or
+    $ python -m pytest tests/unit/test_constant.py
+"""
+
+import pytest
 
 from genericlib import ECODE
 from genericlib import ICSValue

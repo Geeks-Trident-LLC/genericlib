@@ -107,6 +107,7 @@ class TestCopyObj:
         shallow = datatype.copy_obj(data, deep=False)
         assert shallow == data
         assert shallow is not data
+        assert isinstance(shallow, type(data))
         assert shallow[0] is data[0]
 
     def test_deep_copy(self):
@@ -115,6 +116,7 @@ class TestCopyObj:
         deep = datatype.copy_obj(data, deep=True)
         assert deep == data
         assert deep is not data
+        assert isinstance(deep, type(data))
         assert deep["a"] is not data["a"]
 
 
@@ -123,8 +125,10 @@ class TestCleanListOfDicts:
 
     def test_non_list_input(self):
         """Return unchanged if not list."""
-        data = {"a": " test "}
-        assert datatype.clean_list_of_dicts(data) == data
+        data = [{"a": " test "}]
+        expected = [{"a": "test"}]
+        assert datatype.clean_list_of_dicts(data) != data
+        assert datatype.clean_list_of_dicts(data) == expected
 
     def test_strip_strings(self):
         """Strip whitespace from strings."""

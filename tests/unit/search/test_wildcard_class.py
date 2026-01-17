@@ -1,11 +1,18 @@
-import pytest   # noqa
+"""
+Unit tests for the `genericlib.search` module.
+
+Usage
+-----
+Run pytest in the project root to execute these tests:
+    $ pytest tests/unit/search/test_wildcard_class.py
+    or
+    $ python -m pytest tests/unit/search/test_wildcard_class.py
+"""
+
+import pytest
 
 import re
 from genericlib import Wildcard
-
-
-class FooException(Exception):
-    """Foo Exception"""
 
 
 class TestWildcard:
@@ -648,7 +655,7 @@ class TestWildcard:
     )
     def test_wildcard_for_expansion_case(self, data, expected_pattern,
                                          matched_results, not_matched_results):
-        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)
+        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)   # noqa
         pattern = node.pattern
         assert pattern == expected_pattern
         for matched_result in matched_results:
@@ -717,7 +724,7 @@ class TestWildcard:
     )
     def test_wildcard_posix_character_class(self, data, expected_pattern,
                                             matched_results, not_matched_results):
-        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)
+        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)   # noqa
         pattern = node.pattern
         assert pattern == expected_pattern
 
@@ -743,7 +750,7 @@ class TestWildcard:
     )
     def test_wildcard_word_bound_case(self, data, expected_pattern,
                                       matched_results, not_matched_results):
-        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)
+        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)   # noqa
         pattern = node.pattern
         assert pattern == expected_pattern
 
@@ -769,7 +776,7 @@ class TestWildcard:
     )
     def test_wildcard_word_bound_case(self, data, expected_pattern,
                                       matched_results, not_matched_results):
-        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)
+        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)   # noqa
         pattern = node.pattern
         assert pattern == expected_pattern
 
@@ -831,7 +838,7 @@ class TestWildcard:
     )
     def test_wildcard_round_bracket_case(self, data, expected_pattern,
                                          matched_results, not_matched_results):
-        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)
+        node = Wildcard(data, is_leading=False, is_trailing=False, ignore_case=False)   # noqa
         pattern = node.pattern
         assert pattern == expected_pattern
 

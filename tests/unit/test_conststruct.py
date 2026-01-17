@@ -1,4 +1,15 @@
-import pytest   # noqa
+"""
+Unit tests for the `genericlib.conststruct` module.
+
+Usage
+-----
+Run pytest in the project root to execute these tests:
+    $ pytest tests/unit/test_conststruct.py
+    or
+    $ python -m pytest tests/unit/test_conststruct.py
+"""
+
+import pytest
 from genericlib import SLICE
 from genericlib import STRUCT
 

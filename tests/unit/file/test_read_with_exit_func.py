@@ -1,28 +1,12 @@
 """
-Unit tests for `genericlib.file.read_with_exit`.
-
-This test suite verifies the behavior of the `read_with_exit` function,
-which attempts to read a file and terminates the program with `SystemExit`
-(exit code 1) if an error occurs. The tests ensure correct handling of
-successful reads, nonexistent files, and invalid input.
-
-Test Cases
-----------
-- test_read_existing_file
-    Confirms that an existing UTF‑8 text file is read successfully.
-- test_read_with_different_encoding
-    Validates reading a file with a non‑UTF‑8 encoding (Latin‑1).
-- test_nonexistent_file_triggers_sys_exit
-    Ensures that attempting to read a nonexistent file triggers SystemExit.
-- test_empty_filename_triggers_sys_exit
-    Ensures that passing an empty filename triggers SystemExit.
+Unit tests for `genericlib.file.read_with_exit` function.
 
 Usage
 -----
 Run pytest in the project root to execute these tests:
-    $ pytest /work_dir/tests/unit/file/test_read_with_exit_func.py
+    $ pytest tests/unit/file/test_read_with_exit_func.py
     or
-    $ python -m pytest /work_dir/tests/unit/file/test_read_with_exit_func.py
+    $ python -m pytest tests/unit/file/test_read_with_exit_func.py
 """
 
 import pytest

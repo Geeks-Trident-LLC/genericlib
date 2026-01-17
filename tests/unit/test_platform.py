@@ -9,12 +9,10 @@ Run pytest in the project root to execute these tests:
     $ python -m pytest tests/unit/test_platform.py
 """
 
-
 import platform
 import sys
 import types
 import genericlib.platform as platform_helper  # replace with your actual module name
-
 
 
 class TestOSChecks:

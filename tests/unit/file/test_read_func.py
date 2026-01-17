@@ -1,37 +1,11 @@
 """
-Unit tests for `genericlib.file.read`.
-
-This test suite verifies the behavior of the `read` function, which
-opens a file using `get_file_stream` and returns its full content as
-a string. The tests ensure correct handling of text encoding, large
-files, and error conditions.
-
-Test Cases
-----------
-- test_read_existing_file
-    Confirms that an existing UTF‑8 text file can be read successfully.
-- test_read_with_different_encoding
-    Validates reading a file with a non‑UTF‑8 encoding (Latin‑1).
-- test_empty_filename_raises_value_error
-    Ensures that an empty filename raises a ValueError.
-- test_nonexistent_file_raises_os_error
-    Confirms that attempting to read a non‑existent file raises an OSError.
-- test_read_large_file
-    Verifies that large files are read fully into memory and content length matches.
-
-Notes
------
-- Uses `pytest` fixtures such as `tmp_path` for safe, isolated file creation.
-- Tests cover both normal and exceptional paths to ensure robust error handling.
-- For very large files, the function reads content into memory at once,
-  which is validated here but may not be optimal for production use.
-
+Unit tests for `genericlib.file.read` function.
 Usage
 -----
 Run pytest in the project root to execute these tests:
-    $ pytest /work_dir/tests/unit/file/test_read_func.py
+    $ pytest tests/unit/file/test_read_func.py
     or
-    $ python -m pytest /work_dir/tests/unit/file/test_read_func.py
+    $ python -m pytest tests/unit/file/test_read_func.py
 """
 
 

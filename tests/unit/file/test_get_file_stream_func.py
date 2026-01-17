@@ -1,45 +1,19 @@
 """
-Unit tests for `genericlib.file.get_file_stream`.
-
-This test suite verifies the behavior of the `get_file_stream` function,
-ensuring correct handling of file operations across text and binary modes,
-as well as proper error handling for invalid inputs.
-
-Test Cases
-----------
-- test_read_existing_file
-    Confirms that an existing text file can be opened and read correctly.
-- test_write_and_read_file
-    Validates that data can be written to a file and read back successfully.
-- test_binary_mode
-    Ensures binary read/write operations work and return a buffered stream.
-- test_empty_filename_raises_value_error
-    Verifies that an empty filename raises a ValueError.
-- test_nonexistent_file_raises_os_error
-    Confirms that attempting to open a non-existent file raises an OSError.
-- test_invalid_mode_raises_value_error
-    Ensures that passing an invalid mode string raises a ValueError.
-
-Notes
------
-- Uses `tmp_path` fixture to create temporary files and directories safely.
-- Tests cover both text (`io.TextIOBase`) and binary (`io.BufferedReader`)
-  stream types returned by `open()`.
-- Error conditions are validated using `pytest.raises`.
+Unit tests for `genericlib.file.get_file_stream` function.
 
 Usage
 -----
 Run pytest in the project root to execute these tests:
-    $ pytest /work_dir/tests/unit/file/test_get_file_stream_func.py
+    $ pytest tests/unit/file/test_get_file_stream_func.py
     or
-    $ python -m pytest /work_dir/tests/unit/file/test_get_file_stream_func.py
+    $ python -m pytest tests/unit/file/test_get_file_stream_func.py
 """
 
 
 import io
 import pytest
 
-from genericlib.file import get_file_stream  # adjust import to your actual module
+from genericlib.file import get_file_stream
 
 
 def test_read_existing_file(tmp_path):

@@ -1,4 +1,13 @@
-import pytest   # noqa
+"""
+Unit tests for the `genericlib.collection` module.
+
+Usage
+-----
+Run pytest in the project root to execute these tests:
+    $ pytest tests/unit/test_collection.py
+    or
+    $ python -m pytest tests/unit/test_collection.py
+"""
 
 from genericlib import DictObject
 from genericlib import DotObject
