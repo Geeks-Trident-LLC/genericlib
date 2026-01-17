@@ -11,17 +11,18 @@ Run pytest in the project root to execute these tests:
     $ python -m pytest tests/unit
 """
 
-
+from genericlib import DotObject
 import tempfile
 
 
-def dummy_generator():
-    """Dummy generator"""
-    yield 1
-
-
-class FooException(Exception):
-    """Foo Exception"""
+class DummyCommandResult(DotObject):
+    """Encapsulate the result of a shell command execution."""
+    def __init__(self, output: str, exit_code=0):
+        super().__init__(
+            output=output,
+            exit_code=exit_code,
+            is_success=exit_code==0
+        )
 
 
 class DummyClass:
@@ -35,6 +36,17 @@ class DummyDataClass:
     def __init__(self):
         self.var1 = "value 1"
         self.var2 = "value 2"
+
+# --------------------
+
+class FooException(Exception):
+    """Foo Exception"""
+
+# --------------------
+
+def dummy_generator():
+    """Dummy generator"""
+    yield 1
 
 
 def get_temp_file():

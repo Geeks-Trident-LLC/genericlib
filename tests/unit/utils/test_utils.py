@@ -4,9 +4,9 @@ Unit tests for the `genericlib.utils` module.
 Usage
 -----
 Run pytest in the project root to execute these tests:
-    $ pytest tests/unit/test_utils.py
+    $ pytest tests/unit/utils/test_utils.py
     or
-    $ python -m pytest tests/unit/test_utils.py
+    $ python -m pytest tests/unit/utils/test_utils.py
 """
 
 
@@ -17,7 +17,7 @@ from genericlib import File
 from genericlib import get_data_as_tabular
 
 TEST_DATA = File.get_result_from_yaml_file(
-    'data/utils_data.yaml',
+    '../data/utils_data.yaml',
     base_dir=File.get_dir(__file__),
     dot_datatype=True,
     var_substitution=True

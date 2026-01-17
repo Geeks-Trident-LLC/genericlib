@@ -1,12 +1,12 @@
 """
-Unit tests for the `genericlib.decorators` module.
+Unit tests for the `genericlib.decorators.test_normalize_return_output_text` decorator.
 
 Usage
 -----
 Run pytest in the project root to execute these tests:
-    $ pytest tests/unit/test_decorators.py
+    $ pytest tests/unit/decorators/test_normalize_return_output_text.py
     or
-    $ python -m pytest tests/unit/test_decorators.py
+    $ python -m pytest tests/unit/test_normalize_return_output_text.py
 """
 
 from genericlib.decorators import normalize_return_output_text

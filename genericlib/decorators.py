@@ -13,6 +13,7 @@ import functools
 from textwrap import dedent
 from typing import Callable, Any
 
+
 def normalize_return_output_text(func: Callable) -> Callable:
     """
     Decorator to normalize the return value of a function.
@@ -49,3 +50,30 @@ def normalize_return_output_text(func: Callable) -> Callable:
         return dedent(str(output)).strip()
 
     return wrapper
+
+
+def try_and_catch(handler: Callable[[Exception], Any] = None) -> Callable:
+    """Decorator to catch exceptions and optionally handle them.
+
+    Parameters
+    ----------
+    handler : Callable[[Exception], Any], optional
+        A function that takes the raised exception and returns a value.
+        If not provided, the exception is re-raised.
+
+    Returns
+    -------
+    Callable
+        Wrapped function with exception handling.
+    """
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            try:
+                return func(*args, **kwargs)
+            except Exception as exc:
+                if handler:
+                    return handler(exc)
+                raise exc
+        return wrapper
+    return decorator
