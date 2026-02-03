@@ -36,7 +36,7 @@ class InvalidExceptionType(Exception):
     """Raised when an invalid exception type is encountered."""
 
 
-class EscapePatternError(re.PatternError):
+class EscapePatternError(re.error):
     """Custom exception raised when regex pattern validation fails."""
 
 

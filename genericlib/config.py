@@ -10,7 +10,7 @@ the `version` attribute, it ensures consistency across the package when reportin
 logging, or displaying edition details.
 """
 
-__version__ = '0.6.2a1'
+__version__ = '0.6.2a2'
 version = __version__
 
 __all__ = [
