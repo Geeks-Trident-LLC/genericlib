@@ -32,10 +32,9 @@ class TestSysExitFunction:
         with pytest.raises(SystemExit) as excinfo:
             sys_exit(success=False, msg="Something went wrong")
         assert excinfo.value.code == ECODE.BAD
-
         # Verify printed message
         captured = capsys.readouterr()
-        assert "Something went wrong" in captured.out
+        assert "Something went wrong" in captured.err
 
     def test_sys_exit_no_message(self, capsys):
         # Expect SystemExit with code SUCCESS and no output
