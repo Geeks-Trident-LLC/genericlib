@@ -5,47 +5,6 @@ setup.py for the genericlib package
 This script defines the packaging configuration for the `genericlib` library,
 enabling distribution via PyPI or installation in local environments. It uses
 `setuptools` to specify metadata, dependencies, and packaging rules.
-
-Overview
---------
-- Package Name: `genericlib`
-- Version: 0.6.0a0 (alpha release)
-- License: BSD-3-Clause
-- Author/Maintainer: Tuyen Mathew Duong
-- Repository: https://github.com/Geeks-Trident-LLC/genericlib
-
-Features
---------
-- Provides reusable utilities for accelerating Python development, including
-  support for regex generation and textfsm generation.
-- Streamlines workflows by reducing redundancy and enabling efficient,
-  adaptable, maintainable applications.
-
-Configuration Details
----------------------
-- Long description is loaded from `README.md` and rendered as Markdown.
-- Dependencies: requires `pyyaml`.
-- Packages: discovered automatically via `find_packages`, excluding common
-  non-distribution directories (tests, examples, docs, build, dist, venv).
-- Project URLs:
-  - Documentation: GitHub Wiki
-  - Source: GitHub repository
-  - Issue Tracker: GitHub Issues
-- Classifiers: specify development status, supported Python versions (3.9–3.12),
-  operating systems (MacOS, Linux, Windows), intended audiences, and topics.
-
-Usage
------
-This file is executed when installing the package via:
-
-    pip install .
-
-or when building distributions:
-
-    python setup.py sdist bdist_wheel
-
-It ensures that `genericlib` is packaged correctly with metadata, dependencies,
-and resources included.
 """
 
 
@@ -56,7 +15,7 @@ with open("README.md", encoding="utf-8") as f:
 
 setup(
     name="genericlib",
-    version="0.6.2a2",  # alpha versioning
+    version="0.6.3",  # alpha versioning
     license="BSD-3-Clause",
     license_files=["LICENSE"],
     description="The Generic Python Library accelerates development with "
